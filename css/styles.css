@@ -189,7 +189,7 @@ h1 { margin: 0 0 8px; font-size: clamp(24px, 4vw, 34px); line-height: 1.15; font
 .pie p { margin: 0; max-width: 90ch; }
 
 /* tooltip de ECharts (el contenido lo arma model.js, ya escapado) */
-.tt { padding: 10px 12px; max-width: 320px; font: 13px/1.35 system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--ink); }
+.tt { padding: 10px 12px; box-sizing: border-box; width: max-content; max-width: min(320px, 86vw); white-space: normal; overflow-wrap: anywhere; font: 13px/1.35 system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--ink); }
 .tt-v { font-size: 16px; font-weight: 650; }
 .tt-n { margin-top: 2px; color: var(--ink2); }
 .tt-s { color: var(--ink2); }

@@ -145,7 +145,7 @@
         borderColor: pal.borde,
         borderWidth: 1,
         textStyle: { color: pal.ink },
-        extraCssText: 'border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.14);',
+        extraCssText: 'border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.14);white-space:normal;max-width:min(320px,86vw);',
         formatter: (p) => {
           if (p.dataType === 'node') {
             const n = nodos.get(p.name);
