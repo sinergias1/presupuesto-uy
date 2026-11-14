@@ -461,39 +461,46 @@
   // ------------------------------------------------------------- vista
   // Explicación en palabras simples de lo que muestran las cifras de arriba.
   function renderExplica(v, r) {
-    const $$ = (n) => M.fmtMonto(n).replace('$U ', '$') ;
+    const $$ = (n) => M.fmtMonto(n).replace('$U ', '$');
     const b = (t) => h('strong', {}, t);
-    const parrafos = [];
+    const tarjeta = (titulo, ...contenido) =>
+      h('div', { class: 'ex-card' }, h('h4', {}, titulo), h('p', {}, ...contenido));
+    const tarjetas = [];
     if (v.tipo === 'general') {
       const t = state.ov.totales;
       const dif = t.diferencia;
-      parrafos.push(h('p', {}, 'En 2025 se espera que el Estado cobre ', b($$(t.recursos)),
+      tarjetas.push(tarjeta('Lo que se espera cobrar', b($$(t.recursos)),
         ' con impuestos, tasas, multas y otros ingresos. Es un cálculo, no la plata ya cobrada.'));
-      parrafos.push(h('p', {}, 'Hasta mayo de 2025, ya estaba autorizado a gastar ', b($$(t.gasto)),
-        '. Eso no quiere decir que ya se haya gastado todo.'));
-      parrafos.push(h('p', {}, dif < 0
-        ? h('span', {}, 'O sea que se puede gastar ', b($$(Math.abs(dif))), ' más de lo que se espera cobrar. ')
-        : h('span', {}, 'O sea que se espera cobrar ', b($$(Math.abs(dif))), ' más de lo que se puede gastar. '),
+      tarjetas.push(tarjeta('Lo que se puede gastar', b($$(t.gasto)),
+        ' ya autorizados hasta mayo de 2025. Eso no quiere decir que ya se haya gastado todo.'));
+      tarjetas.push(tarjeta('Lo que falta o sobra', dif < 0
+        ? h('span', {}, 'Se puede gastar ', b($$(Math.abs(dif))), ' más de lo que se espera cobrar. ')
+        : h('span', {}, 'Se espera cobrar ', b($$(Math.abs(dif))), ' más de lo que se puede gastar. '),
         'Ojo: esta diferencia no es el déficit oficial, porque ese se calcula con otras reglas.'));
-      parrafos.push(h('p', {}, 'Para leer los números: “mil millones” es un 1 seguido de nueve ceros (1.000.000.000).'));
+      tarjetas.push(tarjeta('Para leer los números',
+        '“Mil millones” es un 1 seguido de nueve ceros (1.000.000.000).'));
     } else if (r.esGasto) {
-      parrafos.push(h('p', {}, `“${r.titulo}” tiene autorizado gastar `, b($$(r.valor)),
-        `. De cada $100 que gasta el Estado, $${M.numEs(r.pctTotal * 100, 1)} son de aquí.`));
+      tarjetas.push(tarjeta('Cuánto es', `“${r.titulo}” tiene autorizado gastar `, b($$(r.valor)), '.'));
+      tarjetas.push(tarjeta('Qué parte del total',
+        `De cada $100 que gasta el Estado, $${M.numEs(r.pctTotal * 100, 1)} son de aquí.`));
       if (r.tipos && r.tipos.length) {
         const t = r.tipos[0];
-        parrafos.push(h('p', {}, 'La parte más grande, ', b(M.fmtPct(t.pct)), `, es de ${t.tipo.toLowerCase()}.`));
+        tarjetas.push(tarjeta('En qué se va', 'La parte más grande, ', b(M.fmtPct(t.pct)), `, es de ${t.tipo.toLowerCase()}.`));
       }
-      parrafos.push(h('p', {}, r.nHijos
+      tarjetas.push(tarjeta('Qué hay adentro', r.nHijos
         ? `Abajo puedes ver cómo se reparte entre ${r.nHijos} ${r.nivelSiguientePlural}.`
         : 'Este es el nivel más chico: ya no se divide en partes.'));
     } else {
-      parrafos.push(h('p', {}, `Por “${r.titulo}” el Estado espera cobrar `, b($$(r.valor)),
-        `. De cada $100 que se cobran, $${M.numEs(r.pctTotal * 100, 1)} vienen de aquí.`));
-      parrafos.push(h('p', {}, r.nHijos
+      tarjetas.push(tarjeta('Cuánto es', `Por “${r.titulo}” el Estado espera cobrar `, b($$(r.valor)), '.'));
+      tarjetas.push(tarjeta('Qué parte del total',
+        `De cada $100 que se cobran, $${M.numEs(r.pctTotal * 100, 1)} vienen de aquí.`));
+      tarjetas.push(tarjeta('Qué hay adentro', r.nHijos
         ? `Abajo puedes ver de qué se compone (${r.nHijos} ${r.nivelSiguientePlural}) y a qué fondo va cada parte.`
         : 'Este es el nivel más chico: ya no se divide en partes.'));
     }
-    $('explica').replaceChildren(h('h3', { id: 'explica-t' }, '¿Qué significa esto?'), ...parrafos);
+    $('explica').replaceChildren(
+      h('h3', { id: 'explica-t' }, '¿Qué significa esto?'),
+      h('div', { class: 'ex-grid' }, ...tarjetas));
   }
 
   function renderVista() {
