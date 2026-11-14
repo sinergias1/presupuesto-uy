@@ -459,6 +459,43 @@
   }
 
   // ------------------------------------------------------------- vista
+  // Explicación en palabras simples de lo que muestran las cifras de arriba.
+  function renderExplica(v, r) {
+    const $$ = (n) => M.fmtMonto(n).replace('$U ', '$') ;
+    const b = (t) => h('strong', {}, t);
+    const parrafos = [];
+    if (v.tipo === 'general') {
+      const t = state.ov.totales;
+      const dif = t.diferencia;
+      parrafos.push(h('p', {}, 'En 2025 se espera que el Estado cobre ', b($$(t.recursos)),
+        ' con impuestos, tasas, multas y otros ingresos. Es un cálculo, no la plata ya cobrada.'));
+      parrafos.push(h('p', {}, 'Hasta mayo de 2025, ya estaba autorizado a gastar ', b($$(t.gasto)),
+        '. Eso no quiere decir que ya se haya gastado todo.'));
+      parrafos.push(h('p', {}, dif < 0
+        ? h('span', {}, 'O sea que se puede gastar ', b($$(Math.abs(dif))), ' más de lo que se espera cobrar. ')
+        : h('span', {}, 'O sea que se espera cobrar ', b($$(Math.abs(dif))), ' más de lo que se puede gastar. '),
+        'Ojo: esta diferencia no es el déficit oficial, porque ese se calcula con otras reglas.'));
+      parrafos.push(h('p', {}, 'Para leer los números: “mil millones” es un 1 seguido de nueve ceros (1.000.000.000).'));
+    } else if (r.esGasto) {
+      parrafos.push(h('p', {}, `“${r.titulo}” tiene autorizado gastar `, b($$(r.valor)),
+        `. De cada $100 que gasta el Estado, $${M.numEs(r.pctTotal * 100, 1)} son de aquí.`));
+      if (r.tipos && r.tipos.length) {
+        const t = r.tipos[0];
+        parrafos.push(h('p', {}, 'La parte más grande, ', b(M.fmtPct(t.pct)), `, es de ${t.tipo.toLowerCase()}.`));
+      }
+      parrafos.push(h('p', {}, r.nHijos
+        ? `Abajo puedes ver cómo se reparte entre ${r.nHijos} ${r.nivelSiguientePlural}.`
+        : 'Este es el nivel más chico: ya no se divide en partes.'));
+    } else {
+      parrafos.push(h('p', {}, `Por “${r.titulo}” el Estado espera cobrar `, b($$(r.valor)),
+        `. De cada $100 que se cobran, $${M.numEs(r.pctTotal * 100, 1)} vienen de aquí.`));
+      parrafos.push(h('p', {}, r.nHijos
+        ? `Abajo puedes ver de qué se compone (${r.nHijos} ${r.nivelSiguientePlural}) y a qué fondo va cada parte.`
+        : 'Este es el nivel más chico: ya no se divide en partes.'));
+    }
+    $('explica').replaceChildren(h('h3', { id: 'explica-t' }, '¿Qué significa esto?'), ...parrafos);
+  }
+
   function renderVista() {
     const v = state.vista;
     const ov = state.ov;
@@ -499,6 +536,7 @@
     $('titulo').textContent = titulo;
     $('subtitulo').textContent = sub;
     $('tiles').replaceChildren(...tiles);
+    renderExplica(v, v.tipo === 'general' ? null : M.resumenNodo(ov, v));
     document.title = titDoc;
     renderTablas();
     renderGrafico();

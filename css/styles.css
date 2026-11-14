@@ -122,6 +122,13 @@ h1 { margin: 0 0 8px; font-size: clamp(24px, 4vw, 34px); line-height: 1.15; font
 .tipo-b { grid-column: 1 / -1; height: 6px; border-radius: 999px; background: var(--grid); overflow: hidden; }
 .tipo-b i { display: block; height: 100%; border-radius: 999px; background: var(--muted); }
 
+/* explicación en palabras simples */
+.explica { margin: 0 0 16px; padding: 12px 16px; background: var(--surface); border: 1px solid var(--border); border-left: 4px solid var(--muted); border-radius: 12px; max-width: 90ch; }
+.explica h3 { margin: 0 0 6px; font-size: 17px; }
+.explica p { margin: 0 0 8px; font-size: 16px; line-height: 1.55; }
+.explica p:last-child { margin-bottom: 0; }
+.explica strong { font-weight: 650; }
+
 /* gráfico */
 .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 10px 16px 14px; }
 .leyenda-fila { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; margin-bottom: 6px; font-size: 13px; }
