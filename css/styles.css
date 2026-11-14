@@ -1,0 +1,190 @@
+/* Visualizador de Finanzas Estatales de Uruguay - estilos.
+   Paleta: slots 1-4 de la paleta categórica validada (claro y oscuro) para las
+   fuentes de financiamiento; todo lo demás es neutro, así el color significa una sola cosa. */
+
+:root {
+  color-scheme: light;
+  --plane: #f9f9f7;
+  --surface: #fcfcfb;
+  --ink: #0b0b0b;
+  --ink2: #52514e;
+  --muted: #898781;
+  --grid: #e1e0d9;
+  --axis: #c3c2b7;
+  --border: rgba(11, 11, 11, 0.10);
+  --link: #1c5cab;
+  --s1: #2a78d6;
+  --s2: #eb6834;
+  --s3: #1baf7a;
+  --s4: #eda100;
+}
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) {
+    color-scheme: dark;
+    --plane: #0d0d0d;
+    --surface: #1a1a19;
+    --ink: #f0efec;
+    --ink2: #c3c2b7;
+    --grid: #2c2c2a;
+    --axis: #383835;
+    --border: rgba(255, 255, 255, 0.10);
+    --link: #6da7ec;
+    --s1: #3987e5;
+    --s2: #d95926;
+    --s3: #199e70;
+    --s4: #c98500;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --plane: #0d0d0d;
+  --surface: #1a1a19;
+  --ink: #f0efec;
+  --ink2: #c3c2b7;
+  --grid: #2c2c2a;
+  --axis: #383835;
+  --border: rgba(255, 255, 255, 0.10);
+  --link: #6da7ec;
+  --s1: #3987e5;
+  --s2: #d95926;
+  --s3: #199e70;
+  --s4: #c98500;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--plane);
+  color: var(--ink);
+  font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+.wrap { max-width: 1120px; margin: 0 auto; padding: 0 16px; }
+a { color: var(--link); }
+:focus-visible { outline: 2px solid var(--s1); outline-offset: 2px; border-radius: 2px; }
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+.saltar {
+  position: absolute; left: 8px; top: -48px; z-index: 10;
+  background: var(--surface); color: var(--ink); padding: 8px 12px; border-radius: 8px;
+  border: 1px solid var(--border);
+}
+.saltar:focus { top: 8px; }
+
+/* cabecera */
+.cabecera { padding: 28px 0 8px; }
+.eyebrow { margin: 0 0 4px; font-size: 13px; letter-spacing: .04em; text-transform: uppercase; color: var(--ink2); }
+h1 { margin: 0 0 8px; font-size: clamp(24px, 4vw, 34px); line-height: 1.15; font-weight: 650; }
+.lead { margin: 0; max-width: 70ch; color: var(--ink2); }
+
+/* migas de pan */
+#migas { margin: 16px 0 8px; }
+.migas { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 4px; margin: 0; padding: 0; list-style: none; font-size: 14px; }
+.migas li { display: inline-flex; align-items: center; min-width: 0; }
+.migas li + li::before { content: "›"; content: "›" / ""; margin-right: 4px; color: var(--ink2); }
+.migas a, .migas span {
+  display: inline-block; max-width: 34ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  padding: 4px 6px; border-radius: 6px;
+}
+.migas a { text-decoration: none; }
+.migas a:hover { background: var(--grid); text-decoration: underline; }
+.migas span[aria-current] { font-weight: 600; color: var(--ink); }
+
+/* encabezado de la vista */
+.encabezado { margin: 8px 0 16px; }
+#titulo { margin: 0 0 4px; font-size: clamp(22px, 3.2vw, 28px); line-height: 1.2; font-weight: 650; }
+#titulo:focus { outline: none; }
+.sub { margin: 0; max-width: 80ch; color: var(--ink2); }
+
+/* tarjetas de cifras */
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.tile { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; }
+.tile-l { font-size: 13px; color: var(--ink2); }
+.tile-v { margin-top: 2px; font-size: 26px; line-height: 1.2; font-weight: 650; }
+.tile-n { margin-top: 2px; font-size: 13px; color: var(--ink2); }
+.tipos { display: grid; gap: 6px; margin-top: 8px; }
+.tipo { display: grid; grid-template-columns: 1fr auto; column-gap: 8px; align-items: center; font-size: 13px; }
+.tipo-p { font-variant-numeric: tabular-nums; color: var(--ink2); }
+.tipo-b { grid-column: 1 / -1; height: 6px; border-radius: 999px; background: var(--grid); overflow: hidden; }
+.tipo-b i { display: block; height: 100%; border-radius: 999px; background: var(--muted); }
+
+/* gráfico */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 16px 14px; }
+.leyenda-fila { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; margin-bottom: 6px; font-size: 13px; }
+.ley-titulo { color: var(--ink2); }
+.leyenda { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 0; padding: 0; list-style: none; }
+.ley-item { display: inline-flex; align-items: center; gap: 6px; }
+.sw { display: inline-block; width: 12px; height: 8px; border-radius: 3px; flex: none; }
+#grafico { width: 100%; height: 480px; transition: opacity .15s; }
+.cargando #grafico { opacity: .5; }
+.pista { margin: 6px 0 0; font-size: 13px; color: var(--ink2); }
+.omitidos { margin-top: 8px; font-size: 13px; color: var(--ink2); }
+.omitidos summary { cursor: pointer; }
+.omitidos ul { margin: 6px 0 0; padding-left: 18px; }
+.aviso { padding: 12px 14px; border: 1px solid var(--border); border-radius: 8px; background: var(--plane); color: var(--ink); }
+
+/* colores de fuente (clases, para que el modo oscuro cambie solo) */
+.bg-s1 { background: var(--s1); }
+.bg-s2 { background: var(--s2); }
+.bg-s3 { background: var(--s3); }
+.bg-s4 { background: var(--s4); }
+.bg-sx { background: var(--muted); }
+
+/* tablas */
+.tabla-sec { margin-top: 24px; }
+.tabla-sec h3 { margin: 0 0 2px; font-size: 18px; }
+.tabla-nota { margin: 0 0 8px; font-size: 13px; color: var(--ink2); }
+.tabla-wrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; }
+.tabla { width: 100%; border-collapse: collapse; font-size: 14px; }
+.tabla th, .tabla td { padding: 8px 12px; border-bottom: 1px solid var(--grid); text-align: left; vertical-align: middle; }
+.tabla thead th { font-size: 12px; font-weight: 600; color: var(--ink2); white-space: nowrap; }
+.tabla tbody tr:last-child th, .tabla tbody tr:last-child td { border-bottom: 0; }
+.tabla tbody th { font-weight: 500; }
+.tabla .num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.tabla a { text-decoration: none; }
+.tabla a:hover { text-decoration: underline; }
+.tabla a::after { content: " ›"; content: " ›" / ""; }
+.tabla .col-clas { color: var(--ink2); }
+.celda-fuente { display: inline-flex; align-items: center; gap: 8px; }
+.fbar {
+  display: flex; gap: 2px; height: 8px; min-width: 90px; border-radius: 999px; overflow: hidden; background: var(--surface);
+}
+.fbar > span { flex-basis: 0; min-width: 0; }
+.mas { margin: 10px 0 0; }
+.mas button {
+  font: inherit; color: var(--link); background: transparent; border: 1px solid var(--border);
+  border-radius: 8px; padding: 6px 12px; cursor: pointer;
+}
+.mas button:hover { background: var(--grid); }
+
+/* notas y pie */
+.notas { margin: 28px 0 8px; }
+.notas details { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 16px; }
+.notas summary { cursor: pointer; font-weight: 600; }
+.notas ul { margin: 8px 0 0; padding-left: 20px; color: var(--ink2); font-size: 14px; }
+.notas li + li { margin-top: 4px; }
+.pie { margin-top: 24px; padding: 16px 0 32px; border-top: 1px solid var(--grid); font-size: 13px; color: var(--ink2); }
+.pie p { margin: 0; max-width: 90ch; }
+
+/* tooltip de ECharts (el contenido lo arma model.js, ya escapado) */
+.tt { padding: 10px 12px; max-width: 320px; font: 13px/1.35 system-ui, -apple-system, "Segoe UI", sans-serif; color: var(--ink); }
+.tt-v { font-size: 16px; font-weight: 650; }
+.tt-n { margin-top: 2px; color: var(--ink2); }
+.tt-s { color: var(--ink2); }
+.tt-h { margin-top: 6px; font-size: 12px; color: var(--ink2); }
+.tt-key { display: inline-block; width: 12px; height: 2px; margin-right: 6px; vertical-align: middle; border-radius: 1px; }
+
+@media (max-width: 640px) {
+  .col-fuentes { display: none; }
+  .tile-v { font-size: 22px; }
+  .migas a, .migas span { max-width: 22ch; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #grafico { transition: none; }
+}
+@media (forced-colors: active) {
+  .sw, .fbar > span, .tipo-b i { forced-color-adjust: none; }
+}

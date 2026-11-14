@@ -1,346 +1,65 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Visualizador de Finanzas Estatales de Uruguay (2025)</title>
-    <!-- Apache ECharts -->
-    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #f8fafc;
-            color: #1e293b;
-        }
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            background: #ffffff;
-            padding: 24px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-        }
-        header {
-            margin-bottom: 20px;
-            border-bottom: 1px solid #e2e8f0;
-            padding-bottom: 16px;
-        }
-        h1 {
-            margin: 0 0 8px 0;
-            font-size: 1.5rem;
-            color: #0f172a;
-        }
-        p.subtitle {
-            margin: 0;
-            color: #64748b;
-            font-size: 0.95rem;
-        }
-        #breadcrumbs {
-            margin-bottom: 16px;
-            font-size: 0.9rem;
-            color: #2563eb;
-        }
-        #breadcrumbs span {
-            cursor: pointer;
-            text-decoration: underline;
-        }
-        #breadcrumbs span:hover {
-            color: #1d4ed8;
-        }
-        #chart {
-            width: 100%;
-            height: 700px;
-        }
-        .loading {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 700px;
-            font-size: 1.2rem;
-            color: #64748b;
-        }
-    </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Presupuesto del Estado uruguayo 2025: de dónde viene y a dónde va el dinero</title>
+  <meta name="description" content="Diagrama de Sankey interactivo del presupuesto 2025 del Estado uruguayo: recursos, fuentes de financiamiento y gasto por inciso. Datos abiertos del MEF y la Contaduría General de la Nación.">
+  <meta name="color-scheme" content="light dark">
+  <link rel="stylesheet" href="css/styles.css">
+  <!-- ECharts fijado a una versión. Para no depender del CDN, guardar el archivo en
+       vendor/echarts.min.js: la página lo usa automáticamente si el CDN falla. -->
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.6.0/dist/echarts.min.js" defer></script>
+  <script src="js/model.js" defer></script>
+  <script src="js/app.js" defer></script>
 </head>
 <body>
+  <a class="saltar" href="#contenido">Saltar al contenido</a>
 
-<div class="container">
-    <header>
-        <h1>Presupuesto y Finanzas del Estado Uruguayo</h1>
-        <p class="subtitle">Flujo de Recursos (Proyección 2025) y Gasto (Crédito Vigente 2025). Clic en los nodos de gasto para profundizar.</p>
-    </header>
-
-    <div id="breadcrumbs">
-        <strong>Vista:</strong> <span onclick="cargarVistaGeneral()">General (Macro)</span>
+  <header class="cabecera">
+    <div class="wrap">
+      <p class="eyebrow">Presupuesto Nacional · Uruguay · 2025</p>
+      <h1>¿De dónde viene y a dónde va el dinero del Estado?</h1>
+      <p class="lead">Recursos proyectados y crédito vigente al 31/05/2025, a partir de los datos abiertos del Ministerio de Economía y Finanzas y la Contaduría General de la Nación. Se navega de lo general a lo específico con un clic.</p>
     </div>
+  </header>
 
-    <div id="chart">
-        <div class="loading">Cargando datos fiscales...</div>
+  <main id="contenido" class="wrap">
+    <nav id="migas" aria-label="Ruta de navegación"></nav>
+    <div id="estado" role="status"></div>
+
+    <section id="vista" hidden>
+      <div class="encabezado">
+        <p id="contexto" class="eyebrow"></p>
+        <h2 id="titulo" tabindex="-1"></h2>
+        <p id="subtitulo" class="sub"></p>
+      </div>
+
+      <div id="tiles" class="tiles"></div>
+
+      <div class="card" id="grafico-card">
+        <div class="leyenda-fila">
+          <span class="ley-titulo">Fuente de financiamiento</span>
+          <ul id="leyenda" class="leyenda"></ul>
+        </div>
+        <div id="grafico" role="img" aria-label="Diagrama de Sankey"></div>
+        <p id="pista" class="pista"></p>
+        <details id="omitidos" class="omitidos" hidden></details>
+      </div>
+
+      <div id="tablas"></div>
+    </section>
+
+    <section id="notas" class="notas"></section>
+  </main>
+
+  <footer class="pie">
+    <div class="wrap">
+      <p>Datos: Presupuesto Nacional 2025–2029, paquetes de datos abiertos del Ministerio de Economía y Finanzas y la Contaduría General de la Nación. Los montos están en pesos uruguayos corrientes. Proyecto de código abierto.</p>
     </div>
-</div>
+  </footer>
 
-<script>
-    let chart = null;
-    let overviewData = null;
-
-    // Inicializar ECharts
-    window.addEventListener('DOMContentLoaded', async () => {
-        chart = echarts.init(document.getElementById('chart'));
-        window.addEventListener('resize', () => chart.resize());
-        await cargarOverview();
-    });
-
-    async function cargarOverview() {
-        try {
-            const response = await fetch('data/2025/overview.json');
-            if (!response.ok) throw new Error('No se pudo cargar overview.json');
-            overviewData = await response.json();
-            renderizarOverview();
-        } catch (error) {
-            document.getElementById('chart').innerHTML = `<div class="loading" style="color: #dc2626;">Error al cargar los datos: ${error.message}. Asegúrate de servir el sitio vía servidor local (Live Server).</div>`;
-        }
-    }
-
-    function renderizarOverview() {
-        document.getElementById('breadcrumbs').innerHTML = '<strong>Vista:</strong> General (Macro)';
-        
-        const nodes = [];
-        const links = [];
-        const nodeSet = new Set();
-
-        function addNode(name) {
-            if (!nodeSet.has(name)) {
-                nodeSet.add(name);
-                nodes.push({ name: name });
-            }
-        }
-
-        // 1. Recursos (Capítulos)
-        overviewData.recursos.hijos.forEach(cap => {
-            addNode(cap.nombre);
-            // Buscar fuentes asociadas a este capítulo en el puente
-            overviewData.puente.flujos_recursos
-                .filter(f => f.origen === cap.nombre)
-                .forEach(f => {
-                    const fuenteObj = overviewData.puente.fuentes.find(s => s.codigo === f.fuente);
-                    const fuenteNombre = fuenteObj ? `Fuente: ${fuenteObj.nombre}` : `Fuente ${f.fuente}`;
-                    addNode(fuenteNombre);
-                    links.push({
-                        source: cap.nombre,
-                        target: fuenteNombre,
-                        value: f.valor
-                    });
-                });
-        });
-
-        // 2. Fuentes -> Gasto (Clasificaciones de Inciso)
-        overviewData.puente.flujos_gasto.forEach(f => {
-            const fuenteObj = overviewData.puente.fuentes.find(s => s.codigo === f.fuente);
-            const fuenteNombre = fuenteObj ? `Fuente: ${fuenteObj.nombre}` : `Fuente ${f.fuente}`;
-            addNode(fuenteNombre);
-            addNode(f.destino);
-            links.push({
-                source: fuenteNombre,
-                target: f.destino,
-                value: f.valor
-            });
-        });
-
-        // 3. Ajustes de financiamiento si los hay
-        overviewData.puente.ajustes.forEach(aj => {
-            const fuenteObj = overviewData.puente.fuentes.find(s => s.codigo === aj.fuente);
-            const fuenteNombre = fuenteObj ? `Fuente: ${fuenteObj.nombre}` : `Fuente ${aj.fuente}`;
-            const ajusteNombre = `Ajuste / Saldo (${aj.fuente})`;
-            addNode(fuenteNombre);
-            addNode(ajusteNombre);
-            links.push({
-                source: fuenteNombre,
-                target: ajusteNombre,
-                value: aj.valor
-            });
-        });
-
-        const option = {
-            tooltip: {
-                trigger: 'item',
-                triggerOn: 'mousemove',
-                formatter: function (params) {
-                    if (params.dataType === 'node') {
-                        return `<strong>${params.name}</strong>`;
-                    }
-                    return `${params.data.source} → ${params.data.target}<br/><strong>$U ${(params.data.value / 1e6).toLocaleString('es-UY', {maximumFractionDigits: 1})} millones</strong>`;
-                }
-            },
-            series: [{
-                type: 'sankey',
-                data: nodes,
-                links: links,
-                emphasis: { focus: 'adjacency' },
-                线style: { color: 'source', curveness: 0.5 },
-                nodeWidth: 20,
-                nodeGap: 12,
-                left: '5%',
-                right: '15%',
-                top: '5%',
-                bottom: '5%'
-            }]
-        };
-
-        chart.setOption(option, true);
-
-        // Evento de clic para hacer Drill-down en las clasificaciones de gasto
-        chart.off('click');
-        chart.on('click', function (params) {
-            if (params.dataType === 'node') {
-                // Verificar si el nodo clickeado es una Clasificación de Gasto (Administración Central, etc.)
-                const clasMatch = overviewData.gasto.hijos.find(c => c.nombre === params.name);
-                if (clasMatch) {
-                    renderizarClasificacion(clasMatch);
-                }
-            }
-        });
-    }
-
-    function renderizarClasificacion(clas) {
-        document.getElementById('breadcrumbs').innerHTML = `
-            <strong>Vista:</strong> 
-            <span onclick="cargarVistaGeneral()">General (Macro)</span> &gt; 
-            <span>${clas.nombre}</span>
-        `;
-
-        const nodes = [{ name: clas.nombre }];
-        const links = [];
-        const nodeSet = new Set([clas.nombre]);
-
-        function addNode(name) {
-            if (!nodeSet.has(name)) {
-                nodeSet.add(name);
-                nodes.push({ name: name });
-            }
-        }
-
-        // Mostrar los incisos que cuelgan de esta clasificación
-        clas.hijos.forEach(inc => {
-            addNode(inc.nombre);
-            links.push({
-                source: clas.nombre,
-                target: inc.nombre,
-                value: inc.valor
-            });
-        });
-
-        const option = {
-            tooltip: {
-                trigger: 'item',
-                formatter: params => params.dataType === 'node' ? `<strong>${params.name}</strong>` : `${params.data.source} → ${params.data.target}<br/><strong>$U ${(params.data.value / 1e6).toLocaleString('es-UY', {maximumFractionDigits: 1})} millones</strong>`
-            },
-            series: [{
-                type: 'sankey',
-                data: nodes,
-                links: links,
-                emphasis: { focus: 'adjacency' },
-                nodeWidth: 20,
-                nodeGap: 15,
-                left: '10%',
-                right: '20%'
-            }]
-        };
-
-        chart.setOption(option, true);
-
-        // Clic en un inciso para cargar su archivo JSON específico bajo demanda
-        chart.off('click');
-        chart.on('click', async function (params) {
-            if (params.dataType === 'node' && params.name !== clas.nombre) {
-                const incMatch = clas.hijos.find(i => i.nombre === params.name);
-                if (incMatch && incMatch.archivo) {
-                    await cargarDetalleInciso(clas, incMatch);
-                }
-            }
-        });
-    }
-
-    async function cargarDetalleInciso(clas, inc) {
-        try {
-            chart.showLoading();
-            const response = await fetch(`data/2025/${inc.archivo}`);
-            if (!response.ok) throw new Error(`No se pudo cargar ${inc.archivo}`);
-            const data = await response.json();
-            renderizarIncisoDetalle(clas, inc, data.nodo);
-        } catch (error) {
-            alert('Error al cargar el detalle del inciso: ' + error.message);
-        } finally {
-            chart.hideLoading();
-        }
-    }
-
-    function renderizarIncisoDetalle(clas, inc, nodoInciso) {
-        document.getElementById('breadcrumbs').innerHTML = `
-            <strong>Vista:</strong> 
-            <span onclick="cargarVistaGeneral()">General (Macro)</span> &gt; 
-            <span onclick="renderizarClasificacion('${clas.nombre}')">${clas.nombre}</span> &gt; 
-            <span>${inc.nombre}</span>
-        `;
-
-        const nodes = [];
-        const links = [];
-        const nodeSet = new Set();
-
-        function addNode(name) {
-            if (!nodeSet.has(name)) {
-                nodeSet.add(name);
-                nodes.push({ name: name });
-            }
-        }
-
-        // Estructura interna del Inciso: Unidades Ejecutoras -> Programas -> Tipos
-        addNode(nodoInciso.nombre);
-        if (nodoInciso.hijos) {
-            nodoInciso.hijos.forEach(ue => {
-                addNode(ue.nombre);
-                links.push({ source: nodoInciso.nombre, target: ue.nombre, value: ue.valor });
-                
-                if (ue.hijos) {
-                    ue.hijos.forEach(prog => {
-                        addNode(prog.nombre);
-                        links.push({ source: ue.nombre, target: prog.nombre, value: prog.valor });
-                    });
-                }
-            });
-        }
-
-        const option = {
-            tooltip: {
-                trigger: 'item',
-                formatter: params => params.dataType === 'node' ? `<strong>${params.name}</strong>` : `${params.data.source} → ${params.data.target}<br/><strong>$U ${(params.data.value / 1e6).toLocaleString('es-UY', {maximumFractionDigits: 1})} millones</strong>`
-            },
-            series: [{
-                type: 'sankey',
-                data: nodes,
-                links: links,
-                emphasis: { focus: 'adjacency' },
-                nodeWidth: 15,
-                nodeGap: 8,
-                left: '5%',
-                right: '25%'
-            }]
-        };
-
-        chart.setOption(option, true);
-
-        chart.off('click');
-        chart.on('click', () => {
-            // Permitir volver al nivel anterior haciendo clic en el breadcrumb superior
-        });
-    }
-
-    function cargarVistaGeneral() {
-        if (overviewData) {
-            renderizarOverview();
-        }
-    }
-</script>
-
+  <p id="anuncio" class="sr-only" aria-live="polite"></p>
+  <noscript><p class="wrap aviso">Esta visualización necesita JavaScript.</p></noscript>
 </body>
 </html>
