@@ -92,6 +92,7 @@
   }
 
   function layoutPara(ancho) {
+    if (ancho >= 1150) return { clave: 'extra', izq: 230, der: 280, etiqueta: 220, fuente: 13, fila: 36, gap: 14, maxHijos: 14, col0Izq: true };
     if (ancho >= 900) return { clave: 'ancho', izq: 190, der: 230, etiqueta: 180, fuente: 12, fila: 30, gap: 10, maxHijos: 12, col0Izq: true };
     if (ancho >= 600) return { clave: 'medio', izq: 150, der: 170, etiqueta: 140, fuente: 12, fila: 32, gap: 10, maxHijos: 10, col0Izq: true };
     return { clave: 'angosto', izq: 8, der: 96, etiqueta: 92, fuente: 11, fila: 36, gap: 8, maxHijos: 7, col0Izq: false };
@@ -246,7 +247,9 @@
           if (n && n.nav) location.hash = '#' + n.nav;
         });
       }
-      cont.style.height = Math.max(360, Math.min(900, spec.maxCol * L.fila + 70)) + 'px';
+      const movil = L.clave === 'angosto';
+      const base = movil ? Math.max(480, Math.min(700, innerHeight * 0.74)) : Math.max(540, Math.min(900, innerHeight * 0.8));
+      cont.style.height = Math.round(Math.max(base, Math.min(1100, spec.maxCol * L.fila + 70))) + 'px';
       state.chart.resize();
       state.chart.setOption(opcionesSankey(spec, paleta(), L), true);
     } catch (e) {
@@ -257,7 +260,7 @@
   }
 
   // --------------------------------------------------------- cabecera
-  function renderMigas(items) {
+  function renderMigas(items, enGrafico) {
     const ol = h('ol', { class: 'migas' });
     items.forEach((m, i) => {
       const ultimo = i === items.length - 1;
@@ -265,7 +268,10 @@
         ? h('span', { 'aria-current': 'page', title: m.texto }, m.texto)
         : h('a', { href: m.hash, title: m.texto }, m.texto)));
     });
-    $('migas').replaceChildren(ol);
+    const nav = $('migas');
+    nav.replaceChildren(ol);
+    // En la vista con gráfico las migas van arriba a la izquierda del propio gráfico.
+    $(enGrafico ? 'migas-slot' : 'migas-home').append(nav);
   }
 
   function tile(etiqueta, valor, nota, exacto) {
@@ -444,7 +450,7 @@
         tile('Gasto: crédito vigente al 31/05/2025', M.fmtMonto(ov.totales.gasto), null, M.fmtCompleto(ov.totales.gasto)),
         tile('Recursos menos gasto', M.fmtMonto(ov.totales.diferencia), 'No equivale por sí sola a déficit.', M.fmtCompleto(ov.totales.diferencia)),
       ];
-      renderMigas([{ texto: 'Vista general', hash: null }]);
+      renderMigas([{ texto: 'Vista general', hash: null }], true);
       titDoc = 'Presupuesto del Estado uruguayo 2025: de dónde viene y a dónde va el dinero';
     } else {
       const r = M.resumenNodo(ov, v);
@@ -456,7 +462,7 @@
         tile('Participación', M.fmtPct(r.pctTotal), r.totalEtiqueta),
       ];
       if (r.tipos) tiles.push(tileTipos(r.tipos));
-      renderMigas(M.migas(v));
+      renderMigas(M.migas(v), true);
       titDoc = `${r.titulo} · Presupuesto 2025`;
     }
 
