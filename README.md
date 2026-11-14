@@ -1,4 +1,6 @@
-# Visualizador de Finanzas Estatales de Uruguay
+# ¿De dónde sale la torta y cómo se reparte?
+
+Visualizador de Finanzas Estatales de Uruguay
 
 Diagrama de Sankey interactivo del Presupuesto Nacional 2025 (recursos → fuentes de financiamiento → gasto por inciso), con navegación de mayor a menor y migas de pan.
 

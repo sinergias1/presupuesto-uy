@@ -14,22 +14,60 @@
 })(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
 
+  // Textos para el público general. Los nombres oficiales (inciso, unidad ejecutora...)
+  // se conservan entre paréntesis o en los tooltips.
   var NIVELES_GASTO = [
-    'Gasto público', 'Clasificación de inciso', 'Inciso', 'Unidad ejecutora',
-    'Programa', 'Tipo de gasto', 'Objeto del gasto',
+    'Gasto público', 'Grupo de organismos', 'Organismo (inciso)', 'Oficina o dirección (unidad ejecutora)',
+    'Programa', 'En qué se gasta', 'Rubro del gasto',
   ];
-  var NIVELES_RECURSOS = ['Recursos', 'Capítulo', 'Clase', 'Recurso'];
+  var NIVELES_RECURSOS = ['Recursos', 'Tipo de ingreso', 'Subtipo de ingreso', 'Ingreso'];
   var PLURAL = {
-    'Clasificación de inciso': 'clasificaciones de inciso',
-    'Inciso': 'incisos',
-    'Unidad ejecutora': 'unidades ejecutoras',
+    'Grupo de organismos': 'grupos de organismos',
+    'Organismo (inciso)': 'organismos (incisos)',
+    'Oficina o dirección (unidad ejecutora)': 'oficinas o direcciones (unidades ejecutoras)',
     'Programa': 'programas',
-    'Tipo de gasto': 'tipos de gasto',
-    'Objeto del gasto': 'objetos del gasto',
-    'Capítulo': 'capítulos',
-    'Clase': 'clases',
-    'Recurso': 'recursos',
+    'En qué se gasta': 'formas de gasto',
+    'Rubro del gasto': 'rubros del gasto',
+    'Tipo de ingreso': 'tipos de ingreso',
+    'Subtipo de ingreso': 'subtipos de ingreso',
+    'Ingreso': 'ingresos',
   };
+
+  // Nombres simples para lo que se repite en todas las vistas: [nombre, explicación].
+  // Clave: id del nodo, o "fuente/<código>" para los fondos de financiamiento.
+  var AMIGABLE = {
+    'fuente/11': ['Fondo común', 'Rentas Generales: la plata del Estado que puede usarse en cualquier gasto.'],
+    'fuente/12': ['Plata con destino fijo', 'Recursos con afectación especial: cobros que la ley reserva para un fin determinado.'],
+    'fuente/15': ['Fondo de vivienda', 'Fondo Nacional de Vivienda: plata reservada para vivienda.'],
+    'fuente/21': ['Préstamos del exterior', 'Endeudamiento externo: préstamos para proyectos específicos.'],
+    'fuente/13': ['Otra fuente (código 13)', 'Los datos oficiales no la describen.'],
+    'fuente/51': ['Otra fuente (código 51)', 'Los datos oficiales no la describen.'],
+    'recursos/ingresos-tributarios': ['Impuestos', 'Lo que se cobra por impuestos, como el IVA y el IRPF.'],
+    'recursos/ingresos-no-tributarios': ['Tasas, multas y otros cobros', 'Venta de bienes y servicios del Estado, alquileres, multas y concesiones.'],
+    'recursos/transferencias': ['Transferencias recibidas', 'Plata que un organismo recibe de otro.'],
+    'recursos/incremento-de-patrimonio': ['Aumento de patrimonio', 'Ingresos contables que aumentan el patrimonio del Estado.'],
+    'recursos/ingresos-por-disminucion-de-activos': ['Venta o baja de bienes', 'Ingresos por vender o dar de baja bienes del Estado.'],
+    'recursos/contribuciones-figurativas-en-el-pto-nal': ['Aportes entre organismos', 'Movimientos de plata dentro del propio Estado.'],
+    'gasto/a': ['Presidencia y ministerios', 'Administración Central: Presidencia de la República y los ministerios.'],
+    'gasto/b': ['Pagos generales del Estado', 'Otros Organismos: intereses de la deuda, apoyo a la seguridad social, subsidios y partidas que se reparten después.'],
+    'gasto/c': ['Educación, salud y justicia', 'Organismos del Art. 220: organismos con autonomía, como ANEP, ASSE, la Universidad de la República, el Poder Judicial y la Fiscalía.'],
+  };
+  var TIPOS_AMIGABLES = {
+    'Remuneraciones': 'Sueldos y salarios',
+    'Funcionamiento': 'Gastos del día a día (compras y servicios)',
+    'Inversiones': 'Obras y equipamiento',
+  };
+
+  function nombreDe(id, oficial) { return AMIGABLE[id] ? AMIGABLE[id][0] : oficial; }
+  function ayudaDe(id) { return AMIGABLE[id] ? AMIGABLE[id][1] : null; }
+  function extraDe(id, oficial) {
+    return AMIGABLE[id] ? { ayuda: AMIGABLE[id][1], oficial: oficial } : {};
+  }
+  function conExtra(def, id, oficial) {
+    var e = extraDe(id, oficial);
+    Object.keys(e).forEach(function (k) { def[k] = e[k]; });
+    return def;
+  }
 
   // El color sigue a la fuente de financiamiento (la entidad), nunca a su posición:
   // las cuatro fuentes descritas en la metadata ocupan los slots 1-4 de la paleta;
@@ -42,8 +80,8 @@
 
   var AJ_ENTRADA = 'ajuste/entrada';
   var AJ_SALIDA = 'ajuste/salida';
-  var ETIQ_AJ_ENTRADA = 'Diferencia (gasto > recursos)';
-  var ETIQ_AJ_SALIDA = 'Diferencia (recursos > gasto)';
+  var ETIQ_AJ_ENTRADA = 'Falta para cubrir el gasto';
+  var ETIQ_AJ_SALIDA = 'Sobra sin gasto asignado';
 
   // ------------------------------------------------------------------ formato
   function numEs(n, dec) {
@@ -88,7 +126,7 @@
 
   function fuenteNombre(ov, code) {
     var fs = ov.puente.fuentes;
-    for (var i = 0; i < fs.length; i++) if (fs[i].codigo === code) return fs[i].nombre;
+    for (var i = 0; i < fs.length; i++) if (fs[i].codigo === code) return nombreDe('fuente/' + code, fs[i].nombre);
     return 'Fuente ' + code;
   }
 
@@ -134,9 +172,9 @@
   }
 
   function migas(vista) {
-    var out = [{ texto: 'Vista general', hash: '#' }];
+    var out = [{ texto: 'Inicio', hash: '#' }];
     vista.cadena.forEach(function (n, i) {
-      out.push({ texto: n.nombre, hash: i < vista.cadena.length - 1 ? '#' + n.id : null });
+      out.push({ texto: nombreDe(n.id, n.nombre), hash: i < vista.cadena.length - 1 ? '#' + n.id : null });
     });
     return out;
   }
@@ -204,14 +242,14 @@
     var links = [];
 
     ov.recursos.hijos.forEach(function (c) {
-      defs.push({ id: c.id, label: c.nombre, col: 0, kind: 'recurso', fuente: null, nav: c.id, drillable: true });
+      defs.push(conExtra({ id: c.id, label: nombreDe(c.id, c.nombre), col: 0, kind: 'recurso', fuente: null, nav: c.id, drillable: true }, c.id, c.nombre));
     });
     defs.push({ id: AJ_ENTRADA, label: ETIQ_AJ_ENTRADA, col: 0, kind: 'ajuste', fuente: null, nav: null, drillable: false });
     P.fuentes.forEach(function (f) {
-      defs.push({ id: 'fuente/' + f.codigo, label: f.nombre, col: 1, kind: 'fuente', fuente: f.codigo, nav: null, drillable: false });
+      defs.push(conExtra({ id: 'fuente/' + f.codigo, label: nombreDe('fuente/' + f.codigo, f.nombre), col: 1, kind: 'fuente', fuente: f.codigo, nav: null, drillable: false }, 'fuente/' + f.codigo, f.nombre));
     });
     ov.gasto.hijos.forEach(function (c) {
-      defs.push({ id: c.id, label: c.nombre, col: 2, kind: 'gasto', fuente: null, nav: c.id, drillable: true });
+      defs.push(conExtra({ id: c.id, label: nombreDe(c.id, c.nombre), col: 2, kind: 'gasto', fuente: null, nav: c.id, drillable: true }, c.id, c.nombre));
     });
     defs.push({ id: AJ_SALIDA, label: ETIQ_AJ_SALIDA, col: 2, kind: 'ajuste', fuente: null, nav: null, drillable: false });
 
@@ -258,12 +296,12 @@
 
     var fuentesOrden = entradasDesc(nodo.fuentes);
     var defsFuente = fuentesOrden.map(function (e) {
-      return { id: 'fuente/' + e[0], label: fuenteNombre(ov, e[0]), col: colFuente, kind: 'fuente', fuente: e[0], nav: null, drillable: false };
+      return conExtra({ id: 'fuente/' + e[0], label: fuenteNombre(ov, e[0]), col: colFuente, kind: 'fuente', fuente: e[0], nav: null, drillable: false }, 'fuente/' + e[0], (ov.puente.fuentes.filter(function (f) { return f.codigo === e[0]; })[0] || {}).nombre);
     });
 
     var defsHijo = [];
     if (!hijos.length) {
-      defsHijo.push({ id: nodo.id, label: nodo.nombre, col: colHijo, kind: kind, fuente: null, nav: null, drillable: false });
+      defsHijo.push(conExtra({ id: nodo.id, label: nombreDe(nodo.id, nodo.nombre), col: colHijo, kind: kind, fuente: null, nav: null, drillable: false }, nodo.id, nodo.nombre));
       fuentesOrden.forEach(function (e) { enlazar(e[0], nodo.id, e[1]); });
     } else {
       var visibles = hijos;
@@ -274,12 +312,12 @@
       }
       visibles.forEach(function (h) {
         var dr = esDrillable(h);
-        defsHijo.push({ id: h.id, label: h.nombre, col: colHijo, kind: kind, fuente: null, nav: dr ? h.id : null, drillable: dr });
+        defsHijo.push(conExtra({ id: h.id, label: nombreDe(h.id, h.nombre), col: colHijo, kind: kind, fuente: null, nav: dr ? h.id : null, drillable: dr }, h.id, h.nombre));
         entradasDesc(h.fuentes).forEach(function (e) { enlazar(e[0], h.id, e[1]); });
       });
       if (cola.length) {
         var idOtros = nodo.id + '#otros';
-        defsHijo.push({ id: idOtros, label: 'Otros (' + cola.length + ')', col: colHijo, kind: 'otros', fuente: null, nav: null, drillable: false });
+        defsHijo.push({ id: idOtros, label: 'Otros (' + cola.length + ' más)', col: colHijo, kind: 'otros', fuente: null, nav: null, drillable: false });
         entradasDesc(sumarFuentes(cola)).forEach(function (e) { enlazar(e[0], idOtros, e[1]); });
       }
     }
@@ -307,13 +345,15 @@
     var hijos = n.hijos || [];
     var nivelSig = hijos.length ? niveles[prof + 1] || null : null;
     var tipos = n.tipos
-      ? entradasDesc(n.tipos).map(function (e) { return { tipo: e[0], valor: e[1], pct: e[1] / n.valor }; })
+      ? entradasDesc(n.tipos).map(function (e) { return { tipo: TIPOS_AMIGABLES[e[0]] || e[0], oficial: e[0], valor: e[1], pct: e[1] / n.valor }; })
       : null;
     return {
-      titulo: n.nombre,
+      titulo: nombreDe(n.id, n.nombre),
       esGasto: esGasto,
       nivel: niveles[prof] || '',
-      padre: padre ? padre.nombre : null,
+      oficial: AMIGABLE[n.id] ? n.nombre : null,
+      ayuda: ayudaDe(n.id),
+      padre: padre ? nombreDe(padre.id, padre.nombre) : null,
       valor: n.valor,
       pctTotal: n.valor / total,
       totalEtiqueta: esGasto ? 'del gasto total' : 'de los recursos totales',
@@ -327,7 +367,7 @@
   function filaDe(n, totalRef, extra) {
     var fila = {
       id: n.id,
-      nombre: n.nombre,
+      nombre: nombreDe(n.id, n.nombre),
       valor: n.valor,
       pct: totalRef ? n.valor / totalRef : 0,
       fuentes: n.fuentes || {},
@@ -353,12 +393,12 @@
     var incisos = [];
     ov.gasto.hijos.forEach(function (clas) {
       clas.hijos.forEach(function (inc) {
-        incisos.push(filaDe(inc, ov.totales.gasto, { clasificacion: clas.nombre }));
+        incisos.push(filaDe(inc, ov.totales.gasto, { clasificacion: nombreDe(clas.id, clas.nombre) }));
       });
     });
     incisos.sort(function (a, b) { return b.valor - a.valor; });
     var fuentes = ov.puente.fuentes.map(function (f) {
-      return { codigo: f.codigo, nombre: f.nombre, recursos: f.recursos, gasto: f.gasto, saldo: f.saldo };
+      return { codigo: f.codigo, nombre: nombreDe('fuente/' + f.codigo, f.nombre), recursos: f.recursos, gasto: f.gasto, saldo: f.saldo };
     });
     return { capitulos: capitulos, incisos: incisos, fuentes: fuentes };
   }
@@ -367,11 +407,12 @@
   function tooltipNodo(n, total, color) {
     var h = ['<div class="tt"><div class="tt-v">', esc(fmtMonto(n.valor)), '</div><div class="tt-n">'];
     if (n.kind === 'fuente' && color) h.push('<span class="tt-key" style="background:', esc(color), '"></span>');
-    h.push(esc(n.label), '</div><div class="tt-s">', esc(fmtPct(total ? n.valor / total : 0) + ' del total mostrado'), '</div>');
-    if (n.drillable) h.push('<div class="tt-h">Clic para profundizar ›</div>');
-    if (n.kind === 'otros') h.push('<div class="tt-h">Agrupa los elementos menores; el detalle está en la tabla.</div>');
+    h.push(esc(n.label), '</div><div class="tt-s">', esc(fmtPct(total ? n.valor / total : 0) + ' del total de este gráfico'), '</div>');
+    if (n.ayuda) h.push('<div class="tt-h">', esc(n.ayuda), '</div>');
+    if (n.drillable) h.push('<div class="tt-h">Haz clic para ver el detalle ›</div>');
+    if (n.kind === 'otros') h.push('<div class="tt-h">Junta los elementos más chicos. La lista completa está en la tabla de abajo.</div>');
     if (n.kind === 'ajuste') {
-      h.push('<div class="tt-h">Diferencia entre recursos y gasto de una misma fuente. No equivale por sí sola a déficit.</div>');
+      h.push('<div class="tt-h">Es la diferencia entre lo que se espera cobrar y lo que se puede gastar con ese fondo. No es el déficit oficial.</div>');
     }
     h.push('</div>');
     return h.join('');
@@ -381,7 +422,7 @@
     var h = ['<div class="tt"><div class="tt-v">', esc(fmtMonto(l.valor)), '</div><div class="tt-n">'];
     if (color) h.push('<span class="tt-key" style="background:', esc(color), '"></span>');
     h.push(esc(etiquetaOrigen), ' → ', esc(etiquetaDestino), '</div><div class="tt-s">',
-      esc(fmtPct(total ? l.valor / total : 0) + ' del total mostrado'), '</div></div>');
+      esc(fmtPct(total ? l.valor / total : 0) + ' del total de este gráfico'), '</div></div>');
     return h.join('');
   }
 

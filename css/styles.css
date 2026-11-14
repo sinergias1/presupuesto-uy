@@ -78,7 +78,13 @@ a { color: var(--link); }
 .cabecera { padding: 28px 0 8px; }
 .eyebrow { margin: 0 0 4px; font-size: 13px; letter-spacing: .04em; text-transform: uppercase; color: var(--ink2); }
 h1 { margin: 0 0 8px; font-size: clamp(24px, 4vw, 34px); line-height: 1.15; font-weight: 650; }
-.lead { margin: 0; max-width: 70ch; color: var(--ink2); }
+.lead { margin: 0; max-width: 70ch; color: var(--ink2); font-size: 18px; line-height: 1.55; }
+.lead-datos { margin-top: 8px; font-size: 15px; }
+.guia { margin: 6px 0 8px; font-size: 15px; color: var(--ink); }
+.glosario { margin: 8px 0 0; display: grid; grid-template-columns: minmax(150px, 240px) 1fr; gap: 6px 16px; font-size: 15px; }
+.glosario dt { font-weight: 600; }
+.glosario dd { margin: 0; color: var(--ink2); }
+@media (max-width: 640px) { .glosario { grid-template-columns: 1fr; gap: 0; } .glosario dd { margin-bottom: 8px; } }
 
 /* migas de pan */
 #migas { margin: 16px 0 8px; }
@@ -102,14 +108,14 @@ h1 { margin: 0 0 8px; font-size: clamp(24px, 4vw, 34px); line-height: 1.15; font
 .encabezado { margin: 8px 0 16px; }
 #titulo { margin: 0 0 4px; font-size: clamp(22px, 3.2vw, 28px); line-height: 1.2; font-weight: 650; }
 #titulo:focus { outline: none; }
-.sub { margin: 0; max-width: 80ch; color: var(--ink2); }
+.sub { margin: 0; max-width: 80ch; color: var(--ink2); font-size: 17px; }
 
 /* tarjetas de cifras */
 .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; margin-bottom: 12px; }
 .tile { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 10px 14px; }
-.tile-l { font-size: 13px; color: var(--ink2); }
+.tile-l { font-size: 14px; color: var(--ink2); }
 .tile-v { margin-top: 0; font-size: 22px; line-height: 1.2; font-weight: 650; }
-.tile-n { margin-top: 2px; font-size: 13px; color: var(--ink2); }
+.tile-n { margin-top: 2px; font-size: 14px; color: var(--ink2); }
 .tipos { display: grid; gap: 6px; margin-top: 8px; }
 .tipo { display: grid; grid-template-columns: 1fr auto; column-gap: 8px; align-items: center; font-size: 13px; }
 .tipo-p { font-variant-numeric: tabular-nums; color: var(--ink2); }
@@ -125,7 +131,7 @@ h1 { margin: 0 0 8px; font-size: clamp(24px, 4vw, 34px); line-height: 1.15; font
 .sw { display: inline-block; width: 12px; height: 8px; border-radius: 3px; flex: none; }
 #grafico { width: 100%; height: clamp(540px, 80vh, 900px); transition: opacity .15s; }
 .cargando #grafico { opacity: .5; }
-.pista { margin: 6px 0 0; font-size: 13px; color: var(--ink2); }
+.pista { margin: 6px 0 0; font-size: 14px; color: var(--ink2); }
 .omitidos { margin-top: 8px; font-size: 13px; color: var(--ink2); }
 .omitidos summary { cursor: pointer; }
 .omitidos ul { margin: 6px 0 0; padding-left: 18px; }
@@ -167,6 +173,7 @@ h1 { margin: 0 0 8px; font-size: clamp(24px, 4vw, 34px); line-height: 1.15; font
 
 /* notas y pie */
 .notas { margin: 28px 0 8px; }
+.notas details + details { margin-top: 10px; }
 .notas details { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 16px; }
 .notas summary { cursor: pointer; font-weight: 600; }
 .notas ul { margin: 8px 0 0; padding-left: 20px; color: var(--ink2); font-size: 14px; }

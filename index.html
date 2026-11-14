@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Presupuesto del Estado uruguayo 2025: de dónde viene y a dónde va el dinero</title>
-  <meta name="description" content="Diagrama de Sankey interactivo del presupuesto 2025 del Estado uruguayo: recursos, fuentes de financiamiento y gasto por inciso. Datos abiertos del MEF y la Contaduría General de la Nación.">
+  <title>¿De dónde sale la torta y cómo se reparte? Presupuesto del Estado uruguayo 2025</title>
+  <meta name="description" content="Mira de dónde sale la plata del Estado uruguayo y cómo se reparte entre ministerios, escuelas, hospitales y más. Datos abiertos del presupuesto 2025.">
   <meta name="color-scheme" content="light dark">
   <link rel="stylesheet" href="css/styles.css">
   <!-- ECharts fijado a una versión. Para no depender del CDN, guardar el archivo en
@@ -18,9 +18,10 @@
 
   <header class="cabecera">
     <div class="wrap">
-      <p class="eyebrow">Presupuesto Nacional · Uruguay · 2025</p>
-      <h1>¿De dónde viene y a dónde va el dinero del Estado?</h1>
-      <p class="lead">Recursos proyectados y crédito vigente al 31/05/2025, a partir de los datos abiertos del Ministerio de Economía y Finanzas y la Contaduría General de la Nación. Se navega de lo general a lo específico con un clic.</p>
+      <p class="eyebrow">Presupuesto del Estado uruguayo · 2025</p>
+      <h1>¿De dónde sale la torta y cómo se reparte?</h1>
+      <p class="lead">Cada año el Estado junta plata con impuestos, tasas y otros cobros, y la reparte entre ministerios, escuelas, hospitales y más. Aquí puedes seguir ese recorrido. Empieza por lo general y haz clic para ver cada parte más de cerca.</p>
+      <p class="lead lead-datos">Los montos están en pesos uruguayos ($U). Los datos son abiertos y vienen del Ministerio de Economía y Finanzas (MEF) y la Contaduría General de la Nación.</p>
     </div>
   </header>
 
@@ -39,11 +40,12 @@
 
       <div class="card" id="grafico-card">
         <div id="migas-slot" class="migas-slot"></div>
+        <p id="guia" class="guia"></p>
         <div class="leyenda-fila">
-          <span class="ley-titulo">Fuente de financiamiento</span>
+          <span class="ley-titulo">De qué fondo sale la plata:</span>
           <ul id="leyenda" class="leyenda"></ul>
         </div>
-        <div id="grafico" role="img" aria-label="Diagrama de Sankey"></div>
+        <div id="grafico" role="img" aria-label="Diagrama de flujo de la plata"></div>
         <p id="pista" class="pista"></p>
         <details id="omitidos" class="omitidos" hidden></details>
       </div>
@@ -56,7 +58,7 @@
 
   <footer class="pie">
     <div class="wrap">
-      <p>Datos: Presupuesto Nacional 2025–2029, paquetes de datos abiertos del Ministerio de Economía y Finanzas y la Contaduría General de la Nación. Los montos están en pesos uruguayos corrientes. Proyecto de código abierto.</p>
+      <p>Datos: Presupuesto Nacional 2025–2029, paquetes de datos abiertos del Ministerio de Economía y Finanzas (MEF) y la Contaduría General de la Nación. Los montos están en pesos uruguayos ($U) corrientes. Proyecto de código abierto.</p>
     </div>
   </footer>
 

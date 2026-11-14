@@ -195,7 +195,7 @@
   function avisoSinGrafico(cont) {
     cont.style.height = 'auto';
     cont.replaceChildren(h('p', { class: 'aviso' },
-      'No se pudo cargar la biblioteca de gráficos (Apache ECharts). Los mismos datos están en las tablas de abajo.'));
+      'No se pudo cargar el gráfico (falta la biblioteca Apache ECharts). Los mismos datos están en las tablas de abajo.'));
   }
 
   function renderLeyenda(spec) {
@@ -210,7 +210,7 @@
     const suma = spec.omitidos.reduce((a, o) => a + o.valor, 0);
     det.hidden = false;
     det.replaceChildren(
-      h('summary', {}, `${n} flujo${n === 1 ? '' : 's'} demasiado pequeño${n === 1 ? '' : 's'} para dibujarse (suman ${M.fmtMonto(suma)})`),
+      h('summary', {}, `${n} movimiento${n === 1 ? '' : 's'} de plata ${n === 1 ? 'es' : 'son'} muy chico${n === 1 ? '' : 's'} para dibujarse (en total, ${M.fmtMonto(suma)})`),
       h('ul', {}, spec.omitidos.map((o) => h('li', {}, `${o.origen} → ${o.destino}: ${M.fmtMonto(o.valor)}`))));
   }
 
@@ -230,11 +230,16 @@
 
     const hayOtros = spec.nodes.some((n) => n.kind === 'otros');
     $('pista').textContent =
-      'Clic en un nodo con › para profundizar, o en un nombre de las tablas. El color de los flujos indica la fuente de financiamiento.' +
-      (hayOtros ? ' «Otros» agrupa los elementos menores; el detalle completo está en la tabla.' : '');
-    const quien = v.tipo === 'general' ? 'la vista general' : v.nodo.nombre;
+      'Haz clic en un bloque con › para ver qué hay adentro, o en un nombre de las tablas de abajo. Pasa el cursor (o toca) para ver el monto exacto.' +
+      (hayOtros ? ' «Otros» junta los elementos más chicos; la lista completa está en la tabla.' : '');
+    $('guia').textContent = v.tipo === 'general'
+      ? 'Cómo leerlo: la plata va de izquierda a derecha. Cuanto más ancha la franja, más plata. El color muestra de qué fondo sale.'
+      : (v.arbol === 'gasto'
+        ? 'Cómo leerlo: a la izquierda, de qué fondos sale la plata. A la derecha, en qué se reparte. Cuanto más ancha la franja, más plata.'
+        : 'Cómo leerlo: a la izquierda, de qué se compone este ingreso. A la derecha, a qué fondo va. Cuanto más ancha la franja, más plata.');
+    const quien = v.tipo === 'general' ? 'el panorama completo' : v.nodo.nombre;
     cont.setAttribute('aria-label',
-      `Diagrama de Sankey de ${quien}. Los mismos datos están en las tablas siguientes.`);
+      `Diagrama de flujo de la plata: ${quien}. Los mismos datos están en las tablas siguientes.`);
 
     if (!window.echarts) { avisoSinGrafico(cont); return; }
     try {
@@ -283,9 +288,9 @@
 
   function tileTipos(tipos) {
     return h('div', { class: 'tile' },
-      h('div', { class: 'tile-l' }, 'Tipo de gasto'),
+      h('div', { class: 'tile-l' }, 'En qué se gasta'),
       h('div', { class: 'tipos' }, tipos.map((t) =>
-        h('div', { class: 'tipo', title: `${t.tipo}: ${M.fmtMonto(t.valor)}` },
+        h('div', { class: 'tipo', title: `${t.tipo} (en los datos: ${t.oficial}): ${M.fmtMonto(t.valor)}` },
           h('span', { class: 'tipo-n' }, t.tipo),
           h('span', { class: 'tipo-p' }, M.fmtPct(t.pct)),
           h('span', { class: 'tipo-b' }, h('i', { style: `width:${(t.pct * 100).toFixed(1)}%` }))))));
@@ -294,10 +299,10 @@
   function textoDescripcion(r) {
     if (r.nHijos) {
       return r.esGasto
-        ? `Cómo se financia (por fuente de financiamiento) y cómo se distribuye entre ${r.nHijos} ${r.nivelSiguientePlural}.`
-        : `De qué ${r.nivelSiguientePlural} se compone y a qué fuente de financiamiento se asigna cada parte (${r.nHijos}).`;
+        ? `A la izquierda, de qué fondos sale esta plata. A la derecha, cómo se reparte entre ${r.nHijos} ${r.nivelSiguientePlural}.`
+        : `A la izquierda, de qué se compone este ingreso (${r.nHijos} ${r.nivelSiguientePlural}). A la derecha, a qué fondo va cada parte.`;
     }
-    return 'Es el nivel más detallado: no tiene subdivisiones. Se muestra su fuente de financiamiento.';
+    return 'Es el nivel más detallado: ya no se divide más. Se muestra de qué fondos sale la plata.';
   }
 
   // ------------------------------------------------------------ tablas
@@ -326,10 +331,10 @@
     const tbody = h('tbody');
     const cabeza = h('tr', {},
       h('th', { scope: 'col' }, columnaNombre),
-      conClasif ? h('th', { scope: 'col', class: 'col-clas' }, 'Clasificación') : null,
+      conClasif ? h('th', { scope: 'col', class: 'col-clas' }, 'Grupo') : null,
       h('th', { scope: 'col', class: 'num' }, 'Monto'),
       h('th', { scope: 'col', class: 'num' }, pctEtiqueta),
-      h('th', { scope: 'col', class: 'col-fuentes' }, 'Fuentes de financiamiento'));
+      h('th', { scope: 'col', class: 'col-fuentes' }, 'De qué fondos sale'));
     const mas = h('p', { class: 'mas' });
     let mostradas = 0;
 
@@ -361,13 +366,13 @@
 
   function tablaFuentesNodo(filas) {
     return h('section', { class: 'tabla-sec' },
-      h('h3', {}, 'Fuentes de financiamiento'),
+      h('h3', {}, 'De qué fondos sale la plata'),
       h('div', { class: 'tabla-wrap' }, h('table', { class: 'tabla' },
-        h('caption', { class: 'sr-only' }, 'Fuentes de financiamiento'),
+        h('caption', { class: 'sr-only' }, 'De qué fondos sale la plata'),
         h('thead', {}, h('tr', {},
-          h('th', { scope: 'col' }, 'Fuente'),
+          h('th', { scope: 'col' }, 'Fondo'),
           h('th', { scope: 'col', class: 'num' }, 'Monto'),
-          h('th', { scope: 'col', class: 'num' }, '% de este nodo'))),
+          h('th', { scope: 'col', class: 'num' }, 'Parte del total'))),
         h('tbody', {}, filas.map((f) => h('tr', {},
           h('th', { scope: 'row' }, celdaFuente(f.codigo, f.nombre)),
           h('td', { class: 'num', title: M.fmtCompleto(f.valor) }, M.fmtMonto(f.valor)),
@@ -376,15 +381,15 @@
 
   function tablaPuente(filas) {
     return h('section', { class: 'tabla-sec' },
-      h('h3', {}, 'Fuentes de financiamiento: recursos y gasto'),
+      h('h3', {}, 'Cada fondo: lo que entra y lo que sale'),
       h('p', { class: 'tabla-nota' },
-        'La diferencia compara los recursos proyectados con el crédito vigente de cada fuente. No equivale por sí sola a déficit.'),
+        'Entra lo que se espera cobrar y sale lo que se puede gastar con ese fondo. La diferencia no es el déficit oficial.'),
       h('div', { class: 'tabla-wrap' }, h('table', { class: 'tabla' },
-        h('caption', { class: 'sr-only' }, 'Fuentes de financiamiento: recursos, gasto y diferencia'),
+        h('caption', { class: 'sr-only' }, 'Cada fondo: lo que entra, lo que sale y la diferencia'),
         h('thead', {}, h('tr', {},
-          h('th', { scope: 'col' }, 'Fuente'),
-          h('th', { scope: 'col', class: 'num' }, 'Recursos'),
-          h('th', { scope: 'col', class: 'num' }, 'Gasto'),
+          h('th', { scope: 'col' }, 'Fondo'),
+          h('th', { scope: 'col', class: 'num' }, 'Entra (lo que se cobra)'),
+          h('th', { scope: 'col', class: 'num' }, 'Sale (lo que se gasta)'),
           h('th', { scope: 'col', class: 'num' }, 'Diferencia'))),
         h('tbody', {}, filas.map((f) => h('tr', {},
           h('th', { scope: 'row' }, celdaFuente(f.codigo, f.nombre)),
@@ -400,12 +405,13 @@
       const g = M.filasGeneral(state.ov);
       cont.replaceChildren(
         tablaRanking({
-          titulo: 'Gasto por inciso', nota: 'Todos los incisos, de mayor a menor. Clic en un nombre para ver su detalle.',
-          filas: g.incisos, columnaNombre: 'Inciso', pctEtiqueta: '% del gasto total', conClasif: true,
+          titulo: 'A dónde va la plata, organismo por organismo', nota: 'Del que más recibe al que menos. Haz clic en un nombre para ver su detalle.',
+          filas: g.incisos, columnaNombre: 'Organismo (inciso)', pctEtiqueta: 'Parte del gasto total', conClasif: true,
         }),
         tablaRanking({
-          titulo: 'Recursos por capítulo', filas: g.capitulos, columnaNombre: 'Capítulo',
-          pctEtiqueta: '% de los recursos',
+          titulo: 'De dónde viene la plata', nota: 'Los tipos de ingreso, del que más aporta al que menos.',
+          filas: g.capitulos, columnaNombre: 'Tipo de ingreso',
+          pctEtiqueta: 'Parte de lo que se cobra',
         }),
         tablaPuente(g.fuentes));
       return;
@@ -415,8 +421,8 @@
     const filas = M.filasHijos(v);
     if (filas.length) {
       secciones.push(tablaRanking({
-        titulo: r.nivelSiguiente ? r.nivelSiguiente[0].toUpperCase() + r.nivelSiguiente.slice(1) + ' (de mayor a menor)' : 'Detalle',
-        filas, columnaNombre: r.nivelSiguiente || 'Nombre', pctEtiqueta: '% de este nodo',
+        titulo: r.nivelSiguientePlural ? r.nivelSiguientePlural[0].toUpperCase() + r.nivelSiguientePlural.slice(1) + ', del que más al que menos' : 'Detalle',
+        filas, columnaNombre: r.nivelSiguiente || 'Nombre', pctEtiqueta: 'Parte de este total',
       }));
     }
     secciones.push(tablaFuentesNodo(M.filasFuentesDeNodo(state.ov, v.nodo)));
@@ -425,14 +431,31 @@
 
   function renderNotas() {
     const m = state.ov.meta;
-    $('notas').replaceChildren(h('details', {},
-      h('summary', {}, 'Sobre los datos y cómo leer el gráfico'),
-      h('ul', {},
-        h('li', {}, `Recursos: ${m.recursos}.`),
-        h('li', {}, `Gasto: ${m.gasto}.`),
-        h('li', {}, `Unidad: ${m.unidad}.`),
-        m.notas.map((t) => h('li', {}, t)),
-        h('li', {}, 'El color de los flujos indica la fuente de financiamiento. Los nodos en gris no tienen color propio.'))));
+    const palabras = [
+      ['Recursos', 'La plata que el Estado espera cobrar en el año: impuestos, tasas, multas y otros ingresos.'],
+      ['Crédito vigente', 'La plata que ya está autorizada para gastar. No es lo que ya se gastó.'],
+      ['Fondo (fuente de financiamiento)', 'De qué “bolsillo” sale la plata. Cada color del gráfico es un fondo.'],
+      ['Rentas Generales (“fondo común”)', 'La plata que puede usarse en cualquier gasto.'],
+      ['Afectación especial (“destino fijo”)', 'Plata que una ley reserva para un fin determinado.'],
+      ['Inciso', 'Cada organismo grande del presupuesto: un ministerio, la Presidencia, la Universidad, el Poder Judicial, etc.'],
+      ['Unidad ejecutora', 'Una oficina o dirección dentro de un inciso, con su propio presupuesto.'],
+      ['Programa', 'Un objetivo concreto en el que se gasta, por ejemplo “Seguridad pública”.'],
+      ['Rubro del gasto', 'La compra o el pago puntual: un sueldo, un alquiler, un equipo.'],
+      ['Mil millones', 'Mil veces un millón. Por ejemplo, 1,0 mil millones son 1.000.000.000 de pesos.'],
+    ];
+    $('notas').replaceChildren(
+      h('details', {},
+        h('summary', {}, 'Palabras que conviene conocer'),
+        h('dl', { class: 'glosario' }, palabras.flatMap(([t, d]) => [h('dt', {}, t), h('dd', {}, d)]))),
+      h('details', {},
+        h('summary', {}, 'Sobre los datos (para quien quiere más detalle)'),
+        h('ul', {},
+          h('li', {}, `Recursos: ${m.recursos}.`),
+          h('li', {}, `Gasto: ${m.gasto}.`),
+          h('li', {}, `Unidad: ${m.unidad}.`),
+          m.notas.map((t) => h('li', {}, t)),
+          h('li', {}, 'Los nombres simples de los fondos y de los grupos de organismos son una traducción nuestra. Al pasar el cursor por un nodo se ve su nombre oficial.'),
+          h('li', {}, 'El color de las franjas indica el fondo del que sale la plata. Lo que está en gris no tiene color propio.'))));
   }
 
   // ------------------------------------------------------------- vista
@@ -442,28 +465,34 @@
     let titulo, contexto, sub, tiles, titDoc;
 
     if (v.tipo === 'general') {
-      titulo = 'Vista general: recursos, fuentes y gasto';
-      contexto = 'Vista general';
-      sub = 'Recursos proyectados para 2025 → fuente de financiamiento → gasto por clasificación de inciso (crédito vigente al 31/05/2025).';
+      titulo = 'El panorama completo';
+      contexto = 'Inicio';
+      sub = 'Primero se junta la plata (izquierda), después va a un fondo (centro) y al final se reparte (derecha). Haz clic en un bloque con › para ver qué hay adentro.';
+      const dif = ov.totales.diferencia;
       tiles = [
-        tile('Recursos proyectados 2025', M.fmtMonto(ov.totales.recursos), null, M.fmtCompleto(ov.totales.recursos)),
-        tile('Gasto: crédito vigente al 31/05/2025', M.fmtMonto(ov.totales.gasto), null, M.fmtCompleto(ov.totales.gasto)),
-        tile('Recursos menos gasto', M.fmtMonto(ov.totales.diferencia), 'No equivale por sí sola a déficit.', M.fmtCompleto(ov.totales.diferencia)),
+        tile('Lo que se espera cobrar en 2025', M.fmtMonto(ov.totales.recursos), 'Impuestos, tasas, multas y otros cobros.', M.fmtCompleto(ov.totales.recursos)),
+        tile('Lo que se puede gastar', M.fmtMonto(ov.totales.gasto), 'Plata ya autorizada a mayo de 2025 (crédito vigente).', M.fmtCompleto(ov.totales.gasto)),
+        tile('Lo que falta o sobra', M.fmtMonto(dif),
+          (dif < 0 ? 'Se puede gastar más de lo que se espera cobrar.' : 'Se espera cobrar más de lo que se puede gastar.') + ' No es el déficit oficial: ese se calcula de otra forma.',
+          M.fmtCompleto(dif)),
       ];
-      renderMigas([{ texto: 'Vista general', hash: null }], true);
-      titDoc = 'Presupuesto del Estado uruguayo 2025: de dónde viene y a dónde va el dinero';
+      renderMigas([{ texto: 'Inicio', hash: null }], true);
+      titDoc = '¿De dónde sale la torta y cómo se reparte? Presupuesto del Estado uruguayo 2025';
     } else {
       const r = M.resumenNodo(ov, v);
       titulo = r.titulo;
       contexto = r.padre ? `${r.nivel} · ${r.padre}` : r.nivel;
-      sub = textoDescripcion(r);
+      sub = (r.ayuda ? r.ayuda + ' ' : '') + textoDescripcion(r);
       tiles = [
-        tile(r.esGasto ? 'Monto (crédito vigente)' : 'Monto proyectado', M.fmtMonto(r.valor), null, M.fmtCompleto(r.valor)),
-        tile('Participación', M.fmtPct(r.pctTotal), r.totalEtiqueta),
+        tile(r.esGasto ? 'Plata autorizada para gastar' : 'Lo que se espera cobrar', M.fmtMonto(r.valor), null, M.fmtCompleto(r.valor)),
+        tile('Qué parte es del total', M.fmtPct(r.pctTotal),
+          r.esGasto
+            ? `De cada $100 que se gastan, $${M.numEs(r.pctTotal * 100, 1)} van aquí.`
+            : `De cada $100 que se cobran, $${M.numEs(r.pctTotal * 100, 1)} vienen de aquí.`),
       ];
       if (r.tipos) tiles.push(tileTipos(r.tipos));
       renderMigas(M.migas(v), true);
-      titDoc = `${r.titulo} · Presupuesto 2025`;
+      titDoc = `${r.titulo} · ¿De dónde sale la torta y cómo se reparte?`;
     }
 
     $('contexto').textContent = contexto;
@@ -491,15 +520,15 @@
         ? 'Los navegadores bloquean la lectura de archivos locales. Desde la carpeta web/ se puede abrir un servidor con "python -m http.server 8000" y visitar http://localhost:8000.'
         : (e && e.message) || 'Intente nuevamente.',
       ' ',
-      h('a', { href: '#' }, 'Volver a la vista general')));
+      h('a', { href: '#' }, 'Volver al inicio')));
   }
 
   function mostrarNoEncontrado(id) {
     $('vista').hidden = true;
-    renderMigas([{ texto: 'Vista general', hash: '#' }, { texto: 'Vista no encontrada', hash: null }]);
+    renderMigas([{ texto: 'Inicio', hash: '#' }, { texto: 'Página no encontrada', hash: null }]);
     mostrarEstado(h('div', { class: 'aviso', role: 'alert' },
       `No existe la vista «${id}». Puede que el enlace sea antiguo. `,
-      h('a', { href: '#' }, 'Volver a la vista general')));
+      h('a', { href: '#' }, 'Volver al inicio')));
   }
 
   async function route() {
