@@ -93,3 +93,4 @@ body.cargando #lienzo { opacity: .55; transition: opacity .2s; }
 .controles button:hover, .controles button:focus-visible { border-color: #6fd0ff; outline: none; }
 #lienzo { cursor: grab; }
 @media (max-width: 760px) { .controles { bottom: 150px; right: 12px; } }
+.enlaces-pie { display: inline-flex; gap: 18px; flex-wrap: wrap; }

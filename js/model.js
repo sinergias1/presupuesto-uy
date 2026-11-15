@@ -588,6 +588,7 @@
     filasPersonas: filasPersonas,
     sueldoPrincipal: sueldoPrincipal,
     esc: esc,
+    nombreDe: nombreDe,
     fuenteSlot: fuenteSlot,
     fuenteNombre: fuenteNombre,
     esDrillable: esDrillable,
