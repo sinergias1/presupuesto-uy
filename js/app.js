@@ -89,6 +89,7 @@
     return data;
   }
   const cargarArchivo = async (archivo) => (await getJSON(BASE + archivo)).nodo;
+  const cargarCompras = (ref) => getJSON(BASE + ref);
 
   // ------------------------------------------------------------ ECharts
   function cargarScript(src) {
@@ -713,7 +714,7 @@
           h('span', {}, x.objeto, h('br'), h('small', {}, `${x.articulo} · N.º ${x.rid}`)),
           x.proveedor, x.fecha || '—',
           x.unidades ? `${M.numEs(x.unidades, 0)} ${(x.unidad || 'unidad').replace(/^unidad$/, x.unidades === 1 ? 'unidad' : 'unidades')}`.trim() : '—',
-          enlacesExternos(x.enlaces) || '—',
+          enlacesExternos(M.enlacesCompra(x.rid, !!x.estado)) || '—',
         ]),
       }));
     }
@@ -832,7 +833,7 @@
       if (r.comprasRubro) {
         tarjetas.push(tarjeta('Las compras de este rubro',
           `Abajo se ven las compras adjudicadas en 2025 (catálogo de compras estatales de ARCE): qué se compró y a qué proveedor. Adjudicar es decidir comprar; el pago puede llegar después. ` +
-          (r.comprasRubro.escalado ? 'Se adjudicó más que lo autorizado en este rubro, y se muestra hasta lo autorizado.' : 'Lo que no figura en el catálogo queda en “Resto sin detalle de compra”.')));
+          (r.comprasRubro.excede ? `Se adjudicó más (${$$(r.comprasRubro.adjudicado)}) que lo autorizado en este rubro (${$$(r.valor)}). Puede deberse a contratos que se pagan en varios años o a compras que se pagan desde otros rubros.` : 'Lo que no figura en el catálogo queda en “Resto sin detalle de compra”.')));
       }
       if (r.tipos && r.tipos.length) {
         const t = r.tipos[0];
@@ -999,7 +1000,7 @@
     try {
       const id = decodeURIComponent(location.hash.replace(/^#\/?/, '')).split('#')[0]; // ignora sufijos como #otros
       const vista = id
-        ? Object.assign({ tipo: 'nodo' }, await M.resolver(state.ov, id, cargarArchivo))
+        ? Object.assign({ tipo: 'nodo' }, await M.resolver(state.ov, id, cargarArchivo, cargarCompras))
         : { tipo: 'general' };
       if (token !== state.token) return;
       state.vista = vista;

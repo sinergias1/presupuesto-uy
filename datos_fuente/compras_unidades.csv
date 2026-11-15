@@ -1,2 +1,238 @@
 inciso,ue,buyer_name,buyer_id
+25,1,Administración Nacional de Educación Pública,Consejo Directivo Central
+25,2,Administración Nacional de Educación Pública,Consejo de Educación Inicial y Primaria
+25,3,Administración Nacional de Educación Pública,Consejo de Educación Secundaria
+25,4,Administración Nacional de Educación Pública,Consejo de Educación Técnico-Profesional
+25,5,Administración Nacional de Educación Pública,Consejo de Formación en Educación
+29,68,Administración de Servicios de Salud del Estado,Administración de Servicios de Salud del Estado
+29,87,Administración de Servicios de Salud del Estado,Asistencia Integral
+29,105,Administración de Servicios de Salud del Estado,Atencion de Urgencia Emergencia Prehospitalaria y Traslado.
+29,35,Administración de Servicios de Salud del Estado,Centro Aux. de Cardona y Florencio Sánchez
+29,73,Administración de Servicios de Salud del Estado,Centro Auxiliar Chuy
+29,34,Administración de Servicios de Salud del Estado,Centro Auxiliar de Bella Unión
+29,36,Administración de Servicios de Salud del Estado,Centro Auxiliar de Carmelo
+29,39,Administración de Servicios de Salud del Estado,Centro Auxiliar de Dolores
+29,91,Administración de Servicios de Salud del Estado,Centro Auxiliar de Guichón
+29,43,Administración de Servicios de Salud del Estado,Centro Auxiliar de Juan Lacaze
+29,47,Administración de Servicios de Salud del Estado,Centro Auxiliar de Nueva Helvecia
+29,90,Administración de Servicios de Salud del Estado,Centro Auxiliar de Nueva Palmira
+29,50,Administración de Servicios de Salud del Estado,Centro Auxiliar de Pando
+29,51,Administración de Servicios de Salud del Estado,Centro Auxiliar de Paso de los Toros
+29,53,Administración de Servicios de Salud del Estado,Centro Auxiliar de Rosario
+29,52,Administración de Servicios de Salud del Estado,Centro Auxiliar de Río Branco
+29,40,Administración de Servicios de Salud del Estado,Centro Auxiliar de Young
+29,62,Administración de Servicios de Salud del Estado,Centro Auxiliar de las Piedras
+29,15,Administración de Servicios de Salud del Estado,Centro Departamental de Artigas
+29,16,Administración de Servicios de Salud del Estado,Centro Departamental de Canelones
+29,17,Administración de Servicios de Salud del Estado,Centro Departamental de Cerro Largo
+29,19,Administración de Servicios de Salud del Estado,Centro Departamental de Durazno
+29,20,Administración de Servicios de Salud del Estado,Centro Departamental de Flores
+29,21,Administración de Servicios de Salud del Estado,Centro Departamental de Florida
+29,22,Administración de Servicios de Salud del Estado,Centro Departamental de Lavalleja
+29,102,Administración de Servicios de Salud del Estado,Centro Departamental de Maldonado
+29,24,Administración de Servicios de Salud del Estado,Centro Departamental de Paysandú
+29,25,Administración de Servicios de Salud del Estado,Centro Departamental de Rivera
+29,27,Administración de Servicios de Salud del Estado,Centro Departamental de Rocha
+29,26,Administración de Servicios de Salud del Estado,Centro Departamental de Río Negro
+29,28,Administración de Servicios de Salud del Estado,Centro Departamental de Salto
+29,18,Administración de Servicios de Salud del Estado,Centro Departamental de Salud Pública de Colonia
+29,29,Administración de Servicios de Salud del Estado,Centro Departamental de San José
+29,30,Administración de Servicios de Salud del Estado,Centro Departamental de Soriano
+29,31,Administración de Servicios de Salud del Estado,Centro Departamental de Tacuarembó
+29,32,Administración de Servicios de Salud del Estado,Centro Departamental de Treinta y Tres
+29,4,Administración de Servicios de Salud del Estado,Centro Hospitalario  Pereira Rossell
+29,103,Administración de Servicios de Salud del Estado,Centro de Rehabilitación Médico Ocupacional y Sicosocial
+29,78,Administración de Servicios de Salud del Estado,Ctro Inf.y Ref.Nal de Red Drogas
+29,86,Administración de Servicios de Salud del Estado,Direc.Sistema de Atenciòn Integral Personas Privad. Libertad
+29,63,Administración de Servicios de Salud del Estado,Hospital -Centro Geriátrico Dr. Luis Piñeiro del Campo
+29,12,Administración de Servicios de Salud del Estado,Hospital Dr. Gustavo Saint Bois
+29,76,Administración de Servicios de Salud del Estado,Hospital Español
+29,88,Administración de Servicios de Salud del Estado,Hospital Especializado de Ojos
+29,5,Administración de Servicios de Salud del Estado,Hospital Maciel
+29,6,Administración de Servicios de Salud del Estado,Hospital Pasteur
+29,7,Administración de Servicios de Salud del Estado,Hospital Vilardebó
+29,54,Administración de Servicios de Salud del Estado,Hospital de San Carlos
+29,77,Administración de Servicios de Salud del Estado,Hospital del Cerro
+29,8,Administración de Servicios de Salud del Estado,Instituto Nacional del Cáncer
+29,10,Administración de Servicios de Salud del Estado,Instituto Nal.de Reumatalogía Prof.Dr. Moisés Mizraji
+29,64,Administración de Servicios de Salud del Estado,Laboratorio Químico Industrial Francisco Dorrego
+29,2,Administración de Servicios de Salud del Estado,Red de Atención Primaria Area Metropolitana
+29,79,Administración de Servicios de Salud del Estado,Red de Atención Primaria de Artigas
+29,57,Administración de Servicios de Salud del Estado,Red de Atención Primaria de Canelones
+29,80,Administración de Servicios de Salud del Estado,Red de Atención Primaria de Cerro Largo
+29,48,Administración de Servicios de Salud del Estado,Red de Atención Primaria de Colonia
+29,59,Administración de Servicios de Salud del Estado,Red de Atención Primaria de Durazno
+29,81,Administración de Servicios de Salud del Estado,Red de Atención Primaria de Flores
+29,58,Administración de Servicios de Salud del Estado,Red de Atención Primaria de Florida
+29,42,Administración de Servicios de Salud del Estado,Red de Atención Primaria de Lavalleja
+29,49,Administración de Servicios de Salud del Estado,Red de Atención Primaria de Maldonado
+29,41,Administración de Servicios de Salud del Estado,Red de Atención Primaria de Paysandú
+29,46,Administración de Servicios de Salud del Estado,Red de Atención Primaria de Rivera
+29,44,Administración de Servicios de Salud del Estado,Red de Atención Primaria de Rocha
+29,82,Administración de Servicios de Salud del Estado,Red de Atención Primaria de Río Negro
+29,84,Administración de Servicios de Salud del Estado,Red de Atención Primaria de Salto
+29,45,Administración de Servicios de Salud del Estado,Red de Atención Primaria de San José
+29,83,Administración de Servicios de Salud del Estado,Red de Atención Primaria de Soriano
+29,55,Administración de Servicios de Salud del Estado,Red de Atención Primaria de Tacuarembó
+29,61,Administración de Servicios de Salud del Estado,Red de Atención Primaria de Treinta y Tres
+29,9,Administración de Servicios de Salud del Estado,Servicio Nacional de Ortopedia y Traumatología
+29,66,Administración de Servicios de Salud del Estado,Servicio Nacional de Sangre
+18,1,Corte Electoral,Corte Electoral
+24,24,Diversos Créditos,Dir. Gral. de Secretaría (M.E.F.)
+24,7,Diversos Créditos,Ministerio de Agricultura y Pesca
+24,2,Diversos Créditos,Presidencia de la República
+33,1,Fiscalia General de la Nación,Fiscalia General de la Nación
+35,1,Instituto Nacional de Inclusion Social Adolescente,Instituto Nacional de Inclusion Social Adolescente
+32,1,Instituto Uruguayo de Meteorología,Instituto Uruguayo de Meteorologia INUMET
+27,1,Instituto del Niño y Adolescente del Uruguay,Instituto del Niño y Adolescente del Uruguay INAU
+34,1,Junta de Transparencia y Etica Publica,Junta de Transparencia y Etica Publica
+36,1,Ministerio de Ambiente,Dirección General de Secretaría
+36,3,Ministerio de Ambiente,Dirección Nacional de Aguas (DINAGUA)
+36,4,Ministerio de Ambiente,Dirección Nacional de Biodiversidad y Servicios Ecosistémico
+36,2,Ministerio de Ambiente,Dirección Nacional de Calidad y Evaluación Ambiental
+36,5,Ministerio de Ambiente,Dirección Nacional de Cambio Climático
+3,18,Ministerio de Defensa Nacional,Comando General de la Armada
+3,23,Ministerio de Defensa Nacional,Comando General de la Fuerza Aérea
+3,4,Ministerio de Defensa Nacional,Comando General del Ejército
+3,1,Ministerio de Defensa Nacional,Dirección General de Secretaría de Estado
+3,34,Ministerio de Defensa Nacional,Dirección General de los Servicios
+3,41,Ministerio de Defensa Nacional,Dirección Nacional Aviación Civil e Infraestructura Aeronáut
+3,33,Ministerio de Defensa Nacional,Dirección Nacional de Sanidad de las Fuerzas Armadas
+3,3,Ministerio de Defensa Nacional,Estado Mayor de la Defensa
+3,35,Ministerio de Defensa Nacional,Servicio de Retiros y Pensiones de las Fuerzas Armadas
+15,1,Ministerio de Desarrollo Social,Direc. General de Secretaría.
+15,6,Ministerio de Desarrollo Social,Dirección Nacional de Protección Social
+15,2,Ministerio de Desarrollo Social,Dirección de Desarrollo Social
+15,3,Ministerio de Desarrollo Social,Instituto Nacional de Alimentación
+5,3,Ministerio de Economía y Finanzas,Auditoría Interna de la Nación
+5,2,Ministerio de Economía y Finanzas,Contaduría General de la Nación
+5,1,Ministerio de Economía y Finanzas,Dir. Gral. Secretaría del  Mrio. de Economía y Finanzas
+5,5,Ministerio de Economía y Finanzas,Dirección General Impositiva
+5,7,Ministerio de Economía y Finanzas,Dirección Nacional de Aduanas
+5,9,Ministerio de Economía y Finanzas,Dirección Nacional de Catastro
+5,8,Ministerio de Economía y Finanzas,Dirección Nacional de Loterías y Quinielas
+5,6,Ministerio de Economía y Finanzas,Dirección Nacional de Zonas Francas
+5,4,Ministerio de Economía y Finanzas,Tesorería General de la Nación
+11,7,Ministerio de Educación y Cultura,Archivo General de la Nación
+11,24,Ministerio de Educación y Cultura,Canal 5 - Servicio de Televisión Nacional
+11,8,Ministerio de Educación y Cultura,Comisión del Patrimonio Cultural de la Nación
+11,18,Ministerio de Educación y Cultura,Dirección General de Registros
+11,1,Ministerio de Educación y Cultura,Dirección General de Secretaría
+11,15,Ministerio de Educación y Cultura,Dirección General de la Biblioteca Nacional
+11,21,Ministerio de Educación y Cultura,Dirección General del Registro de Estado Civil
+11,3,Ministerio de Educación y Cultura,Dirección Nacional de Cultura
+11,12,Ministerio de Educación y Cultura,"Dirección Nacional de Innovación, Ciencia y Tecnología"
+11,2,Ministerio de Educación y Cultura,Dirección de Educación
+11,17,Ministerio de Educación y Cultura,Fiscalías de Gobierno de Primer y Segundo Turno
+11,11,Ministerio de Educación y Cultura,Instituto de Investigaciones Biológicas Clemente Estable
+11,20,Ministerio de Educación y Cultura,Procuraduría Estado en Contencioso-Administrativo
+7,2,"Ministerio de Ganadería, Agricultura y Pesca",Dir.Nal. de Rec.Acuáticos(Ex-INAPE)
+7,8,"Ministerio de Ganadería, Agricultura y Pesca",Dirección General Forestal
+7,9,"Ministerio de Ganadería, Agricultura y Pesca",Dirección General de Bioseguridad e Inocuidad Alimentaria
+7,3,"Ministerio de Ganadería, Agricultura y Pesca",Dirección General de Recursos Naturales Renovables
+7,1,"Ministerio de Ganadería, Agricultura y Pesca",Dirección General de Secretaría
+7,4,"Ministerio de Ganadería, Agricultura y Pesca",Dirección General de Servicios Agrícolas
+7,5,"Ministerio de Ganadería, Agricultura y Pesca",Dirección General de Servicios Ganaderos
+7,6,"Ministerio de Ganadería, Agricultura y Pesca",Dirección General de la Granja
+7,7,"Ministerio de Ganadería, Agricultura y Pesca",Dirección Gral .Desarr.Rural
+8,11,"Ministerio de Industria, Energía  y Minería",Autoridad Reguladora Nacional en Radioprotección
+8,10,"Ministerio de Industria, Energía  y Minería",Dir. Nal. de Telecom.y Serv.comun.audiovisual
+8,1,"Ministerio de Industria, Energía  y Minería",Dirección General de Secretaría
+8,6,"Ministerio de Industria, Energía  y Minería",Dirección Nacional de Aplicaciones de Tecnología Nuclear
+8,9,"Ministerio de Industria, Energía  y Minería",Dirección Nacional de Artesanías y Pequeñas y Medianas Empre
+8,8,"Ministerio de Industria, Energía  y Minería",Dirección Nacional de Energía
+8,2,"Ministerio de Industria, Energía  y Minería",Dirección Nacional de Industrias
+8,7,"Ministerio de Industria, Energía  y Minería",Dirección Nacional de Minería y Geología
+8,4,"Ministerio de Industria, Energía  y Minería",Dirección Nacional de la Propiedad Industrial
+6,1,Ministerio de Relaciones Exteriores,Ministerio de Relaciones Exteriores
+12,106,Ministerio de Salud Pública,Dirección General de Coordinación
+12,108,Ministerio de Salud Pública,Dirección General de Fiscalización
+12,1,Ministerio de Salud Pública,Dirección General de Secretaría
+12,103,Ministerio de Salud Pública,Dirección General de la Salud
+12,104,Ministerio de Salud Pública,"Inst.Nal.Donac.yTrasp.Células,Tej.y Organos"
+13,5,Ministerio de Trabajo y Seguridad Social,Direc.Nal de Seg.Social
+13,1,Ministerio de Trabajo y Seguridad Social,Dirección General de Secretaría
+13,4,Ministerio de Trabajo y Seguridad Social,Dirección Nacional de Coordinación en el Interior
+13,3,Ministerio de Trabajo y Seguridad Social,Dirección Nacional de Empleo
+13,2,Ministerio de Trabajo y Seguridad Social,Dirección Nacional de Trabajo
+13,7,Ministerio de Trabajo y Seguridad Social,Inspección General del Trabajo y de la Seguridad Social
+10,1,Ministerio de Transporte y Obras Públicas,Despacho de la Secretaría  Estado y Oficinas Dependientes
+10,5,Ministerio de Transporte y Obras Públicas,Dirección Nacional de Arquitectura
+10,4,Ministerio de Transporte y Obras Públicas,Dirección Nacional de Hidrografía
+10,6,Ministerio de Transporte y Obras Públicas,Dirección Nacional de Topografía
+10,7,Ministerio de Transporte y Obras Públicas,Dirección Nacional de Transporte
+10,3,Ministerio de Transporte y Obras Públicas,Dirección Nacional de Vialidad
+9,1,Ministerio de Turismo,Dirección General de Secretaría
+9,3,Ministerio de Turismo,Dirección Nacional de Turismo
+14,1,Ministerio de Vivienda y Ordenamiento Territorial,Dirección General de Secretaría
+14,6,Ministerio de Vivienda y Ordenamiento Territorial,Dirección Nacional de Integración Social y Urbana
+14,3,Ministerio de Vivienda y Ordenamiento Territorial,Dirección Nacional de Ordenamiento Territorial
+14,2,Ministerio de Vivienda y Ordenamiento Territorial,Dirección Nacional de Vivienda
+4,25,Ministerio del Interior,Dirección Nacional de Asistencia y Seguridad Social Policial
+4,30,Ministerio del Interior,Dirección Nacional de Asuntos Sociales
+4,24,Ministerio del Interior,Dirección Nacional de Bomberos
+4,31,Ministerio del Interior,Dirección Nacional de Identificación Civil
+4,2,Ministerio del Interior,Dirección Nacional de Migración
+4,23,Ministerio del Interior,Dirección Nacional de Policía Caminera
+4,28,Ministerio del Interior,Dirección Nacional de Policía Científica
+4,30,Ministerio del Interior,Dirección Nacional de Sanidad Policial
+4,35,Ministerio del Interior,Dirección Nacional de la Seguridad Rural
+4,29,Ministerio del Interior,Escuela Nacional de Policía
+4,33,Ministerio del Interior,Guardia Republicana
+4,26,Ministerio del Interior,Instituto Nacional de Rehabilitación
+4,5,Ministerio del Interior,Jefatura de Policía de Artigas
+4,6,Ministerio del Interior,Jefatura de Policía de Canelones
+4,7,Ministerio del Interior,Jefatura de Policía de Cerro Largo
+4,8,Ministerio del Interior,Jefatura de Policía de Colonia
+4,9,Ministerio del Interior,Jefatura de Policía de Durazno
+4,10,Ministerio del Interior,Jefatura de Policía de Flores
+4,11,Ministerio del Interior,Jefatura de Policía de Florida
+4,12,Ministerio del Interior,Jefatura de Policía de Lavalleja
+4,13,Ministerio del Interior,Jefatura de Policía de Maldonado
+4,4,Ministerio del Interior,Jefatura de Policía de Montevideo
+4,14,Ministerio del Interior,Jefatura de Policía de Paysandú
+4,16,Ministerio del Interior,Jefatura de Policía de Rivera
+4,17,Ministerio del Interior,Jefatura de Policía de Rocha
+4,15,Ministerio del Interior,Jefatura de Policía de Río Negro
+4,18,Ministerio del Interior,Jefatura de Policía de Salto
+4,19,Ministerio del Interior,Jefatura de Policía de San José
+4,20,Ministerio del Interior,Jefatura de Policía de Soriano
+4,21,Ministerio del Interior,Jefatura de Policía de Tacuarembó
+4,22,Ministerio del Interior,Jefatura de Policía de Treinta y Tres
 4,1,Ministerio del Interior,Secretaría del Ministerio del Interior
+16,101,Poder Judicial,Poder Judicial
+1,003,Poder Legislativo,Comisión Administrativa del Poder Legislativo
+1,002,Poder Legislativo,Cámara de Representantes
+1,001,Poder Legislativo,Cámara de Senadores
+2,10,Presidencia de la República,Agen.p/Des.del Gob.de Gest.Electr.y Soc.Inform.y del Conoc.
+2,3,Presidencia de la República,Casa Militar
+2,7,Presidencia de la República,Instituto Nacional de EstadÍstica
+2,8,Presidencia de la República,Oficina Nacional del Servicio Civil
+2,4,Presidencia de la República,Oficina de Planeamiento y Presupuesto
+2,1,Presidencia de la República,Presidencia de la República y Unidades Dependientes
+2,11,Presidencia de la República,Secretaría Nacional del Deporte
+17,1,Tribunal de Cuentas,Tribunal de Cuentas
+19,1,Tribunal de lo  Contencioso  Administrativo,Tribunal de lo Contencioso Administrativo
+31,1,Universidad Tecnológica del Uruguay,Universidad Tecnológica del Uruguay
+26,30,Universidad de la República,Centro Universitario Regional Este
+26,31,Universidad de la República,Centro Universitario Regional Litoral Norte
+26,33,Universidad de la República,Centro Universitario Regional Noreste
+26,2,Universidad de la República,Facultad de Agronomía
+26,3,Universidad de la República,Facultad de Arquitectura
+26,3,Universidad de la República,"Facultad de Arquitectura, Diseño y Urbanismo"
+26,16,Universidad de la República,Facultad de Artes
+26,24,Universidad de la República,Facultad de Ciencias
+26,4,Universidad de la República,Facultad de Ciencias Económicas y de Administración
+26,23,Universidad de la República,Facultad de Ciencias Sociales
+26,5,Universidad de la República,Facultad de Derecho
+26,22,Universidad de la República,Facultad de Enfermería
+26,12,Universidad de la República,Facultad de Humanidades y Ciencias de la Educación
+26,25,Universidad de la República,Facultad de Información y Comunicación
+26,6,Universidad de la República,Facultad de Ingenieria
+26,7,Universidad de la República,Facultad de Medicina
+26,9,Universidad de la República,Facultad de Odontología
+26,19,Universidad de la República,Facultad de Psicología
+26,10,Universidad de la República,Facultad de Química
+26,11,Universidad de la República,Facultad de Veterinaria
+26,8,Universidad de la República,Instituto de Higiene
+26,1,Universidad de la República,Oficinas Centrales y Escuelas Dependientes de Rectorado

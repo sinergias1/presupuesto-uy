@@ -8,14 +8,15 @@ Usa dos tablas curadas a mano (se revisan en GitHub):
   datos_fuente/compras_unidades.csv  unidad compradora de la base → inciso / unidad ejecutora
   datos_fuente/compras_reglas.csv    artículo comprado (regex) → rubro del presupuesto
 
-Reglas de cuadratura (el árbol exige que los hijos sumen al padre):
-  * las compras de un rubro nunca superan su crédito: si lo superan se escalan hacia abajo
-    y se deja constancia (`compras.escalado`); lo que no se compró figura como
-    "Resto sin detalle de compra";
-  * un rubro presente en varios programas recibe las compras en proporción a su crédito.
+Reglas de cuadratura:
+  * los montos de las compras son los REALES (no se recortan). Lo que el rubro tiene autorizado y
+    no aparece comprado figura como "Resto sin detalle de compra";
+  * si se adjudicó más que el crédito del rubro (contratos de varios años, otros rubros que pagan,
+    etc.), el rubro queda marcado `compras.excede` y los hijos suman más que el padre;
+  * un rubro presente en varios programas llena primero el de mayor crédito.
 """
 from __future__ import annotations
-import argparse, csv, json, re, sqlite3, unicodedata
+import argparse, csv, json, re, sqlite3, unicodedata, zlib
 from collections import defaultdict
 from pathlib import Path
 
@@ -61,6 +62,11 @@ def enlaces_compra(rid, con_resolucion):
     return e
 
 
+def pslug(nombre):
+    """Id estable de un proveedor: nombre acotado + código corto, porque dos nombres largos pueden empezar igual."""
+    return f"{slug(nombre)[:28]}-{zlib.crc32(nombre.encode()) & 0xffff:04x}"
+
+
 def repartir(valor: int, pesos: dict) -> dict:
     """Reparte `valor` entero según `pesos` (resto mayor), sumando exacto."""
     tot = sum(pesos.values())
@@ -75,7 +81,7 @@ def repartir(valor: int, pesos: dict) -> dict:
 
 def limpiar(nodo):
     """Quita lo colgado en una corrida anterior."""
-    nodo.pop("compras_sin_monto", None)
+    nodo.pop("compras_sin_monto", None); nodo.pop("compras_ref", None)
     for h in nodo.get("hijos", []) or []:
         limpiar(h)
     if nodo.get("hijos") and nodo["hijos"][-1].get("compras_resto"):
@@ -83,6 +89,16 @@ def limpiar(nodo):
     if nodo.get("compras") and nodo["compras"] is not True:
         for k in ("compras", "hijos", "nivel_hijos"):
             nodo.pop(k, None)
+
+
+def buscar(nodo, id_):
+    """Nodo con ese id dentro del subárbol (los ids son jerárquicos: se baja por prefijo)."""
+    if nodo["id"] == id_:
+        return nodo
+    for h in nodo.get("hijos", []) or []:
+        if id_ == h["id"] or id_.startswith(h["id"] + "/"):
+            return buscar(h, id_)
+    raise KeyError(id_)
 
 
 def hojas_rubro(ue):
@@ -99,14 +115,18 @@ def hojas_rubro(ue):
 
 def cargar_reglas():
     with open(RAIZ / "datos_fuente/compras_reglas.csv", encoding="utf-8") as f:
-        return [(re.compile(r["patron"]), r["rubro"], r["tipo"]) for r in csv.DictReader(f)]
+        return [(re.compile(r["patron"]), r["rubro"].split("|"), r["tipo"]) for r in csv.DictReader(f)]
 
 
-def clasificar(desc, reglas):
+def clasificar(desc, reglas, disponibles):
+    """Primera regla cuyo patrón calza Y que tenga algún rubro candidato en esta unidad ejecutora.
+    Si la regla calza pero la unidad no tiene ninguno de sus rubros, se sigue con la siguiente."""
     desc = desc.split(" (Cód")[0].strip().upper()
-    for pat, rubro, tipo in reglas:
+    for pat, rubros, tipo in reglas:
         if pat.search(desc):
-            return rubro, tipo
+            for r in rubros:
+                if r in disponibles:
+                    return r, tipo
     return None, None
 
 
@@ -124,13 +144,19 @@ def main():
     ap.add_argument("--db", type=Path, required=True)
     ap.add_argument("--datos", type=Path, default=RAIZ / "data/2025")
     a = ap.parse_args()
+    for viejo in (a.datos / "compras").glob("*.json"):
+        viejo.unlink()
     reglas = cargar_reglas()
     con = sqlite3.connect(f"file:{a.db}?mode=ro", uri=True)
     unidades = list(csv.DictReader(open(RAIZ / "datos_fuente/compras_unidades.csv", encoding="utf-8")))
-    por_inc = defaultdict(list)
+    # una unidad ejecutora puede tener varias unidades compradoras en la base
+    por_ue = defaultdict(list)
     for u in unidades:
-        por_inc[u["inciso"]].append(u)
-    for inc, us in por_inc.items():
+        por_ue[(u["inciso"], u["ue"])].append((u["buyer_name"], u["buyer_id"]))
+    por_inc = defaultdict(list)
+    for (inc_, ue_), compradores in por_ue.items():
+        por_inc[inc_].append({"inciso": inc_, "ue": ue_, "compradores": compradores})
+    for inc, us in sorted(por_inc.items(), key=lambda kv: int(kv[0]) if kv[0].isdigit() else 0):
         ruta = a.datos / f"gasto/inciso_{inc}.json"
         doc = json.loads(ruta.read_text(encoding="utf-8"))
         raiz = doc["nodo"]
@@ -142,13 +168,14 @@ def main():
                 """select i.classification_id, i.classification_description, i.supplier_name, i.monto_total,
                           r.id, r.objeto_compra, r.fecha_compra, r.resolucion, i.quantity, i.unit_name
                    from releases r join items i on i.release_id=r.id
-                   where r.buyer_name=? and r.buyer_id=?""", (u["buyer_name"], u["buyer_id"])).fetchall()
+                   where """ + " or ".join(["(r.buyer_name=? and r.buyer_id=?)"] * len(u["compradores"])),
+                [x for par in u["compradores"] for x in par]).fetchall()
             res = {"adjudicado": 0, "sin_monto": 0, "sin_rubro": 0, "asignado": 0, "escalado": 0, "renglones": len(filas)}
             # rubro -> artículo(id,desc) -> proveedor -> monto (pesos enteros)
             acu = defaultdict(lambda: defaultdict(lambda: defaultdict(float)))
-            sin_rubro = defaultdict(float); tipo_de = {}; nom_orig = {}; det = defaultdict(dict); sin_monto = defaultdict(dict)
+            refs = {}; sin_rubro = defaultdict(float); tipo_de = {}; nom_orig = {}; det = defaultdict(dict); sin_monto = defaultdict(dict)
             for cid, desc, prov, monto, rid, objeto, fecha, estado, cant, unidad in filas:
-                rubro, tipo = clasificar(desc or "", reglas)
+                rubro, tipo = clasificar(desc or "", reglas, rubros)
                 if rubro: tipo_de.setdefault(rubro, tipo)
                 if monto is None:
                     res["sin_monto"] += 1
@@ -161,8 +188,8 @@ def main():
                 res["adjudicado"] += monto
                 if rubro is None or rubro not in rubros:
                     res["sin_rubro"] += monto; sin_rubro[(desc or "").split(" (Cód")[0]] += monto; continue
-                nom_orig[str(cid)] = acentuar((desc or "").split(" (Cód")[0].strip().capitalize())
-                art = (str(cid), acentuar((desc or "").split(" (Cód")[0].strip().capitalize()))
+                nom_orig.setdefault(str(cid), acentuar((desc or "").split(" (Cód")[0].strip().capitalize()))
+                art = (str(cid), nom_orig[str(cid)])
                 pnom = (prov or "Proveedor sin nombre").strip().title()
                 acu[rubro][art][pnom] += monto
                 d = det[(rubro, art, pnom)].setdefault(rid, [acentuar((objeto or "Compra sin descripción").strip()), fecha, estado, 0.0])
@@ -175,10 +202,11 @@ def main():
                 cred_tot = sum(r["valor"] for r, _ in ocurr)
                 lineas = sorted(((m, art, p) for art, pv in arts.items() for p, m in pv.items()), reverse=True)
                 comp_tot = sum(m for m, _, _ in lineas)
-                factor = min(1.0, cred_tot / comp_tot) if comp_tot else 0
-                if factor < 1: res["escalado"] += comp_tot - cred_tot
-                # llenado secuencial: cada ocurrencia recibe líneas hasta agotar su crédito
-                cola = [[m * factor, art, p] for m, art, p in lineas]
+                if comp_tot > cred_tot: res["escalado"] += comp_tot - cred_tot
+                # llenado secuencial: cada ocurrencia recibe líneas hasta agotar su crédito; lo que sobra
+                # (se adjudicó más que lo autorizado) va a la primera, SIN recortar los montos reales
+                cola = [[m, art, p] for m, art, p in lineas]
+                asignaciones = []
                 for r, tipo in ocurr:
                     cap = float(r["valor"]); mios = defaultdict(lambda: defaultdict(float))
                     while cola and cap > 0.5:
@@ -187,6 +215,10 @@ def main():
                         mios[art][p] += t; cap -= t
                         if t >= m - 1e-9: cola.pop(0)
                         else: cola[0][0] = m - t
+                    asignaciones.append(mios)
+                for m, art, p in cola:
+                    asignaciones[0][art][p] += m
+                for (r, tipo), mios in zip(ocurr, asignaciones):
                     if not mios: continue
                     art_nodos = []
                     for art, pesos in mios.items():
@@ -203,39 +235,40 @@ def main():
                             hojas = []
                             for k, vv in sorted(rp.items(), key=lambda x: -x[1]):
                                 o, fch, est, _ = rel[k]
-                                hojas.append(nodo(f"{r['id']}/c{cid}/{slug(p)}/r{k}", (o[:90] + "…") if len(o) > 90 else o, f"r{k}", vv, r["fuentes"],
-                                                  compras=True, nivel="Compra", detalle=f"Compra N.º {k} · {fch or 's/f'} · {est or 'estado no informado'}",
-                                                  enlaces=enlaces_compra(k, bool(est))))
-                            pv_nodos.append(nodo(f"{r['id']}/c{cid}/{slug(p)}", p, slug(p), v, r["fuentes"], hojas or None,
+                                hojas.append(nodo(f"{r['id']}/c{cid}/{pslug(p)}/r{k}", (o[:90] + "…") if len(o) > 90 else o, f"r{k}", vv, r["fuentes"],
+                                                  compras=True, nivel="Compra", rid=str(k), fecha=fch, estado=est))
+                            pv_nodos.append(nodo(f"{r['id']}/c{cid}/{pslug(p)}", p, pslug(p), v, r["fuentes"], hojas or None,
                                                  compras=True, nivel="Proveedor", nivel_hijos="Compra"))
                         hijos.append(nodo(f"{r['id']}/c{cid}", nom, f"c{cid}", v_art, r["fuentes"], pv_nodos, compras=True,
                                           nivel="Artículo comprado", nivel_hijos="Proveedor"))
                     tot_art = sum(h["valor"] for h in hijos)
-                    if tot_art > r["valor"]:   # redondeo
-                        exceso = tot_art - r["valor"]
-                        hijos[0]["valor"] -= exceso; hijos[0]["hijos"][0]["valor"] -= exceso
-                        hijos[0]["fuentes"] = repartir(hijos[0]["valor"], r["fuentes"])
-                        hijos[0]["hijos"][0]["fuentes"] = repartir(hijos[0]["hijos"][0]["valor"], r["fuentes"])
-                        tot_art = r["valor"]
                     resto = r["valor"] - tot_art
                     if resto > 0:
                         hijos.append(nodo(f"{r['id']}/resto", "Resto sin detalle de compra", "resto", resto, r["fuentes"], compras_resto=True, nivel="Resto del rubro"))
                     hijos.sort(key=lambda h: -h["valor"])
-                    r["hijos"] = hijos
+                    refs[r["id"]] = {"hijos": hijos}
                     r["nivel_hijos"] = "Artículo comprado"
-                    r["compras"] = {"adjudicado": int(tot_art), "escalado": factor < 1}
+                    r["compras"] = {"adjudicado": int(tot_art), "excede": tot_art > r["valor"]}
                     res["asignado"] += tot_art
             for rubro, rels in sin_monto.items():
                 ocurr = sorted(rubros[rubro], key=lambda rt: (rt[1] != tipo_de.get(rubro), -rt[0]["valor"]))
                 lista = sorted(rels.values(), key=lambda x: (-x.get("unidades", 0), x["rid"]))[:100]
-                ocurr[0][0]["compras_sin_monto"] = [
+                refs.setdefault(ocurr[0][0]["id"], {})["compras_sin_monto"] = [
                     {"rid": x["rid"], "objeto": x["objeto"], "fecha": x["fecha"], "estado": x["estado"], "proveedor": x["proveedor"],
                      "articulo": x["articulo"], "unidades": x.get("unidades"), "unidad": (x["unidad"] or "").lower(),
                      "enlaces": enlaces_compra(x["rid"], bool(x["estado"]))} for x in lista]
+                ocurr[0][0].setdefault("compras", {"adjudicado": 0, "excede": False})
                 res["compras_sin_monto"] = res.get("compras_sin_monto", 0) + len(rels)
+            if refs:
+                rel = f"compras/{inc}_{u['ue']}.json"
+                for nid, dat in refs.items():
+                    nodo_r = buscar(ue, nid)
+                    nodo_r["compras_ref"] = rel
+                (a.datos / rel).parent.mkdir(parents=True, exist_ok=True)
+                (a.datos / rel).write_text(json.dumps(refs, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
             ue["compras_resumen"] = {k: int(v) for k, v in res.items()}
-            print(f"{inc}/{u['ue']} {ue['nombre']}: adjudicado {res['adjudicado']/1e6:.1f} M | asignado a rubro {res['asignado']/1e6:.1f} M | "
-                  f"sin rubro {res['sin_rubro']/1e6:.1f} M | sobre el crédito {res['escalado']/1e6:.1f} M | renglones sin monto {res['sin_monto']}/{res['renglones']}")
+            print(f"{inc}/{u['ue']} {ue['nombre'][:40]}: adjudicado {res['adjudicado']/1e6:.1f} M | asignado a rubro {res['asignado']/1e6:.1f} M | "
+                  f"sin rubro {res['sin_rubro']/1e6:.1f} M | adjudicado por encima del crédito {res['escalado']/1e6:.1f} M | renglones sin monto {res['sin_monto']}/{res['renglones']}")
             for d, m in sorted(sin_rubro.items(), key=lambda x: -x[1])[:25]:
                 print(f"     sin regla: {m/1e6:6.2f}  {d}")
         ruta.write_text(json.dumps(doc, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")

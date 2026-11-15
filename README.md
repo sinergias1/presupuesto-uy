@@ -105,3 +105,11 @@ El 3D es solo para computadoras, tablets e iPads. En un celular (el lado corto d
 - `datos_fuente/compras_reglas.csv`: regla artículo comprado → rubro del presupuesto (curada a mano; la base no trae el rubro).
 - Las compras sin monto en el catálogo se listan aparte en cada rubro («Compras adjudicadas sin monto informado»), con enlace al portal.
 - Adjudicar es decidir comprar; el pago puede llegar después. Lo adjudicado por encima del crédito de un rubro se muestra hasta el tope; lo que no figura en el catálogo queda en «Resto sin detalle de compra». Los renglones sin monto (≈26% en el piloto) no se incluyen.
+
+## Compras en todo el presupuesto (v13)
+
+`datos_fuente/compras_unidades.csv` ahora cubre las 237 unidades compradoras de la base que corresponden a una unidad ejecutora del presupuesto (revisadas a mano las que no calzan por nombre). `datos_fuente/compras_reglas.csv` es la tabla de reglas artículo → rubro (cada regla lista rubros candidatos: se usa el primero que exista en la unidad ejecutora).
+
+- Los montos son los **reales** de la adjudicación; no se recortan. Si lo adjudicado supera lo autorizado en el rubro (contratos de varios años, otros rubros que pagan), el rubro queda marcado `compras.excede`.
+- Las compras no viven en el JSON del inciso: están en `data/2025/compras/<inciso>_<ue>.json` y se cargan al entrar a un rubro (`compras_ref`).
+- Quedan fuera las entidades que no están en el presupuesto nacional (UTE, OSE, ANCAP, intendencias, bancos…) y las compras sin rubro asignable.

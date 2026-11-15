@@ -195,11 +195,26 @@
 
   // --------------------------------------------------------------------- árbol
   function esDrillable(n) {
-    return !!(n.archivo || (n.hijos && n.hijos.length));
+    return !!(n.archivo || n.compras_ref || (n.hijos && n.hijos.length));
   }
 
   function profundidad(id) {
     return id.split('/').length - 1;
+  }
+
+  var PORTAL = 'https://www.comprasestatales.gub.uy';
+  /** Enlaces públicos de una compra (ficha y, si ya tiene resolución, el PDF). */
+  function enlacesCompra(rid, conResolucion) {
+    var e = [{ t: 'Ver la compra en el portal de compras estatales', u: PORTAL + '/consultas/detalle/id/' + encodeURIComponent(rid) }];
+    if (conResolucion) e.push({ t: 'Resolución (PDF)', u: PORTAL + '/Resoluciones/acta_' + encodeURIComponent(rid) + '.pdf' });
+    return e;
+  }
+  function datosCompra(n) {
+    if (!n || !n.rid) return { detalle: n && n.detalle || null, enlaces: n && n.enlaces || null };
+    return {
+      detalle: 'Compra N.º ' + n.rid + ' · ' + (n.fecha || 's/f') + ' · ' + (n.estado || 'estado no informado'),
+      enlaces: enlacesCompra(n.rid, !!n.estado),
+    };
   }
 
   function noEncontrado(id) {
@@ -213,7 +228,7 @@
    * Los incisos del overview vienen sin hijos y con `archivo`: se cargan con
    * cargarArchivo(archivo) -> Promise<nodo completo>.
    */
-  async function resolver(ov, id, cargarArchivo) {
+  async function resolver(ov, id, cargarArchivo, cargarCompras) {
     var partes = id.split('/');
     var arbol = partes[0];
     if ((arbol !== 'gasto' && arbol !== 'recursos') || partes.length < 2) throw noEncontrado(id);
@@ -227,6 +242,13 @@
         var completo = await cargarArchivo(hijo.archivo);
         if (!completo || completo.id !== hijo.id) throw new Error('El archivo ' + hijo.archivo + ' no corresponde a ' + hijo.id);
         hijo = completo;
+      }
+      if (hijo.compras_ref && !hijo.hijos && cargarCompras) {
+        // las compras (artículos, proveedores, compras) viven en un archivo por unidad ejecutora
+        var dat = (await cargarCompras(hijo.compras_ref))[hijo.id] || {};
+        hijo = Object.assign({}, hijo);
+        if (dat.hijos) hijo.hijos = dat.hijos;
+        if (dat.compras_sin_monto) hijo.compras_sin_monto = dat.compras_sin_monto;
       }
       cadena.push(hijo);
       cur = hijo;
@@ -375,7 +397,7 @@
       }
       visibles.forEach(function (h) {
         var dr = esDrillable(h);
-        defsHijo.push(conExtra({ id: h.id, label: nombreDe(h.id, h.nombre), col: colHijo, kind: kind, fuente: null, nav: dr ? h.id : null, drillable: dr, cargos: h.cargos || null, ejecutado: h.ejecutado != null ? h.ejecutado : null, compras: h.compras === true ? 'compra' : (h.compras_resto ? 'resto' : (h.compras ? 'rubro' : null)), escalado: !!(h.compras && h.compras.escalado), detalle: h.detalle || null }, h.id, h.nombre));
+        defsHijo.push(conExtra({ id: h.id, label: nombreDe(h.id, h.nombre), col: colHijo, kind: kind, fuente: null, nav: dr ? h.id : null, drillable: dr, cargos: h.cargos || null, ejecutado: h.ejecutado != null ? h.ejecutado : null, compras: h.compras === true ? 'compra' : (h.compras_resto ? 'resto' : (h.compras ? 'rubro' : null)), excede: !!(h.compras && h.compras.excede), detalle: datosCompra(h).detalle }, h.id, h.nombre));
         entradasDesc(h.fuentes).forEach(function (e) { enlazar(e[0], h.id, e[1]); });
       });
       if (cola.length) {
@@ -386,7 +408,9 @@
     }
 
     var defs = esGasto ? defsFuente.concat(defsHijo) : defsHijo.concat(defsFuente);
-    var spec = ensamblar(defs, links, nodo.valor);
+    // si se adjudicó más que lo autorizado (rubro con compras), el total del gráfico es lo comprado
+    var totalGraf = hijos.length ? Math.max(nodo.valor, hijos.reduce(function (s, h) { return s + h.valor; }, 0)) : nodo.valor;
+    var spec = ensamblar(defs, links, totalGraf);
     spec.tipo = 'nodo';
     return spec;
   }
@@ -418,8 +442,8 @@
       cargos: n.cargos || null,
       sinCargos: !!n.sin_cargos,
       sinMonto: n.compras_sin_monto || null,
-      enlaces: n.enlaces || null,
-      detalleCompra: n.detalle || null,
+      enlaces: datosCompra(n).enlaces,
+      detalleCompra: datosCompra(n).detalle,
       enCompras: n.compras === true || !!n.compras_resto,
       comprasResto: !!n.compras_resto,
       comprasRubro: n.compras && n.compras !== true ? n.compras : null,
@@ -454,7 +478,7 @@
       pct: totalRef ? n.valor / totalRef : 0,
       fuentes: n.fuentes || {},
       hash: esDrillable(n) ? '#' + n.id : null,
-      enlaces: n.enlaces || null,
+      enlaces: datosCompra(n).enlaces,
     };
     if (n.ejecutado != null) {
       fila.ejecutado = n.ejecutado;
@@ -466,7 +490,8 @@
 
   function filasHijos(vista) {
     var n = vista.nodo;
-    return (n.hijos || []).map(function (h) { return filaDe(h, n.valor); });
+    var ref = Math.max(n.valor, (n.hijos || []).reduce(function (s, h) { return s + h.valor; }, 0));
+    return (n.hijos || []).map(function (h) { return filaDe(h, ref); });
   }
 
   /** Desglose por objeto del gasto de un nodo "Remuneraciones" que se separó en partes. */
@@ -570,7 +595,7 @@
     if (n.detalle) h.push('<div class="tt-h">', esc(n.detalle), '</div>');
     if (n.compras === 'compra') h.push('<div class="tt-h">', esc('Compra adjudicada en 2025 (catálogo de compras estatales). Adjudicar es decidir comprar: el pago puede llegar después.'), '</div>');
     if (n.compras === 'resto') h.push('<div class="tt-h">', esc('Parte de este rubro que no aparece en el catálogo de compras: otros tipos de gasto, compras sin monto o sin clasificar.'), '</div>');
-    if (n.compras === 'rubro') h.push('<div class="tt-h">', esc('Este rubro incluye compras adjudicadas en 2025.' + (n.escalado ? ' Se adjudicó más de lo autorizado en este rubro: se muestra hasta el tope.' : '')), '</div>');
+    if (n.compras === 'rubro') h.push('<div class="tt-h">', esc('Este rubro incluye compras adjudicadas en 2025.' + (n.excede ? ' Se adjudicó más que lo autorizado en este rubro.' : '')), '</div>');
     if (n.drillable) h.push('<div class="tt-h">' + ((typeof window !== 'undefined' && window.ES_CELULAR) ? 'Toca' : 'Haz clic') + ' para ver el detalle ›</div>');
     if (n.kind === 'otros') h.push('<div class="tt-h">Junta los elementos más chicos. La lista completa está en la tabla de abajo.</div>');
     if (n.kind === 'ajuste') {
@@ -608,6 +633,7 @@
     esDrillable: esDrillable,
     profundidad: profundidad,
     resolver: resolver,
+    enlacesCompra: enlacesCompra,
     migas: migas,
     specGeneral: specGeneral,
     specNodo: specNodo,

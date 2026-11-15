@@ -102,6 +102,7 @@ async function cargarJSON(ruta) {
   return r.json();
 }
 const cargarArchivo = async (archivo) => (await cargarJSON(BASE + archivo)).nodo;
+const cargarCompras = (ref) => cargarJSON(BASE + ref);
 
 async function iniciar() {
   if (!M) throw new Error('model.js no cargó');
@@ -522,7 +523,7 @@ async function iniciar() {
       if (!id) { vista = { tipo: 'general' }; spec = M.specGeneral(ov); }
       else {
         document.body.classList.add('cargando');
-        vista = Object.assign({ tipo: 'nodo' }, await M.resolver(ov, id, cargarArchivo));
+        vista = Object.assign({ tipo: 'nodo' }, await M.resolver(ov, id, cargarArchivo, cargarCompras));
         spec = M.specNodo(ov, vista, { maxHijos: MOVIL ? 9 : 13 });
       }
       if (mi !== ficha) return;
