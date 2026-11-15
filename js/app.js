@@ -37,8 +37,9 @@
   }, { passive: true });
   function ubicarCartel() {
     const w = cartel.el.offsetWidth, hh = cartel.el.offsetHeight;
-    const x = Math.min(Math.max(8, cartel.x + 16), innerWidth - w - 8);
-    const y = Math.min(Math.max(8, cartel.y + 18), innerHeight - hh - 8);
+    // arriba a la izquierda del cursor: el tooltip del gráfico sale abajo a la derecha, así no se tapan
+    const x = Math.min(Math.max(8, cartel.x - w - 14), innerWidth - w - 8);
+    const y = Math.min(Math.max(8, cartel.y - hh - 16), innerHeight - hh - 8);
     cartel.el.style.transform = `translate(${x}px, ${y}px)`;
   }
   function mostrarCartel(texto) {
@@ -292,7 +293,7 @@
           // un bloque sin salida: no navega; avisa con un cartelito que sigue al mouse
           mostrarCartel(n.kind === 'otros'
             ? 'Acá hay muchos elementos chicos juntos. Mirá la lista completa en la tabla de abajo.'
-            : 'No hay nada más a la derecha de este bloque. Subí un nivel (migas o Esc) para seguir explorando.');
+            : 'Sin más detalle a la derecha. Usá Esc o navegá por las migas para volver atrás.');
         });
       }
       const movil = L.clave === 'angosto';
