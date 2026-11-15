@@ -172,8 +172,6 @@ async function iniciar() {
   let entrada = 0; // 0 -> 1 al aparecer una vista nueva
   let hover = null;
   const etiquetas = $('etiquetas');
-  const conectores = $('conectores');
-  const SVGNS = 'http://www.w3.org/2000/svg';
   const tip = $('tip');
 
   function limpiar() {
@@ -181,7 +179,6 @@ async function iniciar() {
     V.nodosObj.forEach((o) => { scene.remove(o); if (o.geometry) o.geometry.dispose(); if (o.material) o.material.dispose(); });
     [V.billetes, V.monedas].forEach((m) => { scene.remove(m); m.dispose(); });
     etiquetas.replaceChildren();
-    conectores.replaceChildren();
     tip.hidden = true;
     hover = null;
     V = null;
@@ -215,14 +212,6 @@ async function iniciar() {
       d.append(b, sp);
       etiquetas.append(d);
       p.etiqueta = d;
-      const g = document.createElementNS(SVGNS, 'g');
-      const ln = document.createElementNS(SVGNS, 'line');
-      const pt = document.createElementNS(SVGNS, 'circle');
-      const col = '#' + c.getHexString();
-      ln.setAttribute('stroke', col); ln.setAttribute('stroke-width', '1.6'); ln.setAttribute('stroke-dasharray', '1 5'); ln.setAttribute('stroke-linecap', 'round');
-      pt.setAttribute('r', '3.2'); pt.setAttribute('fill', col);
-      g.append(ln, pt); conectores.append(g);
-      p.cLinea = ln; p.cPunto = pt; p.cG = g;
     });
 
     // Billetes y monedas. Cada flujo recibe una cantidad y una velocidad que dependen de su monto:
@@ -272,7 +261,6 @@ async function iniciar() {
     };
     entrada = 0; t0 = performance.now();
     cam.distT = distBase();
-    MIN = Math.round(cam.distT * 0.66); // no se puede acercar tanto como para que todo tape todo
     cam.dist = cam.distT + 8;
     window.__flujo3d = { listo: true, vista: vista.tipo === 'general' ? '' : vista.nodo.id, particulas: parts.length, nodos: pos.size, enlaces: enlaces.length,
       detalle: enlaces.map((e) => ({ de: e.l.source, a: e.l.target, valor: e.l.valor, cuantas: e.cuantas, vel: e.velBase })) };
@@ -354,7 +342,7 @@ async function iniciar() {
     if (VERTICAL) return dos ? 30 : 34;
     return dos ? (asp < 1.5 ? 29 : 26) : (asp < 1.5 ? 35 : 32);
   };
-  let MIN = 12; const MAX = 52;
+  const MIN = 12, MAX = 52;
   let ultimoMov = 0;
   let t0 = performance.now();
 
@@ -449,7 +437,7 @@ async function iniciar() {
       else {
         document.body.classList.add('cargando');
         vista = Object.assign({ tipo: 'nodo' }, await M.resolver(ov, id, cargarArchivo));
-        spec = M.specNodo(ov, vista, { maxHijos: Math.max(5, Math.min(13, Math.floor((innerHeight - 190) / (MOVIL ? 52 : 70)))) });
+        spec = M.specNodo(ov, vista, { maxHijos: Math.max(5, Math.min(13, Math.floor((innerHeight - 70) / (MOVIL ? 56 : 72)))) });
       }
       if (mi !== ficha) return;
       hudDe(spec, vista);
@@ -516,15 +504,12 @@ async function iniciar() {
     });
     // Los carteles pueden ocupar varias líneas (el nombre se muestra entero): se separan según su altura real.
     const alto = (p) => (p.hh || (p.hh = p.etiqueta.offsetHeight || 44));
-    const repartir = (lista, tope, techo) => {
-      const adelante = () => {
-        for (let i = 1; i < lista.length; i++) {
-          const min = (alto(lista[i - 1]) + alto(lista[i])) / 2 + 5;
-          if (lista[i].py - lista[i - 1].py < min) lista[i].py = lista[i - 1].py + min;
-        }
-      };
+    const repartir = (lista, tope) => {
       lista.sort((x, y) => x.py - y.py);
-      adelante();
+      for (let i = 1; i < lista.length; i++) {
+        const min = (alto(lista[i - 1]) + alto(lista[i])) / 2 + 5;
+        if (lista[i].py - lista[i - 1].py < min) lista[i].py = lista[i - 1].py + min;
+      }
       const n = lista.length;
       if (n && lista[n - 1].py + alto(lista[n - 1]) / 2 > tope) {
         lista[n - 1].py = tope - alto(lista[n - 1]) / 2;
@@ -533,40 +518,20 @@ async function iniciar() {
           if (lista[i + 1].py - lista[i].py < min) lista[i].py = lista[i + 1].py - min;
         }
       }
-      // nunca debajo del título / los totales (tienen prioridad sobre el borde de abajo)
-      if (n && lista[0].py - alto(lista[0]) / 2 < techo) { lista[0].py = techo + alto(lista[0]) / 2; adelante(); }
     };
-    const hudI = document.querySelector('.hud-izq').getBoundingClientRect().bottom + 10;
-    const cif = $('cifras');
-    const hudD = cif.classList.contains('en-izq') ? 16 : cif.getBoundingClientRect().bottom + 10;
     const tope = innerHeight - (VERTICAL ? 130 : 44);
-    if (VERTICAL) repartir([].concat(...porCol), tope, hudI); // en celular todos comparten el ancho: se ordenan juntos
+    if (VERTICAL) repartir([].concat(...porCol), tope); // en celular todos comparten el ancho: se ordenan juntos
     porCol.forEach((lista) => {
-      if (!VERTICAL) repartir(lista, tope, lista === porCol[0] ? hudI : hudD);
+      if (!VERTICAL) repartir(lista, tope);
       lista.forEach((p) => {
         const izq = VERTICAL ? 'translate(0,-50%)' : 'translate(-100%,-50%)';
         const der = VERTICAL ? 'translate(-100%,-50%)' : 'translate(0,-50%)';
         const tr = p.col === 0 ? izq : p.col === ultima ? der : 'translate(-50%,-100%)';
         // que no se salga de la pantalla
         const w = p.etiqueta.offsetWidth || 160;
-        const h = alto(p);
-        const medio = p.col !== 0 && p.col !== ultima;
-        let x0 = p.col === 0 ? (VERTICAL ? p.px : p.px - w) : p.col === ultima ? (VERTICAL ? p.px - w : p.px) : p.px - w / 2;
-        let dx = 0;
-        if (x0 < 6) dx = 6 - x0; else if (x0 + w > innerWidth - 6) dx = -(x0 + w - (innerWidth - 6));
-        p.px += dx; x0 += dx;
-        // conector punteado desde el bloque hasta el borde más cercano del cartel
-        const ax3 = medio ? p.x : p.col === 0 ? p.x - ANCHO_NODO / 2 : p.x + ANCHO_NODO / 2;
-        v3.set(ax3, medio ? p.top : p.centro, 0).project(camera);
-        const bx = (v3.x * 0.5 + 0.5) * innerWidth, by = (-v3.y * 0.5 + 0.5) * innerHeight;
-        const cy = medio ? p.py - h / 2 : p.py;
-        let ex, ey;
-        if (bx < x0) { ex = x0; ey = cy; } else if (bx > x0 + w) { ex = x0 + w; ey = cy; }
-        else { ex = bx; ey = by > cy ? cy + h / 2 : cy - h / 2; }
-        p.cLinea.setAttribute('x1', bx.toFixed(1)); p.cLinea.setAttribute('y1', by.toFixed(1));
-        p.cLinea.setAttribute('x2', ex.toFixed(1)); p.cLinea.setAttribute('y2', ey.toFixed(1));
-        p.cPunto.setAttribute('cx', bx.toFixed(1)); p.cPunto.setAttribute('cy', by.toFixed(1));
-        p.cG.setAttribute('opacity', ((hover && hover !== p ? 0.35 : 0.9) * entrada).toFixed(2));
+        const x0 = p.col === 0 ? (VERTICAL ? p.px : p.px - w) : p.col === ultima ? (VERTICAL ? p.px - w : p.px) : p.px - w / 2;
+        if (x0 < 6) p.px += 6 - x0;
+        else if (x0 + w > innerWidth - 6) p.px -= x0 + w - (innerWidth - 6);
         p.etiqueta.style.transform = `translate(${p.px.toFixed(1)}px,${p.py.toFixed(1)}px) ${tr}`;
         p.etiqueta.style.opacity = (hover && hover !== p ? 0.45 : 1) * entrada;
       });
