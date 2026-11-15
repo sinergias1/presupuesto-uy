@@ -1,5 +1,6 @@
 patron,rubro,tipo,comentario
 "^(TENDIDO DE RED|OBRA DE SANEAMIENTO)",383-0,i,obras hidráulicas y sanitarias
+"MONITOREO DE PERSONAS|TOBILLERA",259-2,f,dispositivos electrónicos del Ministerio del Interior (monitoreo de personas)
 "MANTENIMIENTO DE (SOFTWARE|SISTEMA)|DESARROLLO DE SOFTWARE|MESA DE AYUDA|SOPORTE INFORMATICO|SISTEMA DE INFORMACION|HOSTING|NUBE",285-0,f,servicios informáticos
 "^(SOFTWARE|LICENCIA)",393-0,i,programas de computación
 "ARRENDAMIENTO DE (RADAR|EQUIPAMIENTO)",259-0,f,otros alquileres

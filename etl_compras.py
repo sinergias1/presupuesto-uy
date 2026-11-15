@@ -75,6 +75,7 @@ def repartir(valor: int, pesos: dict) -> dict:
 
 def limpiar(nodo):
     """Quita lo colgado en una corrida anterior."""
+    nodo.pop("compras_sin_monto", None)
     for h in nodo.get("hijos", []) or []:
         limpiar(h)
     if nodo.get("hijos") and nodo["hijos"][-1].get("compras_resto"):
@@ -139,19 +140,25 @@ def main():
             rubros = hojas_rubro(ue)
             filas = con.execute(
                 """select i.classification_id, i.classification_description, i.supplier_name, i.monto_total,
-                          r.id, r.objeto_compra, r.fecha_compra, r.resolucion
+                          r.id, r.objeto_compra, r.fecha_compra, r.resolucion, i.quantity, i.unit_name
                    from releases r join items i on i.release_id=r.id
                    where r.buyer_name=? and r.buyer_id=?""", (u["buyer_name"], u["buyer_id"])).fetchall()
             res = {"adjudicado": 0, "sin_monto": 0, "sin_rubro": 0, "asignado": 0, "escalado": 0, "renglones": len(filas)}
             # rubro -> artículo(id,desc) -> proveedor -> monto (pesos enteros)
             acu = defaultdict(lambda: defaultdict(lambda: defaultdict(float)))
-            sin_rubro = defaultdict(float); tipo_de = {}; nom_orig = {}; det = defaultdict(dict)
-            for cid, desc, prov, monto, rid, objeto, fecha, estado in filas:
-                if monto is None:
-                    res["sin_monto"] += 1; continue
-                res["adjudicado"] += monto
+            sin_rubro = defaultdict(float); tipo_de = {}; nom_orig = {}; det = defaultdict(dict); sin_monto = defaultdict(dict)
+            for cid, desc, prov, monto, rid, objeto, fecha, estado, cant, unidad in filas:
                 rubro, tipo = clasificar(desc or "", reglas)
                 if rubro: tipo_de.setdefault(rubro, tipo)
+                if monto is None:
+                    res["sin_monto"] += 1
+                    if rubro in rubros:
+                        sm = sin_monto[rubro].setdefault(rid, {"rid": rid, "objeto": acentuar((objeto or "Compra sin descripción").strip()),
+                            "fecha": fecha, "estado": estado, "proveedor": (prov or "Proveedor sin nombre").strip().title(),
+                            "articulo": acentuar((desc or "").split(" (Cód")[0].strip().capitalize()), "cantidad": 0.0, "unidad": None})
+                        sm["cantidad"] += 1; sm["unidades"] = sm.get("unidades", 0) + (cant or 0); sm["unidad"] = unidad
+                    continue
+                res["adjudicado"] += monto
                 if rubro is None or rubro not in rubros:
                     res["sin_rubro"] += monto; sin_rubro[(desc or "").split(" (Cód")[0]] += monto; continue
                 nom_orig[str(cid)] = acentuar((desc or "").split(" (Cód")[0].strip().capitalize())
@@ -218,6 +225,14 @@ def main():
                     r["nivel_hijos"] = "Artículo comprado"
                     r["compras"] = {"adjudicado": int(tot_art), "escalado": factor < 1}
                     res["asignado"] += tot_art
+            for rubro, rels in sin_monto.items():
+                ocurr = sorted(rubros[rubro], key=lambda rt: (rt[1] != tipo_de.get(rubro), -rt[0]["valor"]))
+                lista = sorted(rels.values(), key=lambda x: (-x.get("unidades", 0), x["rid"]))[:100]
+                ocurr[0][0]["compras_sin_monto"] = [
+                    {"rid": x["rid"], "objeto": x["objeto"], "fecha": x["fecha"], "estado": x["estado"], "proveedor": x["proveedor"],
+                     "articulo": x["articulo"], "unidades": x.get("unidades"), "unidad": (x["unidad"] or "").lower(),
+                     "enlaces": enlaces_compra(x["rid"], bool(x["estado"]))} for x in lista]
+                res["compras_sin_monto"] = res.get("compras_sin_monto", 0) + len(rels)
             ue["compras_resumen"] = {k: int(v) for k, v in res.items()}
             print(f"{inc}/{u['ue']} {ue['nombre']}: adjudicado {res['adjudicado']/1e6:.1f} M | asignado a rubro {res['asignado']/1e6:.1f} M | "
                   f"sin rubro {res['sin_rubro']/1e6:.1f} M | sobre el crédito {res['escalado']/1e6:.1f} M | renglones sin monto {res['sin_monto']}/{res['renglones']}")

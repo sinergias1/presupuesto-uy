@@ -103,4 +103,5 @@ El 3D es solo para computadoras, tablets e iPads. En un celular (el lado corto d
 
 - `datos_fuente/compras_unidades.csv`: unidad compradora de la base → inciso / unidad ejecutora (la base no trae códigos, solo nombres). Piloto: Secretaría del Ministerio del Interior.
 - `datos_fuente/compras_reglas.csv`: regla artículo comprado → rubro del presupuesto (curada a mano; la base no trae el rubro).
+- Las compras sin monto en el catálogo se listan aparte en cada rubro («Compras adjudicadas sin monto informado»), con enlace al portal.
 - Adjudicar es decidir comprar; el pago puede llegar después. Lo adjudicado por encima del crédito de un rubro se muestra hasta el tope; lo que no figura en el catálogo queda en «Resto sin detalle de compra». Los renglones sin monto (≈26% en el piloto) no se incluyen.

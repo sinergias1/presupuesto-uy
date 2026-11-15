@@ -417,6 +417,7 @@
       nivel: n.nivel || niveles[prof] || '',
       cargos: n.cargos || null,
       sinCargos: !!n.sin_cargos,
+      sinMonto: n.compras_sin_monto || null,
       enlaces: n.enlaces || null,
       detalleCompra: n.detalle || null,
       enCompras: n.compras === true || !!n.compras_resto,

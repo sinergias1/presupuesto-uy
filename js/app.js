@@ -690,8 +690,24 @@
     const filas = M.filasHijos(v);
     if (filas.length) {
       secciones.push(tablaRanking({
-        titulo: r.nivelSiguientePlural ? r.nivelSiguientePlural[0].toUpperCase() + r.nivelSiguientePlural.slice(1) + ', del que más al que menos' : 'Detalle',
+        titulo: r.nivelSiguiente === 'Compra' ? `Todas las compras de ${r.titulo}`
+          : r.nivelSiguiente === 'Proveedor' ? `Proveedores de “${r.titulo}”`
+          : r.nivelSiguientePlural ? r.nivelSiguientePlural[0].toUpperCase() + r.nivelSiguientePlural.slice(1) + ', del que más al que menos' : 'Detalle',
+        nota: r.nivelSiguiente === 'Compra' ? `Son las compras adjudicadas en 2025 a este proveedor dentro de “${r.padre}”. En el portal oficial pueden figurar otras compras suyas en otros artículos o rubros.` : undefined,
         filas, columnaNombre: r.nivelSiguiente || 'Nombre', pctEtiqueta: 'Parte de este total',
+      }));
+    }
+    if (r.sinMonto && r.sinMonto.length) {
+      secciones.push(tablaSimple({
+        titulo: 'Compras adjudicadas sin monto informado',
+        nota: 'Estas compras figuran en el catálogo de compras estatales sin monto, así que no tienen ancho en el gráfico. El monto suele estar en la resolución (enlace a la derecha).',
+        columnas: [{ t: 'Compra' }, { t: 'Proveedor' }, { t: 'Fecha' }, { t: 'Cantidad', num: true }, { t: 'Ver en el portal' }],
+        filas: r.sinMonto.map((x) => [
+          h('span', {}, x.objeto, h('br'), h('small', {}, `${x.articulo} · N.º ${x.rid}`)),
+          x.proveedor, x.fecha || '—',
+          x.unidades ? `${M.numEs(x.unidades, 0)} ${(x.unidad || 'unidad').replace(/^unidad$/, x.unidades === 1 ? 'unidad' : 'unidades')}`.trim() : '—',
+          enlacesExternos(x.enlaces) || '—',
+        ]),
       }));
     }
     secciones.push(tablaFuentesNodo(M.filasFuentesDeNodo(state.ov, v.nodo)));
