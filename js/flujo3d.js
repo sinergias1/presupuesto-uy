@@ -393,6 +393,7 @@ async function iniciar() {
   const mundoPorPixel = () => 2 * cam.dist * Math.tan((camera.fov * Math.PI / 360)) / innerHeight;
   const punteros = new Map();
   let ptrDown = null, movioMucho = false, distPinza = 0, ultimaNav = 0;
+  let ultimoPuntero = null; // última posición del mouse: la cámara se mueve sola, así que se vuelve a elegir qué hay bajo el cursor en cada cuadro
   const plano = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
   const puntoMundo = (cx, cy, salida) => {
     ndc.set((cx / innerWidth) * 2 - 1, -(cy / innerHeight) * 2 + 1);
@@ -435,6 +436,7 @@ async function iniciar() {
       return;
     }
     mover(ev.clientX, ev.clientY);
+    ultimoPuntero = { x: ev.clientX, y: ev.clientY };
     fijarHover(elegir(ev.clientX, ev.clientY), ev.clientX, ev.clientY);
   });
   canvas.addEventListener('pointerdown', (ev) => {
@@ -456,7 +458,7 @@ async function iniciar() {
   }
   canvas.addEventListener('pointerup', (ev) => soltar(ev, true));
   canvas.addEventListener('pointercancel', (ev) => soltar(ev, false));
-  canvas.addEventListener('pointerleave', (ev) => { if (!punteros.size) fijarHover(null); });
+  canvas.addEventListener('pointerleave', (ev) => { ultimoPuntero = null; if (!punteros.size) fijarHover(null); });
   canvas.addEventListener('wheel', (ev) => {
     ev.preventDefault();
     zoomHacia(1 + Math.sign(ev.deltaY) * 0.1, ev.clientX, ev.clientY);
@@ -638,6 +640,7 @@ async function iniciar() {
     camera.position.set(cam.px + Math.sin(cam.yaw) * d, cam.py + Math.sin(cam.pitch) * d * 0.55 + 0.6, Math.cos(cam.yaw) * d);
     camera.lookAt(cam.px, cam.py, 0);
 
+    if (ultimoPuntero && !punteros.size && V) fijarHover(elegir(ultimoPuntero.x, ultimoPuntero.y), ultimoPuntero.x, ultimoPuntero.y);
     if (V) {
       for (let i = 0; i < V.realceEnlace.length; i++) V.realceEnlace[i] += (V.objetivoEnlace[i] - V.realceEnlace[i]) * 0.12;
       V.pos.forEach((p) => {
