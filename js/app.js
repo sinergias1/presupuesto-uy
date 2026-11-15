@@ -230,7 +230,7 @@
 
     const hayOtros = spec.nodes.some((n) => n.kind === 'otros');
     $('pista').textContent =
-      'Haz clic en un bloque con › para ver qué hay adentro, o en un nombre de las tablas de abajo. Pasa el cursor (o toca) para ver el monto exacto.' +
+      'Haz clic en un bloque con › para ver qué hay adentro, o en un nombre de las tablas de abajo. Doble clic en un fondo para subir un nivel. Pasa el cursor (o toca) para ver el monto exacto.' +
       (hayOtros ? ' «Otros» junta los elementos más chicos; la lista completa está en la tabla.' : '');
     $('guia').textContent = v.tipo === 'general'
       ? 'Cómo leerlo: la plata va de izquierda a derecha. Cuanto más ancha la franja, más plata. El color muestra de qué fondo sale.'
@@ -249,7 +249,16 @@
         state.chart.on('click', (p) => {
           if (p.dataType !== 'node' || !state.idx) return;
           const n = state.idx.nodos.get(p.name);
-          if (n && n.nav) location.hash = '#' + n.nav;
+          if (n && n.nav) { state.ultimaNav = performance.now(); location.hash = '#' + n.nav; }
+        });
+        // doble clic en un bloque que no se abre más (un fondo, "Otros"…): sube un nivel
+        state.chart.on('dblclick', (p) => {
+          if (p.dataType !== 'node' || !state.idx || !state.vista || state.vista.tipo === 'general') return;
+          if (performance.now() - (state.ultimaNav || 0) < 800) return; // el primer clic de un doble clic acaba de abrir otra vista
+          const n = state.idx.nodos.get(p.name);
+          if (!n || n.nav) return;
+          const migas = M.migas(state.vista);
+          location.hash = migas[migas.length - 2].hash;
         });
       }
       const movil = L.clave === 'angosto';

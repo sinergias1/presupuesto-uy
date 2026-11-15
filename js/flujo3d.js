@@ -371,7 +371,7 @@ async function iniciar() {
         const color = n.kind === 'fuente' ? colorFuente(n.fuente) : null;
         tip.replaceChildren();
         tip.insertAdjacentHTML('beforeend', M.tooltipNodo(n, V.spec.total, color));
-        if (!n.nav && n.kind !== 'ajuste') { const h = document.createElement('div'); h.className = 'tt-pista'; h.textContent = 'Doble clic: ver más detalle en 2D'; tip.firstChild.append(h); }
+        if (!n.nav && n.kind !== 'ajuste') { const h = document.createElement('div'); h.className = 'tt-pista'; h.textContent = n.kind === 'fuente' && V.vista.tipo !== 'general' ? 'Doble clic: subir al inicio' : 'Doble clic: ver más detalle en 2D'; tip.firstChild.append(h); }
         tip.hidden = false;
       } else {
         tip.hidden = true;
@@ -470,6 +470,8 @@ async function iniciar() {
     const p = elegir(cx, cy);
     if (!p) { volverAlCentro(); return; }
     if (p.n.nav) { location.hash = '#' + p.n.nav; return; }
+    // un fondo no se abre más: sube al nivel de arriba (inicio) donde se ve a dónde va esa plata
+    if (p.n.kind === 'fuente' && V && V.vista && V.vista.tipo !== 'general') { location.hash = '#'; return; }
     const id = idDetalle(p.n);
     location.href = 'detalle.html' + (id ? '#' + id : '');
   }
