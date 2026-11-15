@@ -300,6 +300,7 @@
       const base = movil ? Math.max(480, Math.min(700, innerHeight * 0.74)) : Math.max(540, Math.min(900, innerHeight * 0.8));
       cont.style.height = Math.round(Math.max(base, Math.min(1100, spec.maxCol * L.fila + 70))) + 'px';
       state.chart.resize();
+      state.chart.dispatchAction({ type: 'hideTip' }); // evita que el tooltip busque un nodo de la vista anterior mientras se reemplazan los datos
       state.chart.setOption(opcionesSankey(spec, paleta(), L), true);
     } catch (e) {
       console.error(e);
