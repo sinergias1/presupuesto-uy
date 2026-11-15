@@ -588,7 +588,7 @@
       const g = M.filasGeneral(state.ov);
       cont.replaceChildren(
         tablaRanking({
-          titulo: 'A dónde va la plata, organismo por organismo', nota: 'Del que más recibe al que menos. Haz clic en un nombre para ver su detalle.',
+          titulo: 'A dónde va la plata, organismo por organismo', nota: 'Del que más recibe al que menos. ' + (esToque() ? 'Toca' : 'Haz clic en') + ' un nombre para ver su detalle.',
           filas: g.incisos, columnaNombre: 'Organismo (inciso)', pctEtiqueta: 'Parte del gasto total', conClasif: true,
         }),
         tablaRanking({
@@ -788,7 +788,7 @@
     if (v.tipo === 'general') {
       titulo = 'El panorama completo';
       contexto = 'Inicio';
-      sub = 'Primero se junta la plata (izquierda), después va a un fondo (centro) y al final se reparte (derecha). Haz clic en un bloque con › para ver qué hay adentro.';
+      sub = 'Primero se junta la plata (izquierda), después va a un fondo (centro) y al final se reparte (derecha). ' + (esToque() ? 'Toca' : 'Haz clic en') + ' un bloque con › para ver qué hay adentro.';
       const dif = ov.totales.diferencia;
       tiles = [
         tile('Lo que se espera cobrar en 2025', M.fmtMonto(ov.totales.recursos), 'Impuestos, tasas, multas y otros cobros.', M.fmtCompleto(ov.totales.recursos)),

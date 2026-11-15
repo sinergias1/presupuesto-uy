@@ -557,7 +557,7 @@
     }
     if (n.cargos) h.push('<div class="tt-h">', esc(textoCargos(n.cargos)), '</div>');
     if (n.ayuda) h.push('<div class="tt-h">', esc(n.ayuda), '</div>');
-    if (n.drillable) h.push('<div class="tt-h">Haz clic para ver el detalle ›</div>');
+    if (n.drillable) h.push('<div class="tt-h">' + ((typeof window !== 'undefined' && window.ES_CELULAR) ? 'Toca' : 'Haz clic') + ' para ver el detalle ›</div>');
     if (n.kind === 'otros') h.push('<div class="tt-h">Junta los elementos más chicos. La lista completa está en la tabla de abajo.</div>');
     if (n.kind === 'ajuste') {
       h.push('<div class="tt-h">Es la diferencia entre lo que se espera cobrar y lo que se puede gastar con ese fondo. No es el déficit oficial.</div>');

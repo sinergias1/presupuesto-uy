@@ -232,3 +232,4 @@ h1 { margin: 0 0 8px; font-size: clamp(24px, 4vw, 34px); line-height: 1.15; font
 }
 .cartel-mouse.visible { opacity: 1; }
 .es-celular .vuelta3d { display: none; }
+.es-celular .sep3d { display: none; }
