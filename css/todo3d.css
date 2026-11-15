@@ -7,3 +7,7 @@
 .etq b { display: block; font-weight: 700; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 .etq span { display: block; color: #cfe6ff; font-size: 12px; font-weight: 600; }
 .tt-camino { margin-top: 6px; color: var(--ink-2); font-size: 11px; line-height: 1.35; }
+
+/* "Año: 2025" escrito a mano, arriba de todo */
+.anio { display: block; width: clamp(150px, 18vw, 240px); height: auto; margin: 0 0 4px -4px; color: #ff5f52; transform: rotate(-3deg); transform-origin: left center;
+  filter: drop-shadow(0 0 6px rgba(255, 95, 82, .45)); }
