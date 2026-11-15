@@ -250,6 +250,11 @@
         if (dat.hijos) hijo.hijos = dat.hijos;
         if (dat.compras_sin_monto) hijo.compras_sin_monto = dat.compras_sin_monto;
       }
+      if (hijo.compras_sin_rubro && hijo.compras_ref && hijo.hijos && cargarCompras) {
+        // unidad ejecutora: compras que no pudimos ubicar en ningún rubro (tabla aparte)
+        var dUE = (await cargarCompras(hijo.compras_ref)).__ue__ || {};
+        hijo = Object.assign({}, hijo, { compras_sin_rubro_lista: dUE.compras_sin_rubro || [] });
+      }
       cadena.push(hijo);
       cur = hijo;
     }
@@ -397,7 +402,7 @@
       }
       visibles.forEach(function (h) {
         var dr = esDrillable(h);
-        defsHijo.push(conExtra({ id: h.id, label: nombreDe(h.id, h.nombre), col: colHijo, kind: kind, fuente: null, nav: dr ? h.id : null, drillable: dr, cargos: h.cargos || null, ejecutado: h.ejecutado != null ? h.ejecutado : null, compras: h.compras === true ? 'compra' : (h.compras_resto ? 'resto' : (h.compras ? 'rubro' : null)), excede: !!(h.compras && h.compras.excede), detalle: datosCompra(h).detalle }, h.id, h.nombre));
+        defsHijo.push(conExtra({ id: h.id, label: (h.aprox ? '≈ ' : '') + nombreDe(h.id, h.nombre), col: colHijo, kind: kind, fuente: null, nav: dr ? h.id : null, drillable: dr, cargos: h.cargos || null, ejecutado: h.ejecutado != null ? h.ejecutado : null, compras: h.compras === true ? 'compra' : (h.compras_resto ? 'resto' : (h.compras ? 'rubro' : null)), excede: !!(h.compras && h.compras.excede), aprox: !!h.aprox || !!(h.compras && h.compras.aprox), detalle: datosCompra(h).detalle }, h.id, h.nombre));
         entradasDesc(h.fuentes).forEach(function (e) { enlazar(e[0], h.id, e[1]); });
       });
       if (cola.length) {
@@ -442,6 +447,8 @@
       cargos: n.cargos || null,
       sinCargos: !!n.sin_cargos,
       sinMonto: n.compras_sin_monto || null,
+      aprox: !!n.aprox,
+      sinRubro: n.compras_sin_rubro_lista ? { lista: n.compras_sin_rubro_lista, n: n.compras_sin_rubro.n, monto: n.compras_sin_rubro.monto } : null,
       enlaces: datosCompra(n).enlaces,
       detalleCompra: datosCompra(n).detalle,
       enCompras: n.compras === true || !!n.compras_resto,
@@ -593,9 +600,10 @@
     if (n.cargos) h.push('<div class="tt-h">', esc(textoCargos(n.cargos)), '</div>');
     if (n.ayuda) h.push('<div class="tt-h">', esc(n.ayuda), '</div>');
     if (n.detalle) h.push('<div class="tt-h">', esc(n.detalle), '</div>');
+    if (n.aprox) h.push('<div class="tt-h">', esc('Ubicación aproximada: la unidad no tiene un rubro más específico para esta compra, así que se la ubicó en el “otros” de su familia.'), '</div>');
     if (n.compras === 'compra') h.push('<div class="tt-h">', esc('Compra adjudicada en 2025 (catálogo de compras estatales). Adjudicar es decidir comprar: el pago puede llegar después.'), '</div>');
     if (n.compras === 'resto') h.push('<div class="tt-h">', esc('Parte de este rubro que no aparece en el catálogo de compras: otros tipos de gasto, compras sin monto o sin clasificar.'), '</div>');
-    if (n.compras === 'rubro') h.push('<div class="tt-h">', esc('Este rubro incluye compras adjudicadas en 2025.' + (n.excede ? ' Se adjudicó más que lo autorizado en este rubro.' : '')), '</div>');
+    if (n.compras === 'rubro') h.push('<div class="tt-h">', esc('Este rubro incluye compras adjudicadas en 2025.' + (n.excede ? ' Se adjudicó más que lo autorizado en este rubro.' : '') + (n.aprox ? ' Incluye compras ubicadas por aproximación.' : '')), '</div>');
     if (n.drillable) h.push('<div class="tt-h">' + ((typeof window !== 'undefined' && window.ES_CELULAR) ? 'Toca' : 'Haz clic') + ' para ver el detalle ›</div>');
     if (n.kind === 'otros') h.push('<div class="tt-h">Junta los elementos más chicos. La lista completa está en la tabla de abajo.</div>');
     if (n.kind === 'ajuste') {

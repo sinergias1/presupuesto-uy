@@ -113,3 +113,9 @@ El 3D es solo para computadoras, tablets e iPads. En un celular (el lado corto d
 - Los montos son los **reales** de la adjudicación; no se recortan. Si lo adjudicado supera lo autorizado en el rubro (contratos de varios años, otros rubros que pagan), el rubro queda marcado `compras.excede`.
 - Las compras no viven en el JSON del inciso: están en `data/2025/compras/<inciso>_<ue>.json` y se cargan al entrar a un rubro (`compras_ref`).
 - Quedan fuera las entidades que no están en el presupuesto nacional (UTE, OSE, ANCAP, intendencias, bancos…) y las compras sin rubro asignable.
+
+### Ubicación aproximada de compras (v13)
+Si una compra no calza con un rubro específico de su unidad ejecutora, `etl_compras.py` la ubica en el rubro "otros" de su familia
+(199-0 consumo, 299-0 servicios, 399-0 bienes de uso). Esas compras llevan `aprox: true`, se marcan con "≈" en el gráfico y
+con una nota en tooltip y tarjetas. Si la unidad tampoco tiene ese rubro, la compra va a la tabla "Compras que no pudimos ubicar
+en un rubro" de la unidad (`__ue__` en `data/2025/compras/<inciso>_<ue>.json`). Cobertura: ~96% de lo adjudicado queda en el gráfico.

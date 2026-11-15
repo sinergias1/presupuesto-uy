@@ -81,7 +81,7 @@ def repartir(valor: int, pesos: dict) -> dict:
 
 def limpiar(nodo):
     """Quita lo colgado en una corrida anterior."""
-    nodo.pop("compras_sin_monto", None); nodo.pop("compras_ref", None)
+    nodo.pop("compras_sin_monto", None); nodo.pop("compras_ref", None); nodo.pop("compras_sin_rubro", None)
     for h in nodo.get("hijos", []) or []:
         limpiar(h)
     if nodo.get("hijos") and nodo["hijos"][-1].get("compras_resto"):
@@ -113,6 +113,14 @@ def hojas_rubro(ue):
     return out
 
 
+# rubros "otros" de cada familia (1 consumo, 2 servicios, 3 bienes de uso), en orden de preferencia
+OBRAS = re.compile(r"\b(REFORMA|CONSTRUCCION|ACONDICIONAMIENTO DE|RECICLAJE DE INMUEBLE|ASCENSOR|TERMOTANQUE|EQUIPO (FACO|DE RAYOS|DE ECO)|PISCINA(?! )|IMPERMEABILIZANTE|EMPAPELADO|FACHADA)\b")
+SERVICIOS = re.compile(r"\b(LIMPIEZA|MANTENIMIENTO|RECOLECCION|CONTRATACION|SERVICIO|TRANSPORTE|PUBLICACION|IMPRESION|GASTOS COMUNES|SOFTWARE|GARANTIA|"
+                       r"CENTELLOGRAMA|ECODOPPLER|ENDOSCOP\w*|\w+GRAFIA|\w+SCOPIA|EMBOLIZACION|DETECCION|EXTRACCION|RECARGA|TRABAJO|COLOCACION|"
+                       r"ALQUILER|ARRENDAMIENTO|CAPACITACION|CURSO|ESTUDIO|TICKET|CIRUGIA|CONSULTA|PROCEDIMIENTO|ANALISIS|DETERMINACION|RESONANCIA|TOMOGRAFIA)\b")
+FAMILIAS = {"1": [("199-0", "f"), ("194-0", "f")], "2": [("299-0", "f")], "3": [("399-0", "i")]}
+
+
 def cargar_reglas():
     with open(RAIZ / "datos_fuente/compras_reglas.csv", encoding="utf-8") as f:
         return [(re.compile(r["patron"]), r["rubro"].split("|"), r["tipo"]) for r in csv.DictReader(f)]
@@ -122,12 +130,22 @@ def clasificar(desc, reglas, disponibles):
     """Primera regla cuyo patrón calza Y que tenga algún rubro candidato en esta unidad ejecutora.
     Si la regla calza pero la unidad no tiene ninguno de sus rubros, se sigue con la siguiente."""
     desc = desc.split(" (Cód")[0].strip().upper()
+    familia = None
     for pat, rubros, tipo in reglas:
         if pat.search(desc):
+            familia = familia or rubros[0][:1]
             for r in rubros:
                 if r in disponibles:
-                    return r, tipo
-    return None, None
+                    return r, tipo, False
+    # ninguna regla calza (o ninguno de sus rubros está en esta unidad): rubro "otros" de la misma familia
+    # (ubicación aproximada). Si ninguna regla calzó, la familia se estima por palabras clave.
+    if not familia:
+        familia = "3" if OBRAS.search(desc) else "2" if SERVICIOS.search(desc) else "1"
+    if familia:
+        for r, tipo in FAMILIAS.get(familia, []):
+            if r in disponibles:
+                return r, tipo, True
+    return None, None, False
 
 
 def nodo(id_, nombre, codigo, valor, fuentes, hijos=None, **extra):
@@ -173,27 +191,34 @@ def main():
             res = {"adjudicado": 0, "sin_monto": 0, "sin_rubro": 0, "asignado": 0, "escalado": 0, "renglones": len(filas)}
             # rubro -> artículo(id,desc) -> proveedor -> monto (pesos enteros)
             acu = defaultdict(lambda: defaultdict(lambda: defaultdict(float)))
-            refs = {}; sin_rubro = defaultdict(float); tipo_de = {}; nom_orig = {}; det = defaultdict(dict); sin_monto = defaultdict(dict)
+            refs = {}; sin_rubro = defaultdict(float); sr_rid = {}; res["aprox"] = 0; tipo_de = {}; nom_orig = {}; det = defaultdict(dict); sin_monto = defaultdict(dict)
             for cid, desc, prov, monto, rid, objeto, fecha, estado, cant, unidad in filas:
-                rubro, tipo = clasificar(desc or "", reglas, rubros)
+                rubro, tipo, aprox = clasificar(desc or "", reglas, rubros)
                 if rubro: tipo_de.setdefault(rubro, tipo)
+                art_txt = acentuar((desc or "").split(" (Cód")[0].strip().capitalize())
                 if monto is None:
                     res["sin_monto"] += 1
                     if rubro in rubros:
                         sm = sin_monto[rubro].setdefault(rid, {"rid": rid, "objeto": acentuar((objeto or "Compra sin descripción").strip()),
                             "fecha": fecha, "estado": estado, "proveedor": (prov or "Proveedor sin nombre").strip().title(),
-                            "articulo": acentuar((desc or "").split(" (Cód")[0].strip().capitalize()), "cantidad": 0.0, "unidad": None})
+                            "articulo": art_txt, "cantidad": 0.0, "unidad": None, "aprox": aprox})
                         sm["cantidad"] += 1; sm["unidades"] = sm.get("unidades", 0) + (cant or 0); sm["unidad"] = unidad
                     continue
                 res["adjudicado"] += monto
                 if rubro is None or rubro not in rubros:
-                    res["sin_rubro"] += monto; sin_rubro[(desc or "").split(" (Cód")[0]] += monto; continue
+                    res["sin_rubro"] += monto; sin_rubro[(desc or "").split(" (Cód")[0]] += monto
+                    x = sr_rid.setdefault(rid, {"rid": rid, "objeto": acentuar((objeto or "Compra sin descripción").strip()), "fecha": fecha,
+                                                 "estado": estado, "monto": 0.0, "provs": defaultdict(float), "arts": defaultdict(float)})
+                    x["monto"] += monto; x["provs"][(prov or "Proveedor sin nombre").strip().title()] += monto; x["arts"][art_txt] += monto
+                    continue
+                if aprox: res["aprox"] += monto
                 nom_orig.setdefault(str(cid), acentuar((desc or "").split(" (Cód")[0].strip().capitalize()))
                 art = (str(cid), nom_orig[str(cid)])
                 pnom = (prov or "Proveedor sin nombre").strip().title()
                 acu[rubro][art][pnom] += monto
-                d = det[(rubro, art, pnom)].setdefault(rid, [acentuar((objeto or "Compra sin descripción").strip()), fecha, estado, 0.0])
+                d = det[(rubro, art, pnom)].setdefault(rid, [acentuar((objeto or "Compra sin descripción").strip()), fecha, estado, 0.0, True])
                 d[3] += monto
+                if not aprox: d[4] = False
             for rubro, arts in acu.items():
                 ocurr = rubros[rubro]
                 tipo_pref = tipo_de[rubro]
@@ -234,13 +259,16 @@ def main():
                             rp = repartir(v, {k: int(x[3]) + 1 for k, x in rel.items()})
                             hojas = []
                             for k, vv in sorted(rp.items(), key=lambda x: -x[1]):
-                                o, fch, est, _ = rel[k]
+                                o, fch, est, _, ap = rel[k]
+                                ex = {"aprox": True} if ap else {}
                                 hojas.append(nodo(f"{r['id']}/c{cid}/{pslug(p)}/r{k}", (o[:90] + "…") if len(o) > 90 else o, f"r{k}", vv, r["fuentes"],
-                                                  compras=True, nivel="Compra", rid=str(k), fecha=fch, estado=est))
+                                                  compras=True, nivel="Compra", rid=str(k), fecha=fch, estado=est, **ex))
+                            ap_p = all(rel[k][4] for k in rel)
                             pv_nodos.append(nodo(f"{r['id']}/c{cid}/{pslug(p)}", p, pslug(p), v, r["fuentes"], hojas or None,
-                                                 compras=True, nivel="Proveedor", nivel_hijos="Compra"))
+                                                 compras=True, nivel="Proveedor", nivel_hijos="Compra", **({"aprox": True} if ap_p else {})))
+                        ap_a = all(all(x[4] for x in det[(rubro, (cid, nom_orig[cid]), p)].values()) for p in pesos)
                         hijos.append(nodo(f"{r['id']}/c{cid}", nom, f"c{cid}", v_art, r["fuentes"], pv_nodos, compras=True,
-                                          nivel="Artículo comprado", nivel_hijos="Proveedor"))
+                                          nivel="Artículo comprado", nivel_hijos="Proveedor", **({"aprox": True} if ap_a else {})))
                     tot_art = sum(h["valor"] for h in hijos)
                     resto = r["valor"] - tot_art
                     if resto > 0:
@@ -248,7 +276,9 @@ def main():
                     hijos.sort(key=lambda h: -h["valor"])
                     refs[r["id"]] = {"hijos": hijos}
                     r["nivel_hijos"] = "Artículo comprado"
+                    ap_m = sum(h["valor"] for h in hijos if h.get("aprox"))
                     r["compras"] = {"adjudicado": int(tot_art), "excede": tot_art > r["valor"]}
+                    if ap_m: r["compras"]["aprox"] = int(ap_m)
                     res["asignado"] += tot_art
             for rubro, rels in sin_monto.items():
                 ocurr = sorted(rubros[rubro], key=lambda rt: (rt[1] != tipo_de.get(rubro), -rt[0]["valor"]))
@@ -256,12 +286,23 @@ def main():
                 refs.setdefault(ocurr[0][0]["id"], {})["compras_sin_monto"] = [
                     {"rid": x["rid"], "objeto": x["objeto"], "fecha": x["fecha"], "estado": x["estado"], "proveedor": x["proveedor"],
                      "articulo": x["articulo"], "unidades": x.get("unidades"), "unidad": (x["unidad"] or "").lower(),
-                     "enlaces": enlaces_compra(x["rid"], bool(x["estado"]))} for x in lista]
+                     "enlaces": enlaces_compra(x["rid"], bool(x["estado"])), **({"aprox": True} if x.get("aprox") else {})} for x in lista]
                 ocurr[0][0].setdefault("compras", {"adjudicado": 0, "excede": False})
                 res["compras_sin_monto"] = res.get("compras_sin_monto", 0) + len(rels)
+            if sr_rid:
+                lista = sorted(sr_rid.values(), key=lambda x: -x["monto"])
+                refs["__ue__"] = {"compras_sin_rubro": [
+                    {"rid": x["rid"], "objeto": x["objeto"], "fecha": x["fecha"], "estado": x["estado"], "monto": int(x["monto"]),
+                     "proveedor": max(x["provs"], key=x["provs"].get) + (f" y {len(x['provs'])-1} más" if len(x["provs"]) > 1 else ""),
+                     "articulo": max(x["arts"], key=x["arts"].get) + (f" y {len(x['arts'])-1} más" if len(x["arts"]) > 1 else ""),
+                     "enlaces": enlaces_compra(x["rid"], bool(x["estado"]))} for x in lista[:300]],
+                    "n": len(lista), "monto": int(sum(x["monto"] for x in lista))}
+                ue["compras_sin_rubro"] = {"n": len(lista), "monto": int(sum(x["monto"] for x in lista))}
             if refs:
                 rel = f"compras/{inc}_{u['ue']}.json"
+                ue["compras_ref"] = rel
                 for nid, dat in refs.items():
+                    if nid == "__ue__": continue
                     nodo_r = buscar(ue, nid)
                     nodo_r["compras_ref"] = rel
                 (a.datos / rel).parent.mkdir(parents=True, exist_ok=True)

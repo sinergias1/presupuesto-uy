@@ -718,6 +718,20 @@
         ]),
       }));
     }
+    if (r.sinRubro && r.sinRubro.lista.length) {
+      const rs = r.sinRubro;
+      secciones.push(tablaSimple({
+        titulo: 'Compras que no pudimos ubicar en un rubro',
+        nota: `Esta unidad adjudicó ${M.numEs(rs.n, 0)} compras por ${M.fmtCompleto(rs.monto)} que no calzan con ningún rubro de su presupuesto, ni siquiera con uno aproximado. ` +
+          'Se listan aquí para que no queden fuera' + (rs.n > rs.lista.length ? ` (las ${M.numEs(rs.lista.length, 0)} más grandes)` : '') + '.',
+        columnas: [{ t: 'Compra' }, { t: 'Proveedor' }, { t: 'Fecha' }, { t: 'Monto', num: true }, { t: 'Ver en el portal' }],
+        filas: rs.lista.map((x) => [
+          h('span', {}, x.objeto, h('br'), h('small', {}, `${x.articulo} · N.º ${x.rid}`)),
+          x.proveedor, x.fecha || '—', h('span', { title: M.fmtCompleto(x.monto) }, M.fmtMonto(x.monto)),
+          enlacesExternos(M.enlacesCompra(x.rid, !!x.estado)) || '—',
+        ]),
+      }));
+    }
     secciones.push(tablaFuentesNodo(M.filasFuentesDeNodo(state.ov, v.nodo)));
     if (r.cargos && r.cargos.regimenes) secciones.push(tablaRegimenes(M.filasRegimenes(v.nodo)));
     const hijosCargos = M.filasCargosHijos(v.nodo);
@@ -830,10 +844,14 @@
       if (r.enlaces) {
         tarjetas.push(tarjeta('Ver la compra', (r.detalleCompra ? r.detalleCompra + '. ' : ''), enlacesExternos(r.enlaces)));
       }
+      if (r.aprox) {
+        tarjetas.push(tarjeta('Ubicación aproximada', 'La unidad no tiene un rubro más específico para esto, así que lo ubicamos en el “otros” de su familia. Es una estimación nuestra, no un dato oficial del rubro.'));
+      }
       if (r.comprasRubro) {
         tarjetas.push(tarjeta('Las compras de este rubro',
           `Abajo se ven las compras adjudicadas en 2025 (catálogo de compras estatales de ARCE): qué se compró y a qué proveedor. Adjudicar es decidir comprar; el pago puede llegar después. ` +
-          (r.comprasRubro.excede ? `Se adjudicó más (${$$(r.comprasRubro.adjudicado)}) que lo autorizado en este rubro (${$$(r.valor)}). Puede deberse a contratos que se pagan en varios años o a compras que se pagan desde otros rubros.` : 'Lo que no figura en el catálogo queda en “Resto sin detalle de compra”.')));
+          (r.comprasRubro.excede ? `Se adjudicó más (${$$(r.comprasRubro.adjudicado)}) que lo autorizado en este rubro (${$$(r.valor)}). Puede deberse a contratos que se pagan en varios años o a compras que se pagan desde otros rubros.` : 'Lo que no figura en el catálogo queda en “Resto sin detalle de compra”.') +
+          (r.comprasRubro.aprox ? ` De lo adjudicado, ${$$(r.comprasRubro.aprox)} está ubicado por aproximación (se marca en cada artículo).` : '')));
       }
       if (r.tipos && r.tipos.length) {
         const t = r.tipos[0];
