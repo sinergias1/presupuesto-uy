@@ -336,7 +336,7 @@ async function iniciar() {
     const asp = innerWidth / innerHeight;
     const dos = V && V.nCols === 2;
     if (VERTICAL) return dos ? 30 : 34;
-    return dos ? (asp < 1.5 ? 29 : 26) : (asp < 1.5 ? 30 : 26);
+    return dos ? (asp < 1.5 ? 29 : 26) : (asp < 1.5 ? 35 : 32);
   };
   const MIN = 12, MAX = 52;
   let ultimoMov = 0;
@@ -496,7 +496,7 @@ async function iniciar() {
       p.py = (-v3.y * 0.5 + 0.5) * innerHeight;
       porCol[col].push(p);
     });
-    const sep = VERTICAL ? 15 : 32;
+    const sep = VERTICAL ? 24 : 46;
     porCol.forEach((lista) => {
       lista.sort((a, b) => a.py - b.py);
       for (let i = 1; i < lista.length; i++) {
@@ -506,6 +506,11 @@ async function iniciar() {
         const izq = VERTICAL ? 'translate(0,-50%)' : 'translate(-100%,-50%)';
         const der = VERTICAL ? 'translate(-100%,-50%)' : 'translate(0,-50%)';
         const tr = p.col === 0 ? izq : p.col === ultima ? der : 'translate(-50%,-100%)';
+        // que no se salga de la pantalla
+        const w = p.etiqueta.offsetWidth || 160;
+        const x0 = p.col === 0 ? (VERTICAL ? p.px : p.px - w) : p.col === ultima ? (VERTICAL ? p.px - w : p.px) : p.px - w / 2;
+        if (x0 < 6) p.px += 6 - x0;
+        else if (x0 + w > innerWidth - 6) p.px -= x0 + w - (innerWidth - 6);
         p.etiqueta.style.transform = `translate(${p.px.toFixed(1)}px,${p.py.toFixed(1)}px) ${tr}`;
         p.etiqueta.style.opacity = (hover && hover !== p ? 0.45 : 1) * entrada;
       });
