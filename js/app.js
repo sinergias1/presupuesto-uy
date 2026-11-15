@@ -251,12 +251,13 @@
           const n = state.idx.nodos.get(p.name);
           if (n && n.nav) { state.ultimaNav = performance.now(); location.hash = '#' + n.nav; }
         });
-        // doble clic en un bloque que no se abre más (un fondo, "Otros"…): sube un nivel
+        // doble clic en un bloque que no se abre más: un fondo sube al inicio; otro ("Otros"…) sube un nivel
         state.chart.on('dblclick', (p) => {
           if (p.dataType !== 'node' || !state.idx || !state.vista || state.vista.tipo === 'general') return;
           if (performance.now() - (state.ultimaNav || 0) < 800) return; // el primer clic de un doble clic acaba de abrir otra vista
           const n = state.idx.nodos.get(p.name);
           if (!n || n.nav) return;
+          if (n.kind === 'fuente') { location.hash = '#'; return; } // un fondo: sube al inicio, donde se ve a dónde va esa plata
           const migas = M.migas(state.vista);
           location.hash = migas[migas.length - 2].hash;
         });
