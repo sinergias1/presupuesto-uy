@@ -76,4 +76,4 @@ Vista experimental que dibuja el mismo flujo del Sankey general (recursos → fo
 
 ### Ciudadanos en la vista "todo desplegado"
 
-A la izquierda de `todo3d.html` hay tres personajes (una mujer, un hombre y un nene, dibujados en `js/ciudadanos.js`) que sacan billetes del bolsillo y los tiran hacia los ingresos, para mostrar que la plata sale de la gente.
+A la izquierda de `todo3d.html` hay una familia dibujada en línea azul (`js/ciudadanos.js`) cuyos billetes salen directo de los bolsillos y vuelan hacia los ingresos, para mostrar que la plata sale de la gente.
