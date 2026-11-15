@@ -172,6 +172,8 @@ async function iniciar() {
   let entrada = 0; // 0 -> 1 al aparecer una vista nueva
   let hover = null;
   const etiquetas = $('etiquetas');
+  const conectores = $('conectores');
+  const SVGNS = 'http://www.w3.org/2000/svg';
   const tip = $('tip');
 
   function limpiar() {
@@ -179,6 +181,7 @@ async function iniciar() {
     V.nodosObj.forEach((o) => { scene.remove(o); if (o.geometry) o.geometry.dispose(); if (o.material) o.material.dispose(); });
     [V.billetes, V.monedas].forEach((m) => { scene.remove(m); m.dispose(); });
     etiquetas.replaceChildren();
+    conectores.replaceChildren();
     tip.hidden = true;
     hover = null;
     V = null;
@@ -212,6 +215,14 @@ async function iniciar() {
       d.append(b, sp);
       etiquetas.append(d);
       p.etiqueta = d;
+      const g = document.createElementNS(SVGNS, 'g');
+      const ln = document.createElementNS(SVGNS, 'line');
+      const pt = document.createElementNS(SVGNS, 'circle');
+      const col = '#' + c.getHexString();
+      ln.setAttribute('stroke', col); ln.setAttribute('stroke-width', '1.6'); ln.setAttribute('stroke-dasharray', '1 5'); ln.setAttribute('stroke-linecap', 'round');
+      pt.setAttribute('r', '3.2'); pt.setAttribute('fill', col);
+      g.append(ln, pt); conectores.append(g);
+      p.cLinea = ln; p.cPunto = pt; p.cG = g;
     });
 
     // Billetes y monedas. Cada flujo recibe una cantidad y una velocidad que dependen de su monto:
@@ -529,9 +540,24 @@ async function iniciar() {
         const tr = p.col === 0 ? izq : p.col === ultima ? der : 'translate(-50%,-100%)';
         // que no se salga de la pantalla
         const w = p.etiqueta.offsetWidth || 160;
-        const x0 = p.col === 0 ? (VERTICAL ? p.px : p.px - w) : p.col === ultima ? (VERTICAL ? p.px - w : p.px) : p.px - w / 2;
-        if (x0 < 6) p.px += 6 - x0;
-        else if (x0 + w > innerWidth - 6) p.px -= x0 + w - (innerWidth - 6);
+        const h = alto(p);
+        const medio = p.col !== 0 && p.col !== ultima;
+        let x0 = p.col === 0 ? (VERTICAL ? p.px : p.px - w) : p.col === ultima ? (VERTICAL ? p.px - w : p.px) : p.px - w / 2;
+        let dx = 0;
+        if (x0 < 6) dx = 6 - x0; else if (x0 + w > innerWidth - 6) dx = -(x0 + w - (innerWidth - 6));
+        p.px += dx; x0 += dx;
+        // conector punteado desde el bloque hasta el borde más cercano del cartel
+        const ax3 = medio ? p.x : p.col === 0 ? p.x - ANCHO_NODO / 2 : p.x + ANCHO_NODO / 2;
+        v3.set(ax3, medio ? p.top : p.centro, 0).project(camera);
+        const bx = (v3.x * 0.5 + 0.5) * innerWidth, by = (-v3.y * 0.5 + 0.5) * innerHeight;
+        const cy = medio ? p.py - h / 2 : p.py;
+        let ex, ey;
+        if (bx < x0) { ex = x0; ey = cy; } else if (bx > x0 + w) { ex = x0 + w; ey = cy; }
+        else { ex = bx; ey = by > cy ? cy + h / 2 : cy - h / 2; }
+        p.cLinea.setAttribute('x1', bx.toFixed(1)); p.cLinea.setAttribute('y1', by.toFixed(1));
+        p.cLinea.setAttribute('x2', ex.toFixed(1)); p.cLinea.setAttribute('y2', ey.toFixed(1));
+        p.cPunto.setAttribute('cx', bx.toFixed(1)); p.cPunto.setAttribute('cy', by.toFixed(1));
+        p.cG.setAttribute('opacity', ((hover && hover !== p ? 0.35 : 0.9) * entrada).toFixed(2));
         p.etiqueta.style.transform = `translate(${p.px.toFixed(1)}px,${p.py.toFixed(1)}px) ${tr}`;
         p.etiqueta.style.opacity = (hover && hover !== p ? 0.45 : 1) * entrada;
       });
