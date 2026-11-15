@@ -832,7 +832,7 @@
     card.classList.add('cargando'); // mantiene el cuadro anterior, atenuado, mientras carga
     card.setAttribute('aria-busy', 'true');
     try {
-      const id = decodeURIComponent(location.hash.replace(/^#\/?/, ''));
+      const id = decodeURIComponent(location.hash.replace(/^#\/?/, '')).split('#')[0]; // ignora sufijos como #otros
       const vista = id
         ? Object.assign({ tipo: 'nodo' }, await M.resolver(state.ov, id, cargarArchivo))
         : { tipo: 'general' };
