@@ -660,7 +660,7 @@ async function iniciar() {
     zoomHacia(Math.exp(Math.sign(ev.deltaY) * Math.min(Math.abs(ev.deltaY), 120) * 0.0018), ev.clientX, ev.clientY);
   }, { passive: false });
   // --- doble clic (o doble toque): en un bloque o en una cinta abre la vista por niveles; en el vacío vuelve a ver todo
-  const esNavegable = (n) => n && (n.id.startsWith('gasto/') || n.id.startsWith('recursos/'));
+  const esNavegable = (n) => n && !n.id.includes('#') && (n.id.startsWith('gasto/') || n.id.startsWith('recursos/'));
   function cintaEn(cx, cy) {
     ndc.set((cx / innerWidth) * 2 - 1, -(cy / innerHeight) * 2 + 1);
     ray.setFromCamera(ndc, camera);
