@@ -41,7 +41,7 @@
   var AMIGABLE = {
     'fuente/11': ['Plata sin destino fijo', 'Rentas Generales: la plata del Estado que puede gastarse en lo que se decida, sin estar reservada para nada en particular.'],
     'fuente/12': ['Plata con destino fijo', 'Recursos con afectación especial: cobros que la ley reserva para un fin determinado.'],
-    'fuente/15': ['Fondo de vivienda', 'Fondo Nacional de Vivienda: plata reservada para vivienda.'],
+    'fuente/15': ['Plata fija para vivienda', 'Fondo Nacional de Vivienda: plata reservada para vivienda.'],
     'fuente/21': ['Préstamos del exterior', 'Endeudamiento externo: préstamos para proyectos específicos.'],
     'fuente/13': ['Otra fuente (código 13)', 'Los datos oficiales no la describen.'],
     'fuente/51': ['Otra fuente (código 51)', 'Los datos oficiales no la describen.'],
