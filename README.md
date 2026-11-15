@@ -56,3 +56,12 @@ Los nodos de la Cámara de Senadores (`gasto/p/1/001`) y de la Cámara de Repres
 - `senado_escala_funcionarios.csv`: escala de sueldos básicos de los funcionarios del Senado (1/8/2026), que se muestra en el programa 222. Es una escala por cargo, sin cantidad de personas.
 - El "sueldo anual de los legisladores" es un cálculo (personas x total nominal x 14) y no es comparable con el crédito de sueldos del presupuesto: no incluye aportes patronales ni partidas para secretarios.
 - El ETL se detiene si el número de integrantes o las bancas por partido no coinciden con los controles, o si falta algún sueldo.
+
+## Prototipo 3D (`3d.html`)
+
+Vista experimental que dibuja el mismo flujo del Sankey general (recursos → fondos → gasto) como miles de partículas de luz sobre fondo negro, con three.js 0.160 (desde CDN). No cambia ningún dato: usa `FinanzasModel.specGeneral` de `js/model.js`, así que los nodos, flujos y nombres son los mismos que en el gráfico clásico.
+
+- `js/flujo3d.js`, `css/flujo3d.css`, `3d.html`.
+- Mover el mouse (o arrastrar) cambia el ángulo; la rueda acerca; al pasar por un bloque se realzan sus flujos y aparece su tooltip; el clic lleva al detalle en el gráfico clásico (`index.html#<id>`).
+- Respeta `prefers-reduced-motion` (casi sin movimiento) y avisa si el navegador no tiene WebGL. En pantallas verticales las columnas se acercan y las etiquetas van hacia adentro.
+- Es un prototipo: la lectura precisa de montos sigue siendo el gráfico clásico y las tablas.
