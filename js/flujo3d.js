@@ -207,7 +207,7 @@ async function iniciar() {
 
       const d = document.createElement('div');
       d.className = 'lbl' + (n.kind === 'fuente' ? ' fuente' : '') + (n.nav ? ' nav' : '');
-      const b = document.createElement('b'); b.textContent = n.label + (n.drillable ? '\u00a0›' : '');
+      const b = document.createElement('b'); b.textContent = n.label + (n.drillable ? ' ›' : '');
       const sp = document.createElement('span'); sp.textContent = M.fmtMonto(n.valor);
       d.append(b, sp);
       etiquetas.append(d);
@@ -316,10 +316,6 @@ async function iniciar() {
       d.append(sm, b);
       return d;
     }));
-    // en los niveles de detalle los totales van abajo del título, para dejar libre la derecha a los carteles largos
-    const hudIzq = document.querySelector('.hud-izq');
-    if (vista.tipo === 'general') { if ($('cifras').parentElement === hudIzq) document.body.append($('cifras')); $('cifras').classList.remove('en-izq'); }
-    else { hudIzq.append($('cifras')); $('cifras').classList.add('en-izq'); }
     const clasico = $('clasico');
     clasico.href = vista.tipo === 'general' ? 'index.html' : 'index.html#' + vista.nodo.id;
     clasico.textContent = vista.tipo === 'general' ? '← Volver al gráfico clásico' : 'Ver tablas de este nivel (gráfico clásico) →';
@@ -437,7 +433,7 @@ async function iniciar() {
       else {
         document.body.classList.add('cargando');
         vista = Object.assign({ tipo: 'nodo' }, await M.resolver(ov, id, cargarArchivo));
-        spec = M.specNodo(ov, vista, { maxHijos: Math.max(5, Math.min(13, Math.floor((innerHeight - 70) / (MOVIL ? 56 : 72)))) });
+        spec = M.specNodo(ov, vista, { maxHijos: MOVIL ? 9 : 13 });
       }
       if (mi !== ficha) return;
       hudDe(spec, vista);
@@ -502,27 +498,24 @@ async function iniciar() {
       else if (VERTICAL && col === ultima) p.px = innerWidth - 8;
       porCol[col].push(p);
     });
-    // Los carteles pueden ocupar varias líneas (el nombre se muestra entero): se separan según su altura real.
-    const alto = (p) => (p.hh || (p.hh = p.etiqueta.offsetHeight || 44));
-    const repartir = (lista, tope) => {
-      lista.sort((x, y) => x.py - y.py);
-      for (let i = 1; i < lista.length; i++) {
-        const min = (alto(lista[i - 1]) + alto(lista[i])) / 2 + 5;
-        if (lista[i].py - lista[i - 1].py < min) lista[i].py = lista[i - 1].py + min;
+    const sep = VERTICAL ? 26 : 46;
+    if (VERTICAL) {
+      // en pantalla angosta las etiquetas de todas las columnas comparten el mismo ancho: se ordenan juntas
+      const todas = [].concat(...porCol).sort((a, b) => a.py - b.py);
+      const tope = innerHeight - 130;
+      for (let i = 1; i < todas.length; i++) if (todas[i].py - todas[i - 1].py < sep) todas[i].py = todas[i - 1].py + sep;
+      if (todas.length && todas[todas.length - 1].py > tope) {
+        todas[todas.length - 1].py = tope;
+        for (let i = todas.length - 2; i >= 0; i--) if (todas[i + 1].py - todas[i].py < sep) todas[i].py = todas[i + 1].py - sep;
       }
-      const n = lista.length;
-      if (n && lista[n - 1].py + alto(lista[n - 1]) / 2 > tope) {
-        lista[n - 1].py = tope - alto(lista[n - 1]) / 2;
-        for (let i = n - 2; i >= 0; i--) {
-          const min = (alto(lista[i + 1]) + alto(lista[i])) / 2 + 5;
-          if (lista[i + 1].py - lista[i].py < min) lista[i].py = lista[i + 1].py - min;
+    }
+    porCol.forEach((lista) => {
+      if (!VERTICAL) {
+        lista.sort((a, b) => a.py - b.py);
+        for (let i = 1; i < lista.length; i++) {
+          if (lista[i].py - lista[i - 1].py < sep) lista[i].py = lista[i - 1].py + sep;
         }
       }
-    };
-    const tope = innerHeight - (VERTICAL ? 130 : 44);
-    if (VERTICAL) repartir([].concat(...porCol), tope); // en celular todos comparten el ancho: se ordenan juntos
-    porCol.forEach((lista) => {
-      if (!VERTICAL) repartir(lista, tope);
       lista.forEach((p) => {
         const izq = VERTICAL ? 'translate(0,-50%)' : 'translate(-100%,-50%)';
         const der = VERTICAL ? 'translate(-100%,-50%)' : 'translate(0,-50%)';
