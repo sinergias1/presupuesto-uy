@@ -59,7 +59,7 @@ Los nodos de la Cámara de Senadores (`gasto/p/1/001`) y de la Cámara de Repres
 
 ## Prototipo 3D (`3d.html`)
 
-Vista experimental que dibuja el mismo flujo del Sankey general (recursos → fondos → gasto) como miles de partículas de luz sobre fondo negro, con three.js 0.160 (desde CDN). No cambia ningún dato: usa `FinanzasModel.specGeneral` de `js/model.js`, así que los nodos, flujos y nombres son los mismos que en el gráfico clásico.
+Vista experimental que dibuja el mismo flujo del Sankey general (recursos → fondos → gasto) como billetes y monedas en 3D (unos 6.500 en computadora, 2.600 en celular, con `InstancedMesh`) que avanzan girando sobre fondo negro, con three.js 0.160 (desde CDN). No cambia ningún dato: usa `FinanzasModel.specGeneral` de `js/model.js`, así que los nodos, flujos y nombres son los mismos que en el gráfico clásico.
 
 - `js/flujo3d.js`, `css/flujo3d.css`, `3d.html`.
 - Mover el mouse (o arrastrar) cambia el ángulo; la rueda acerca; al pasar por un bloque se realzan sus flujos y aparece su tooltip; el clic lleva al detalle en el gráfico clásico (`index.html#<id>`).

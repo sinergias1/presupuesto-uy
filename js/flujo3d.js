@@ -20,7 +20,7 @@ const colorFuente = (codigo) => COLOR_FUENTE[codigo] || GRIS;
 const REDUCIR = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const MOVIL = Math.min(innerWidth, innerHeight) < 700;
 if (innerWidth / innerHeight < 0.85) document.body.classList.add('vertical');
-const N_PARTICULAS = MOVIL ? 20000 : 60000;
+const N_OBJETOS = MOVIL ? 2600 : 6500;
 
 // En pantallas verticales (celular) las columnas se acercan y el gráfico se alarga, y las
 // etiquetas de los costados van hacia adentro para no salirse de la pantalla.
@@ -171,80 +171,94 @@ async function iniciar() {
     p.etiqueta = d;
   });
 
-  // --- partículas
+  // --- billetes y monedas (instancias: una sola llamada de dibujo por tipo)
+  scene.add(new THREE.AmbientLight(0xffffff, 1.9));
+  const sol = new THREE.DirectionalLight(0xffffff, 2.6); sol.position.set(-6, 10, 14); scene.add(sol);
+  const luz2 = new THREE.DirectionalLight(0x7fb4ff, 0.9); luz2.position.set(8, -4, 10); scene.add(luz2);
+
+  function texturaBillete() {
+    const c = document.createElement('canvas'); c.width = 256; c.height = 128;
+    const g = c.getContext('2d');
+    g.fillStyle = '#eef2f6'; g.fillRect(0, 0, 256, 128);
+    g.strokeStyle = '#9aa5b3'; g.lineWidth = 6; g.strokeRect(8, 8, 240, 112);
+    g.lineWidth = 2; g.strokeRect(18, 18, 220, 92);
+    g.fillStyle = '#c9d2dc'; g.beginPath(); g.ellipse(128, 64, 46, 34, 0, 0, 7); g.fill();
+    g.strokeStyle = '#7f8b9a'; g.lineWidth = 3; g.stroke();
+    g.fillStyle = '#5b6674'; g.font = 'bold 40px system-ui, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('$U', 128, 66);
+    g.fillStyle = '#7f8b9a';
+    [[34, 34], [222, 34], [34, 94], [222, 94]].forEach(([x, y]) => { g.beginPath(); g.arc(x, y, 7, 0, 7); g.fill(); });
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t;
+  }
+  function texturaMoneda() {
+    const c = document.createElement('canvas'); c.width = 128; c.height = 128;
+    const g = c.getContext('2d');
+    g.fillStyle = '#f1f4f8'; g.fillRect(0, 0, 128, 128);
+    g.strokeStyle = '#8d98a7'; g.lineWidth = 8; g.beginPath(); g.arc(64, 64, 56, 0, 7); g.stroke();
+    g.lineWidth = 2; g.beginPath(); g.arc(64, 64, 44, 0, 7); g.stroke();
+    g.fillStyle = '#566170'; g.font = 'bold 44px system-ui, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('$U', 64, 68);
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t;
+  }
+
   const total = spec.links.reduce((a, l) => a + l.valor, 0);
   const parts = [];
   enlaces.forEach((e, idx) => {
-    const cuantas = Math.max(60, Math.round((e.l.valor / total) * N_PARTICULAS));
-    const col = new THREE.Color(e.l.fuente ? colorFuente(e.l.fuente) : GRIS);
+    const cuantas = Math.max(24, Math.round((e.l.valor / total) * N_OBJETOS));
     for (let k = 0; k < cuantas; k++) {
-      const br = 0.75 + Math.random() * 0.5;
       parts.push({
         e, idx, t: Math.random(), v: Math.random(), z: (Math.random() - 0.5) * (PROF * 0.9),
-        vel: 0.07 + Math.random() * 0.08, tam: 0.05 + Math.random() * 0.06,
-        r: Math.min(1, col.r * br), g: Math.min(1, col.g * br), b: Math.min(1, col.b * br),
+        vel: 0.05 + Math.random() * 0.06, esc: 0.8 + Math.random() * 0.45,
+        fase: Math.random() * 6.283, giro: (Math.random() < 0.5 ? -1 : 1) * (1.2 + Math.random() * 2.2),
+        moneda: Math.random() < 0.38, inc: (Math.random() - 0.5) * 1.1,
       });
     }
   });
-  const n = parts.length;
-  const aPos = new Float32Array(n * 3), aT = new Float32Array(n), aSize = new Float32Array(n), aCol = new Float32Array(n * 3);
-  parts.forEach((q, i) => { aCol[i * 3] = q.r; aCol[i * 3 + 1] = q.g; aCol[i * 3 + 2] = q.b; aT[i] = q.t; aSize[i] = q.tam; });
-  const gp = new THREE.BufferGeometry();
-  gp.setAttribute('position', new THREE.BufferAttribute(aPos, 3));
-  gp.setAttribute('aT', new THREE.BufferAttribute(aT, 1));
-  gp.setAttribute('aSize', new THREE.BufferAttribute(aSize, 1));
-  gp.setAttribute('aColor', new THREE.BufferAttribute(aCol, 3));
-  const mp = new THREE.ShaderMaterial({
-    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
-    uniforms: { uScale: { value: 600 } },
-    vertexShader: `
-      attribute float aT; attribute float aSize; attribute vec3 aColor;
-      varying float vT; varying vec3 vColor; uniform float uScale;
-      void main() {
-        vT = aT; vColor = aColor;
-        vec4 mv = modelViewMatrix * vec4(position, 1.0);
-        gl_PointSize = aSize * uScale / -mv.z;
-        gl_Position = projectionMatrix * mv;
-      }`,
-    fragmentShader: `
-      varying float vT; varying vec3 vColor;
-      void main() {
-        vec2 d = gl_PointCoord - 0.5;
-        float r = length(d) * 2.0;
-        if (r > 1.0) discard;
-        float a = pow(1.0 - r, 2.0);
-        a *= smoothstep(0.0, 0.07, vT) * smoothstep(1.0, 0.93, vT);
-        gl_FragColor = vec4(vColor * 1.3, a * 0.9);
-      }`,
+  const nBill = parts.filter((q) => !q.moneda).length, nMon = parts.length - nBill;
+  const ancho = VERTICAL ? 0.3 : 0.44;
+  const matBillete = new THREE.MeshStandardMaterial({ map: texturaBillete(), roughness: 0.55, metalness: 0.05 });
+  const matMoneda = new THREE.MeshStandardMaterial({ map: texturaMoneda(), roughness: 0.28, metalness: 0.55 });
+  const billetes = new THREE.InstancedMesh(new THREE.BoxGeometry(ancho, ancho / 2, ancho * 0.03), matBillete, nBill);
+  const geoMon = new THREE.CylinderGeometry(ancho * 0.32, ancho * 0.32, ancho * 0.07, 20);
+  geoMon.rotateZ(Math.PI / 2); // la cara queda mirando a ±x; así el giro se ve al avanzar
+  const monedas = new THREE.InstancedMesh(geoMon, matMoneda, nMon);
+  [billetes, monedas].forEach((m) => { m.frustumCulled = false; m.instanceMatrix.setUsage(THREE.DynamicDrawUsage); scene.add(m); });
+  let ib = 0, im = 0;
+  parts.forEach((q) => {
+    const c = new THREE.Color(q.e.l.fuente ? colorFuente(q.e.l.fuente) : GRIS);
+    c.lerp(new THREE.Color(0xffffff), 0.18 + Math.random() * 0.12);
+    q.mesh = q.moneda ? monedas : billetes;
+    q.i = q.moneda ? im++ : ib++;
+    q.mesh.setColorAt(q.i, c);
   });
-  const puntos = new THREE.Points(gp, mp);
-  puntos.frustumCulled = false;
-  scene.add(puntos);
+  billetes.instanceColor.needsUpdate = true; monedas.instanceColor.needsUpdate = true;
 
   // realce por enlace al pasar el cursor (0 = normal, 1 = realzado, -1 = apagado)
   const realceEnlace = new Float32Array(enlaces.length);
   const objetivoEnlace = new Float32Array(enlaces.length);
 
   const suave = (x) => x * x * (3 - 2 * x);
+  const obj = new THREE.Object3D();
+  let reloj = 0;
   function actualizarParticulas(dt) {
     const v = REDUCIR ? 0.12 : 1;
-    for (let i = 0; i < n; i++) {
+    reloj += dt * v;
+    for (let i = 0; i < parts.length; i++) {
       const q = parts[i];
       q.t += q.vel * dt * v;
       if (q.t > 1) q.t -= 1;
       const e = q.e, s = suave(q.t);
       const x0 = e.s.x + ANCHO_NODO / 2, x1 = e.t.x - ANCHO_NODO / 2;
       const top = e.y0 + (e.y1 - e.y0) * s, bot = (e.y0 - e.h) + ((e.y1 - e.h) - (e.y0 - e.h)) * s;
-      aPos[i * 3] = x0 + (x1 - x0) * q.t;
-      aPos[i * 3 + 1] = bot + q.v * (top - bot);
-      aPos[i * 3 + 2] = q.z + Math.sin(q.t * 6.283 + i) * 0.04;
-      aT[i] = q.t;
+      obj.position.set(x0 + (x1 - x0) * q.t, bot + q.v * (top - bot), q.z + Math.sin(q.t * 6.283 + i) * 0.04);
+      // giran sobre sí mismos mientras avanzan
+      obj.rotation.set(q.fase + reloj * q.giro, q.inc, Math.sin(reloj * 0.8 + q.fase) * 0.5);
       const r = realceEnlace[q.idx];
-      aSize[i] = q.tam * (r > 0 ? 1 + 0.9 * r : 1 + 0.55 * r);
+      const aparecer = Math.min(1, q.t / 0.06, (1 - q.t) / 0.06);
+      obj.scale.setScalar(q.esc * (r > 0 ? 1 + 0.45 * r : 1 + 0.6 * r) * aparecer);
+      obj.updateMatrix();
+      q.mesh.setMatrixAt(q.i, obj.matrix);
     }
-    gp.attributes.position.needsUpdate = true;
-    gp.attributes.aT.needsUpdate = true;
-    gp.attributes.aSize.needsUpdate = true;
+    billetes.instanceMatrix.needsUpdate = true;
+    monedas.instanceMatrix.needsUpdate = true;
   }
 
   // --- tamaño y cámara
@@ -253,13 +267,12 @@ async function iniciar() {
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
-    mp.uniforms.uScale.value = (h * renderer.getPixelRatio()) / (2 * Math.tan((camera.fov * Math.PI) / 360));
-  }
+      }
   addEventListener('resize', ajustar);
   ajustar();
 
   const cam = { yaw: 0, pitch: 0, yawT: 0, pitchT: 0, dist: 60, distT: 27, arrastrando: false };
-  const distBase = () => { const asp = innerWidth / innerHeight; return VERTICAL ? 34 : asp < 1.5 ? 31 : 26; };
+  const distBase = () => { const asp = innerWidth / innerHeight; return VERTICAL ? 34 : asp < 1.5 ? 28 : 22.5; };
   cam.distT = distBase();
   const MIN = 14, MAX = 52;
   let ultimoMov = 0;
@@ -399,7 +412,7 @@ async function iniciar() {
     requestAnimationFrame(cuadro);
   }
   requestAnimationFrame(cuadro);
-  window.__flujo3d = { listo: true, particulas: n, nodos: pos.size, enlaces: enlaces.length };
+  window.__flujo3d = { listo: true, particulas: parts.length, nodos: pos.size, enlaces: enlaces.length };
 }
 
 iniciar().catch((e) => {
