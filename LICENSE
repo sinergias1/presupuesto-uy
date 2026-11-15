@@ -1,0 +1,30 @@
+Copyright (c) 2026 Uruguay Papers. Todos los derechos reservados.
+Copyright (c) 2026 Uruguay Papers. All rights reserved.
+
+ES
+Este repositorio y su contenido (código, diseño, ilustraciones, textos y estructura de la
+visualización) son propiedad de su autora. Se publica solo para que pueda verse y funcionar
+en línea. No se concede ninguna licencia para copiar, modificar, redistribuir, publicar,
+alojar en otro sitio ni usar con fines comerciales o no comerciales, en todo o en parte,
+sin permiso previo y por escrito de la autora.
+
+Los datos del presupuesto provienen de los datos abiertos del Ministerio de Economía y
+Finanzas (MEF) y de la Contaduría General de la Nación de Uruguay, y se rigen por los
+términos de esas fuentes. Esta licencia no se aplica a esos datos originales, solo al
+trabajo propio que los procesa y los presenta.
+
+Las bibliotecas de terceros (Apache ECharts, three.js) conservan sus propias licencias.
+
+EN
+This repository and its contents (code, design, artwork, text and the structure of the
+visualization) are the property of the author. It is published only so that it can be
+viewed and run online. No license is granted to copy, modify, redistribute, publish, host
+elsewhere or use, commercially or non-commercially, in whole or in part, without the prior
+written permission of the author.
+
+The budget data comes from the open data of Uruguay's Ministry of Economy and Finance (MEF)
+and the Contaduría General de la Nación, and is governed by the terms of those sources.
+This license does not apply to that original data, only to the original work that processes
+and presents it.
+
+Third-party libraries (Apache ECharts, three.js) keep their own licenses.

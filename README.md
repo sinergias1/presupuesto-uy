@@ -85,3 +85,8 @@ A la izquierda de `index.html` hay una familia dibujada en línea azul (`js/ciud
 - **`3d.html`: vista por niveles.** Tiene "← Vista completa" (vuelve a la portada) y siempre el botón "Explorar más detalles de estos datos en 2D →", que abre `detalle.html#<id>` en ese mismo bloque.
 - **`detalle.html`: gráfico 2D** con el detalle fino. Tiene "← Volver a la vista 3D completa".
 - Los links viejos `index.html#gasto/...` o `#recursos/...` redirigen a `detalle.html` con el mismo hash.
+
+
+## Licencia
+
+© 2026 Uruguay Papers. Todos los derechos reservados: el código y el diseño no se pueden copiar ni reutilizar sin permiso por escrito (ver `LICENSE`). Los datos de origen son abiertos (MEF y Contaduría General de la Nación) y se rigen por los términos de esas fuentes.
