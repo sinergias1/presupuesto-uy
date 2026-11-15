@@ -63,6 +63,8 @@ Vista experimental que dibuja el mismo flujo del Sankey general (recursos → fo
 
 **Navegable.** La vista 3D tiene el mismo drill-down que el gráfico clásico, con las mismas rutas por hash (`3d.html#gasto/a/4`, `3d.html#recursos/ingresos-tributarios`): clic en un bloque con › entra, las migas de arriba (o la tecla Esc) suben un nivel, y cada nivel usa `FinanzasModel.resolver` + `specNodo`, así que los datos son idénticos. Los incisos se cargan de `data/2025/gasto/` cuando se entra.
 
+**Moverse por la imagen.** Rueda o pellizco = zoom hacia donde apuntás; arrastrar (mouse o dedo) o flechas/WASD = desplazarte hacia arriba, abajo, izquierda o derecha; botones +, − y ⌖ (o tecla 0, o doble clic) = acercar, alejar y volver al centro. El clic en un bloque sigue entrando a su detalle, también con zoom.
+
 **Densidad y velocidad según el monto.** Para cada flujo: `peso = (monto / monto del flujo mayor de la vista) ^ GAMMA` (GAMMA = 0,55 en `flujo3d.js`). La cantidad de billetes es proporcional a `peso × superficie de la franja` y la velocidad va de `VEL_MIN` a `VEL_MAX` según el peso. Con GAMMA = 1 sería estrictamente proporcional, pero lo chico quedaría casi invisible y congelado. La escala es relativa a cada vista, no al total del Estado.
 
 - `js/flujo3d.js`, `css/flujo3d.css`, `3d.html`.

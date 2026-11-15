@@ -261,6 +261,7 @@ async function iniciar() {
     };
     entrada = 0; t0 = performance.now();
     cam.distT = distBase();
+    cam.pxT = 0; cam.pyT = 0;
     cam.dist = cam.distT + 8;
     window.__flujo3d = { listo: true, vista: vista.tipo === 'general' ? '' : vista.nodo.id, particulas: parts.length, nodos: pos.size, enlaces: enlaces.length,
       detalle: enlaces.map((e) => ({ de: e.l.source, a: e.l.target, valor: e.l.valor, cuantas: e.cuantas, vel: e.velBase })) };
@@ -331,14 +332,14 @@ async function iniciar() {
   addEventListener('resize', ajustar);
   ajustar();
 
-  const cam = { yaw: 0, pitch: 0, yawT: 0, pitchT: 0, dist: 60, distT: 27, arrastrando: false };
+  const cam = { yaw: 0, pitch: 0, yawT: 0, pitchT: 0, dist: 60, distT: 27, arrastrando: false, px: 0, py: 0, pxT: 0, pyT: 0 };
   const distBase = () => {
     const asp = innerWidth / innerHeight;
     const dos = V && V.nCols === 2;
     if (VERTICAL) return dos ? 30 : 34;
     return dos ? (asp < 1.5 ? 29 : 26) : (asp < 1.5 ? 35 : 32);
   };
-  const MIN = 12, MAX = 52;
+  const MIN = 8, MAX = 52;
   let ultimoMov = 0;
   let t0 = performance.now();
 
@@ -382,38 +383,102 @@ async function iniciar() {
       tip.style.top = Math.min(cy + 16, innerHeight - h - 10) + 'px';
     }
   }
-  let ptrDown = null;
+  // --- mover la vista: arrastrar (mouse o dedo) = desplazar; rueda o pellizco = zoom hacia donde apuntás
+  const LIM_X = 13, LIM_Y = ALTO_TOTAL / 2 + 4;
+  const clampPan = () => {
+    cam.pxT = Math.max(-LIM_X, Math.min(LIM_X, cam.pxT));
+    cam.pyT = Math.max(-LIM_Y, Math.min(LIM_Y, cam.pyT));
+  };
+  const mundoPorPixel = () => 2 * cam.dist * Math.tan((camera.fov * Math.PI / 360)) / innerHeight;
+  const punteros = new Map();
+  let ptrDown = null, movioMucho = false, distPinza = 0;
+  const plano = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+  const puntoMundo = (cx, cy, salida) => {
+    ndc.set((cx / innerWidth) * 2 - 1, -(cy / innerHeight) * 2 + 1);
+    ray.setFromCamera(ndc, camera);
+    return ray.ray.intersectPlane(plano, salida);
+  };
+  function zoomHacia(factor, cx, cy) {
+    const nueva = Math.max(MIN, Math.min(MAX, cam.distT * factor));
+    const real = nueva / cam.distT;
+    if (real === 1) return;
+    // el punto bajo el cursor se queda quieto: se calcula con el estado final (no el de la animación en curso)
+    const k = 2 * cam.distT * Math.tan(camera.fov * Math.PI / 360) / innerHeight;
+    cam.pxT += (cx - innerWidth / 2) * k * (1 - real);
+    cam.pyT -= (cy - innerHeight / 2) * k * (1 - real);
+    cam.distT = nueva;
+    if (nueva >= distBase() * 0.999) { cam.pxT *= 0.6; cam.pyT *= 0.6; } // al alejarse vuelve al centro
+    clampPan();
+  }
+  function volverAlCentro() { cam.pxT = 0; cam.pyT = 0; cam.distT = distBase(); }
   canvas.addEventListener('pointermove', (ev) => {
-    if (cam.arrastrando) {
-      cam.yawT += ev.movementX * 0.004;
-      cam.pitchT -= ev.movementY * 0.004;
-      cam.pitchT = Math.max(-0.5, Math.min(0.5, cam.pitchT));
-      cam.yawT = Math.max(-0.9, Math.min(0.9, cam.yawT));
+    const ant = punteros.get(ev.pointerId);
+    if (ant) {
+      const dx = ev.clientX - ant.x, dy = ev.clientY - ant.y;
+      punteros.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
+      if (ptrDown && Math.hypot(ev.clientX - ptrDown.x, ev.clientY - ptrDown.y) > 6) movioMucho = true;
+      if (movioMucho) {
+        if (punteros.size >= 2) {
+          const [a, b] = [...punteros.values()];
+          const d = Math.hypot(a.x - b.x, a.y - b.y);
+          if (distPinza) zoomHacia(distPinza / d, (a.x + b.x) / 2, (a.y + b.y) / 2);
+          distPinza = d;
+        } else {
+          const k = mundoPorPixel();
+          cam.pxT -= dx * k; cam.pyT += dy * k; clampPan();
+          cam.px = cam.pxT; cam.py = cam.pyT; // sigue al dedo sin demora
+        }
+        canvas.style.cursor = 'grabbing';
+        fijarHover(null);
+      }
       return;
     }
     mover(ev.clientX, ev.clientY);
     fijarHover(elegir(ev.clientX, ev.clientY), ev.clientX, ev.clientY);
   });
   canvas.addEventListener('pointerdown', (ev) => {
-    ptrDown = { x: ev.clientX, y: ev.clientY };
-    if (ev.pointerType !== 'mouse') cam.arrastrando = true;
-    else if (ev.button === 0) cam.arrastrando = false;
+    punteros.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
+    if (punteros.size === 1) { ptrDown = { x: ev.clientX, y: ev.clientY }; movioMucho = false; distPinza = 0; }
+    else { movioMucho = true; const [a, b] = [...punteros.values()]; distPinza = Math.hypot(a.x - b.x, a.y - b.y); }
     canvas.setPointerCapture(ev.pointerId);
   });
-  canvas.addEventListener('pointerup', (ev) => {
-    const movio = ptrDown && Math.hypot(ev.clientX - ptrDown.x, ev.clientY - ptrDown.y) > 6;
-    cam.arrastrando = false;
-    if (!movio) {
+  function soltar(ev, clic) {
+    const eraUno = punteros.size === 1;
+    punteros.delete(ev.pointerId);
+    distPinza = 0;
+    canvas.style.cursor = 'default';
+    if (clic && eraUno && ptrDown && !movioMucho) {
       const p = elegir(ev.clientX, ev.clientY);
       if (p && p.n.nav) location.hash = '#' + p.n.nav; // navega dentro del 3D
     }
-    ptrDown = null;
-  });
-  canvas.addEventListener('pointerleave', () => { fijarHover(null); });
+    if (!punteros.size) ptrDown = null;
+  }
+  canvas.addEventListener('pointerup', (ev) => soltar(ev, true));
+  canvas.addEventListener('pointercancel', (ev) => soltar(ev, false));
+  canvas.addEventListener('pointerleave', (ev) => { if (!punteros.size) fijarHover(null); });
   canvas.addEventListener('wheel', (ev) => {
     ev.preventDefault();
-    cam.distT = Math.max(MIN, Math.min(MAX, cam.distT * (1 + Math.sign(ev.deltaY) * 0.08)));
+    zoomHacia(1 + Math.sign(ev.deltaY) * 0.1, ev.clientX, ev.clientY);
   }, { passive: false });
+  canvas.addEventListener('dblclick', () => volverAlCentro());
+  $('zoom-mas').addEventListener('click', () => zoomHacia(0.8, innerWidth / 2, innerHeight / 2));
+  $('zoom-menos').addEventListener('click', () => zoomHacia(1.25, innerWidth / 2, innerHeight / 2));
+  $('zoom-centro').addEventListener('click', volverAlCentro);
+  // teclado: flechas o WASD para moverse, + y - para el zoom, 0 para volver al centro
+  addEventListener('keydown', (ev) => {
+    if (ev.ctrlKey || ev.metaKey || ev.altKey) return;
+    const paso = mundoPorPixel() * 90;
+    const k = ev.key.toLowerCase();
+    if (k === 'arrowleft' || k === 'a') cam.pxT -= paso;
+    else if (k === 'arrowright' || k === 'd') cam.pxT += paso;
+    else if (k === 'arrowup' || k === 'w') cam.pyT += paso;
+    else if (k === 'arrowdown' || k === 's') cam.pyT -= paso;
+    else if (k === '+' || k === '=') zoomHacia(0.85, innerWidth / 2, innerHeight / 2);
+    else if (k === '-' || k === '_') zoomHacia(1.18, innerWidth / 2, innerHeight / 2);
+    else if (k === '0') volverAlCentro();
+    else return;
+    ev.preventDefault(); clampPan();
+  });
   // Escape sube un nivel
   addEventListener('keydown', (ev) => {
     if (ev.key !== 'Escape' || !V || V.vista.tipo === 'general') return;
@@ -547,8 +612,9 @@ async function iniciar() {
     cam.pitch += (cam.pitchT - cam.pitch) * 0.05;
     cam.dist += (cam.distT - cam.dist) * 0.06;
     const d = cam.dist;
-    camera.position.set(Math.sin(cam.yaw) * d, Math.sin(cam.pitch) * d * 0.55 + 0.6, Math.cos(cam.yaw) * d);
-    camera.lookAt(0, 0, 0);
+    cam.px += (cam.pxT - cam.px) * 0.18; cam.py += (cam.pyT - cam.py) * 0.18;
+    camera.position.set(cam.px + Math.sin(cam.yaw) * d, cam.py + Math.sin(cam.pitch) * d * 0.55 + 0.6, Math.cos(cam.yaw) * d);
+    camera.lookAt(cam.px, cam.py, 0);
 
     if (V) {
       for (let i = 0; i < V.realceEnlace.length; i++) V.realceEnlace[i] += (V.objetivoEnlace[i] - V.realceEnlace[i]) * 0.12;
