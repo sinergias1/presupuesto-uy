@@ -972,7 +972,7 @@ def main() -> None:
                 "así que la fecha de corte no es la misma.",
                 "Solo el Poder Legislativo trae ejecución 2025 (lo efectivamente gastado, `ejecutado`): el resto del gasto es solo crédito, "
                 "así que la ejecución no se puede comparar entre organismos.",
-                "El gasto del Poder Legislativo se financia con Rentas Generales (código 11, la 'Plata de libre uso' de la página): "
+                "El gasto del Poder Legislativo se financia con Rentas Generales (código 11, la 'Plata sin destino fijo' de la página): "
                 "se asignó todo a esa fuente.",
                 "Los recursos no cambian al agregar el Poder Legislativo (solo recauda una suma muy chica). Por eso la diferencia entre "
                 "recursos y gasto crece en lo que suma su gasto.",

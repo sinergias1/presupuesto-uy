@@ -586,7 +586,7 @@
       ['Recursos', 'La plata que el Estado espera cobrar en el año: impuestos, tasas, multas y otros ingresos.'],
       ['Crédito vigente', 'La plata que ya está autorizada para gastar. No es lo que ya se gastó.'],
       ['Fondo (fuente de financiamiento)', 'De qué “bolsillo” sale la plata. Cada color del gráfico es un fondo.'],
-      ['Rentas Generales (“plata de libre uso”)', 'La plata que puede gastarse en lo que se decida, sin estar reservada para un fin.'],
+      ['Rentas Generales (“plata sin destino fijo”)', 'La plata que puede gastarse en lo que se decida, sin estar reservada para un fin.'],
       ['Afectación especial (“plata con destino fijo”)', 'Plata que una ley reserva para un fin determinado.'],
       ['Inciso', 'Cada organismo grande del presupuesto: un ministerio, la Presidencia, la Universidad, el Poder Judicial, etc.'],
       ['Unidad ejecutora', 'Una oficina o dirección dentro de un inciso, con su propio presupuesto.'],
@@ -695,7 +695,7 @@
       }
       if (r.esParlamento) {
         tarjetas.push(tarjeta('De dónde sale la plata',
-          'La plata del Parlamento sale de Rentas Generales, que en esta página se llama “Plata de libre uso”.'));
+          'La plata del Parlamento sale de Rentas Generales, que en esta página se llama “Plata sin destino fijo”.'));
       }
       if (r.sufijo === 'r' && r.tieneObjetos) {
         tarjetas.push(tarjeta('Cómo se parte',

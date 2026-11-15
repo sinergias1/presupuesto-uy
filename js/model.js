@@ -39,7 +39,7 @@
   // Nombres simples para lo que se repite en todas las vistas: [nombre, explicación].
   // Clave: id del nodo, o "fuente/<código>" para los fondos de financiamiento.
   var AMIGABLE = {
-    'fuente/11': ['Plata de libre uso', 'Rentas Generales: la plata del Estado que puede gastarse en lo que se decida, sin estar reservada para nada en particular.'],
+    'fuente/11': ['Plata sin destino fijo', 'Rentas Generales: la plata del Estado que puede gastarse en lo que se decida, sin estar reservada para nada en particular.'],
     'fuente/12': ['Plata con destino fijo', 'Recursos con afectación especial: cobros que la ley reserva para un fin determinado.'],
     'fuente/15': ['Fondo de vivienda', 'Fondo Nacional de Vivienda: plata reservada para vivienda.'],
     'fuente/21': ['Préstamos del exterior', 'Endeudamiento externo: préstamos para proyectos específicos.'],
