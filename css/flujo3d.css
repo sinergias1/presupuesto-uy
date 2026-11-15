@@ -74,9 +74,9 @@ h1 { margin: 0 0 8px; font-size: clamp(22px, 3.2vw, 34px); line-height: 1.1; fon
 body.cargando #lienzo { opacity: .55; transition: opacity .2s; }
 .lbl b { max-width: 250px; overflow: hidden; text-overflow: ellipsis; }
 
-/* Etiquetas con el mismo formato que la vista completa: caja oscura con borde fino, nombre en negrita y monto en celeste claro */
-.lbl { font-size: 14px; line-height: 1.25; color: #fff; padding: 3px 8px; border-radius: 4px;
-  background: rgba(4, 8, 16, .78); box-shadow: 0 0 0 1px rgba(150, 190, 255, .3); text-shadow: 0 1px 2px #000; }
+/* Etiquetas sin caja: solo texto, con sombra oscura para que se lea sobre los billetes */
+.lbl { font-size: 14px; line-height: 1.25; color: #fff; padding: 0; border-radius: 0; background: none; box-shadow: none;
+  text-shadow: 0 0 3px #000, 0 0 6px #000, 0 0 10px rgba(0, 0, 0, .9), 0 1px 2px #000; }
 .lbl b { font-weight: 700; }
 .lbl span { color: #cfe6ff; font-size: 12px; font-weight: 600; }
 
