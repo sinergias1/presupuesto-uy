@@ -133,6 +133,64 @@
   }
 
   // ------------------------------------------------------------ gráfico
+  // Texto de la etiqueta de un bloque. En el celular los fondos no llevan etiqueta (se leen en la leyenda de colores)
+  // y los nombres largos se recortan.
+  function textoEtiqueta(n, L) {
+    if (L.clave !== 'angosto') return n.label + (n.drillable ? ' ›' : '');
+    if (n.kind === 'fuente') return '';
+    const t = n.label.length > 44 ? n.label.slice(0, 43).trimEnd() + '…' : n.label;
+    return t + (n.drillable ? ' ›' : '');
+  }
+
+  // En el celular ninguna etiqueta se esconde por encimarse: se reparten hacia arriba y abajo, cada una lo más cerca
+  // posible de su bloque, para que hasta el bloque más chico (por ejemplo el Parlamento) conserve su nombre.
+  function acomodarEtiquetas(opt, spec, L) {
+    const grafo = state.chart.getModel().getSeriesByIndex(0).getGraph();
+    const alto = state.chart.getHeight();
+    const lineaH = L.fuente + 3, sep = 3;
+    // cuántas líneas ocupa un texto de verdad: se miden las palabras con la misma tipografía del gráfico
+    const ctx = document.createElement('canvas').getContext('2d');
+    ctx.font = `${L.fuente}px system-ui, -apple-system, "Segoe UI", sans-serif`;
+    const lineasDe = (texto) => {
+      let lineas = 1, actual = '';
+      texto.split(' ').forEach((pal) => {
+        lineas += Math.floor(ctx.measureText(pal).width / L.etiqueta); // una palabra muy larga se parte en más de una línea
+        const prueba = actual ? actual + ' ' + pal : pal;
+        if (actual && ctx.measureText(prueba).width > L.etiqueta - 2) { lineas++; actual = pal; } else actual = prueba;
+      });
+      return lineas;
+    };
+    const columnas = new Map();
+    state.etqOff = {};
+    spec.nodes.forEach((n, i) => {
+      const nodo = grafo.getNodeByIndex(i), lay = nodo && nodo.getLayout();
+      const txt = textoEtiqueta(n, L);
+      if (!lay || !txt) return;
+      const hh = lineasDe(txt) * lineaH;
+      const centro = lay.y + lay.dy / 2;
+      if (!columnas.has(n.col)) columnas.set(n.col, []);
+      columnas.get(n.col).push({ i, hh, centro, top: centro - hh / 2 });
+    });
+    columnas.forEach((items) => {
+      items.sort((a, b) => a.top - b.top);
+      let borde = 2;
+      items.forEach((it) => { it.top = Math.max(it.top, borde); borde = it.top + it.hh + sep; });
+      borde = alto - 2;
+      for (let k = items.length - 1; k >= 0; k--) {
+        const it = items[k];
+        it.top = Math.min(it.top, borde - it.hh);
+        borde = it.top - sep;
+      }
+      items.forEach((it) => {
+        const off = it.top + it.hh / 2 - it.centro;
+        const d = opt.series[0].data[it.i];
+        if (Math.abs(off) > 70) d.label = Object.assign({}, d.label, { show: false }); // demasiado lejos de su bloque: mejor sin nombre que uno equivocado
+        else state.etqOff[it.i] = off;
+      });
+    });
+    state.chart.setOption(opt, true);
+  }
+
   function opcionesSankey(spec, pal, L) {
     const nodos = new Map(spec.nodes.map((n) => [n.id, n]));
     const enlaces = new Map(spec.links.map((l) => [l.source + '>' + l.target, l]));
@@ -206,7 +264,7 @@
         draggable: false,
         emphasis: { focus: 'adjacency' },
         lineStyle: { curveness: 0.5 },
-        labelLayout: { hideOverlap: true },
+        labelLayout: L.clave === 'angosto' ? ((q) => ({ dy: (state.etqOff && state.etqOff[q.dataIndex]) || 0 })) : { hideOverlap: true },
         label: {
           color: pal.ink,
           fontSize: L.fuente,
@@ -218,13 +276,7 @@
           textBorderWidth: 3,
           formatter: (p) => {
             const n = nodos.get(p.name);
-            if (!n) return p.name;
-            if (L.clave === 'angosto') {
-              if (n.kind === 'fuente') return ''; // en el celular los fondos se leen en la leyenda de colores de arriba
-              const t = n.label.length > 44 ? n.label.slice(0, 43).trimEnd() + '…' : n.label;
-              return t + (n.drillable ? ' ›' : '');
-            }
-            return n.label + (n.drillable ? ' ›' : '');
+            return n ? textoEtiqueta(n, L) : p.name;
           },
         },
         data,
@@ -336,7 +388,10 @@
       cont.style.height = Math.round(Math.max(base, Math.min(1100, spec.maxCol * L.fila + 70))) + 'px';
       state.chart.resize();
       state.chart.dispatchAction({ type: 'hideTip' }); // evita que el tooltip busque un nodo de la vista anterior mientras se reemplazan los datos
-      state.chart.setOption(opcionesSankey(spec, paleta(), L), true);
+      state.etqOff = {};
+      const opt = opcionesSankey(spec, paleta(), L);
+      state.chart.setOption(opt, true);
+      if (L.clave === 'angosto') acomodarEtiquetas(opt, spec, L);
     } catch (e) {
       console.error(e);
       state.chart = null;
