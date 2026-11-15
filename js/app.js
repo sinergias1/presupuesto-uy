@@ -129,7 +129,7 @@
     if (ancho >= 1150) return { clave: 'extra', izq: 230, der: 280, etiqueta: 220, fuente: 13, fila: 36, gap: 14, maxHijos: 14, col0Izq: true };
     if (ancho >= 900) return { clave: 'ancho', izq: 190, der: 230, etiqueta: 180, fuente: 12, fila: 30, gap: 10, maxHijos: 12, col0Izq: true };
     if (ancho >= 600) return { clave: 'medio', izq: 150, der: 170, etiqueta: 140, fuente: 12, fila: 32, gap: 10, maxHijos: 10, col0Izq: true };
-    return { clave: 'angosto', izq: 8, der: 96, etiqueta: 92, fuente: 11, fila: 36, gap: 8, maxHijos: 7, col0Izq: false };
+    return { clave: 'angosto', izq: 8, der: 118, etiqueta: 112, fuente: 11, fila: 36, gap: 8, maxHijos: 7, col0Izq: false };
   }
 
   // ------------------------------------------------------------ gráfico
@@ -211,13 +211,20 @@
           color: pal.ink,
           fontSize: L.fuente,
           width: L.etiqueta,
-          overflow: 'truncate',
+          overflow: L.clave === 'angosto' ? 'break' : 'truncate',
+          lineHeight: L.clave === 'angosto' ? L.fuente + 3 : undefined,
           ellipsis: '…',
           textBorderColor: pal.surface,
           textBorderWidth: 3,
           formatter: (p) => {
             const n = nodos.get(p.name);
-            return n ? n.label + (n.drillable ? ' ›' : '') : p.name;
+            if (!n) return p.name;
+            if (L.clave === 'angosto') {
+              if (n.kind === 'fuente') return ''; // en el celular los fondos se leen en la leyenda de colores de arriba
+              const t = n.label.length > 44 ? n.label.slice(0, 43).trimEnd() + '…' : n.label;
+              return t + (n.drillable ? ' ›' : '');
+            }
+            return n.label + (n.drillable ? ' ›' : '');
           },
         },
         data,
@@ -247,6 +254,23 @@
       h('summary', {}, `${n} movimiento${n === 1 ? '' : 's'} de plata ${n === 1 ? 'es' : 'son'} muy chico${n === 1 ? '' : 's'} para dibujarse (en total, ${M.fmtMonto(suma)})`),
       h('ul', {}, spec.omitidos.map((o) => h('li', {}, `${o.origen} → ${o.destino}: ${M.fmtMonto(o.valor)}`))));
   }
+
+  // Cada celda guarda el nombre de su columna: en el celular las tablas se muestran como tarjetas y lo necesitan.
+  function etiquetarTablas() {
+    document.querySelectorAll('table.tabla').forEach((t) => {
+      const cab = [...t.querySelectorAll('thead th')].map((x) => x.textContent.trim());
+      t.querySelectorAll('tbody tr').forEach((tr) => {
+        [...tr.children].forEach((c, i) => {
+          if (c.tagName !== 'TD') return;
+          if (cab[i] && !c.dataset.label) c.dataset.label = cab[i];
+          if (/^[—–-]?$/.test(c.textContent.trim())) c.classList.add('vacia'); // sin dato: en las tarjetas no se muestra la fila
+        });
+      });
+    });
+  }
+  let etiquetando = 0;
+  new MutationObserver(() => { cancelAnimationFrame(etiquetando); etiquetando = requestAnimationFrame(etiquetarTablas); })
+    .observe(document.documentElement, { childList: true, subtree: true });
 
   function renderGrafico() {
     const v = state.vista;

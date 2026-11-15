@@ -233,3 +233,50 @@ h1 { margin: 0 0 8px; font-size: clamp(24px, 4vw, 34px); line-height: 1.15; font
 .cartel-mouse.visible { opacity: 1; }
 .es-celular .vuelta3d { display: none; }
 .es-celular .sep3d { display: none; }
+
+/* ---------- celular (≤640 px): el gráfico va primero, las tablas se leen como tarjetas ---------- */
+.toque { display: none; }
+.es-celular .clic { display: none; }
+.es-celular .toque { display: inline; }
+@media (max-width: 640px) {
+  .cabecera { padding-bottom: 6px; }
+  .cabecera h1 { font-size: 26px; line-height: 1.15; }
+  .lead { font-size: 16px; line-height: 1.45; }
+  .lead-datos { font-size: 13px; }
+  #vista:not([hidden]) { display: flex; flex-direction: column; }
+  #vista > .encabezado { order: 0; }
+  #vista > #grafico-card { order: 1; margin-bottom: 18px; }
+  #vista > #tiles { order: 2; grid-template-columns: 1fr 1fr; gap: 8px; }
+  #vista > #explica { order: 3; }
+  #vista > #tablas { order: 4; }
+  .encabezado h2 { font-size: 24px; }
+  .encabezado .sub { font-size: 15px; }
+  .tile { padding: 9px 11px; }
+  .tile-l { font-size: 12.5px; line-height: 1.25; }
+  .tile-v { font-size: 17px; overflow-wrap: anywhere; }
+  .tile-n { font-size: 12.5px; line-height: 1.3; }
+  .card { padding: 8px 10px 12px; }
+  .guia { font-size: 14px; }
+  .leyenda-fila { margin-bottom: 4px; }
+  .pista { font-size: 13px; line-height: 1.45; }
+  /* tablas: cada fila es una tarjeta con su nombre arriba y los datos debajo */
+  .tabla-wrap { overflow-x: visible; }
+  .tabla, .tabla tbody, .tabla tr, .tabla th, .tabla td { display: block; width: auto; }
+  .tabla thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .tabla tbody tr { padding: 10px 14px 8px; border-bottom: 1px solid var(--grid); }
+  .tabla tbody tr:last-child { border-bottom: 0; }
+  .tabla tbody th { padding: 0 0 6px; border: 0; font-size: 15px; font-weight: 600; line-height: 1.3; }
+  .tabla td { display: flex; justify-content: space-between; align-items: baseline; gap: 14px; padding: 2px 0; border: 0; font-size: 14px; text-align: right; }
+  .tabla td::before { content: attr(data-label); flex: none; max-width: 55%; color: var(--ink2); font-size: 12.5px; text-align: left; white-space: normal; }
+  .tabla td.col-fuentes { display: none; }
+  .tabla .num { white-space: normal; }
+  .tabla-sec h3 { font-size: 17px; }
+}
+@media (pointer: coarse) {
+  .migas a, .migas span { padding-top: 6px; padding-bottom: 6px; }
+  .tabla a { display: inline-block; padding: 2px 0; }
+}
+@media (max-width: 640px) {
+  .tile:last-child:nth-child(odd) { grid-column: 1 / -1; }
+  .tabla td.vacia { display: none; }
+}
