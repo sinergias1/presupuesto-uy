@@ -53,6 +53,8 @@
     'recursos/contribuciones-figurativas-en-el-pto-nal': ['Aportes entre organismos', 'Movimientos de plata dentro del propio Estado.'],
     'gasto/a': ['Presidencia y ministerios', 'Administración Central: Presidencia de la República y los ministerios.'],
     'gasto/b': ['Pagos generales del Estado', 'Otros Organismos: intereses de la deuda, apoyo a la seguridad social, subsidios y partidas que se reparten después.'],
+    'gasto/p': ['Parlamento', 'Poder Legislativo: Cámara de Senadores, Cámara de Representantes y Comisión Administrativa (con la Institución Nacional de Derechos Humanos). No está en los archivos oficiales de gasto: lo sumamos con datos de cada Cámara, a fin de 2025.'],
+    'gasto/p/1/002/0': ['Sin programa informado', 'Los documentos de la Cámara de Representantes no dividen su gasto en programas.'],
     'gasto/c': ['Educación, salud y justicia', 'Organismos del Art. 220: organismos con autonomía, como ANEP, ASSE, la Universidad de la República, el Poder Judicial y la Fiscalía.'],
   };
   var TIPOS_AMIGABLES = {
@@ -297,7 +299,7 @@
       defs.push(conExtra({ id: 'fuente/' + f.codigo, label: nombreDe('fuente/' + f.codigo, f.nombre), col: 1, kind: 'fuente', fuente: f.codigo, nav: null, drillable: false }, 'fuente/' + f.codigo, f.nombre));
     });
     ov.gasto.hijos.forEach(function (c) {
-      defs.push(conExtra({ id: c.id, label: nombreDe(c.id, c.nombre), col: 2, kind: 'gasto', fuente: null, nav: c.id, drillable: true }, c.id, c.nombre));
+      defs.push(conExtra({ id: c.id, label: nombreDe(c.id, c.nombre), col: 2, kind: 'gasto', fuente: null, nav: c.id, drillable: true, ejecutado: c.ejecutado != null ? c.ejecutado : null }, c.id, c.nombre));
     });
     defs.push({ id: AJ_SALIDA, label: ETIQ_AJ_SALIDA, col: 2, kind: 'ajuste', fuente: null, nav: null, drillable: false });
 
@@ -349,7 +351,7 @@
 
     var defsHijo = [];
     if (!hijos.length) {
-      defsHijo.push(conExtra({ id: nodo.id, label: nombreDe(nodo.id, nodo.nombre), col: colHijo, kind: kind, fuente: null, nav: null, drillable: false, cargos: nodo.cargos || null }, nodo.id, nodo.nombre));
+      defsHijo.push(conExtra({ id: nodo.id, label: nombreDe(nodo.id, nodo.nombre), col: colHijo, kind: kind, fuente: null, nav: null, drillable: false, cargos: nodo.cargos || null, ejecutado: nodo.ejecutado != null ? nodo.ejecutado : null }, nodo.id, nodo.nombre));
       fuentesOrden.forEach(function (e) { enlazar(e[0], nodo.id, e[1]); });
     } else {
       var visibles = hijos;
@@ -360,7 +362,7 @@
       }
       visibles.forEach(function (h) {
         var dr = esDrillable(h);
-        defsHijo.push(conExtra({ id: h.id, label: nombreDe(h.id, h.nombre), col: colHijo, kind: kind, fuente: null, nav: dr ? h.id : null, drillable: dr, cargos: h.cargos || null }, h.id, h.nombre));
+        defsHijo.push(conExtra({ id: h.id, label: nombreDe(h.id, h.nombre), col: colHijo, kind: kind, fuente: null, nav: dr ? h.id : null, drillable: dr, cargos: h.cargos || null, ejecutado: h.ejecutado != null ? h.ejecutado : null }, h.id, h.nombre));
         entradasDesc(h.fuentes).forEach(function (e) { enlazar(e[0], h.id, e[1]); });
       });
       if (cola.length) {
@@ -402,6 +404,9 @@
       nivel: n.nivel || niveles[prof] || '',
       cargos: n.cargos || null,
       sinCargos: !!n.sin_cargos,
+      ejecutado: n.ejecutado != null ? n.ejecutado : null,
+      pctEjecutado: n.ejecutado != null && n.valor ? n.ejecutado / n.valor : null,
+      esParlamento: /^gasto\/p(\/|$)/.test(n.id),
       sufijo: n.id.slice(n.id.lastIndexOf('/') + 1),
       tieneObjetos: !!(n.objetos && n.objetos.length),
       oficial: ayudaDe(n.id, n.nombre) ? n.nombre : null,
@@ -429,6 +434,10 @@
       fuentes: n.fuentes || {},
       hash: esDrillable(n) ? '#' + n.id : null,
     };
+    if (n.ejecutado != null) {
+      fila.ejecutado = n.ejecutado;
+      fila.pctEjecutado = n.valor ? n.ejecutado / n.valor : 0;
+    }
     if (extra) Object.keys(extra).forEach(function (k) { fila[k] = extra[k]; });
     return fila;
   }
@@ -511,6 +520,9 @@
     var h = ['<div class="tt"><div class="tt-v">', esc(fmtMonto(n.valor)), '</div><div class="tt-n">'];
     if (n.kind === 'fuente' && color) h.push('<span class="tt-key" style="background:', esc(color), '"></span>');
     h.push(esc(n.label), '</div><div class="tt-s">', esc(fmtPct(total ? n.valor / total : 0) + ' del total de este gráfico'), '</div>');
+    if (n.ejecutado != null && n.valor) {
+      h.push('<div class="tt-h">', esc('Ejecutado en 2025: ' + fmtMonto(n.ejecutado) + ' (' + fmtPct(n.ejecutado / n.valor) + ' de lo autorizado).'), '</div>');
+    }
     if (n.cargos) h.push('<div class="tt-h">', esc(textoCargos(n.cargos)), '</div>');
     if (n.ayuda) h.push('<div class="tt-h">', esc(n.ayuda), '</div>');
     if (n.drillable) h.push('<div class="tt-h">Haz clic para ver el detalle ›</div>');

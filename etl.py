@@ -111,6 +111,24 @@ COLS_PUESTOS = {
 # (clasificación=1, inciso=2, unidad ejecutora=3, programa=4).
 NIVEL_MAX_TIPOS = 4
 
+# Poder Legislativo (inciso 1): no está en los CSV oficiales. Se agrega desde un CSV curado
+# (datos_fuente/legislativo_2025.csv) como grupo aparte. Los montos son crédito definitivo
+# al 31/12/2025 y vienen con su ejecución; se asigna todo al fondo común (Rentas Generales).
+ARCHIVO_LEGISLATIVO = Path(__file__).resolve().parent / "datos_fuente" / "legislativo_2025.csv"
+CLAS_LEGISLATIVO = ("P", "Poder Legislativo")
+FUENTE_LEGISLATIVO = "11"
+COLS_LEGISLATIVO = [
+    "inciso", "ue", "ue_nombre", "prog", "prog_nombre", "tipo_gasto", "concepto",
+    "credito_definitivo", "ejecutado", "fuente",
+]
+# Totales de control por unidad ejecutora (crédito definitivo, ejecutado), tomados de los
+# totales de cada PDF original. Si el CSV curado deja de cerrar con ellos, el ETL se detiene.
+CONTROL_LEGISLATIVO = {
+    "001": (2_087_350_032, 1_612_142_864),  # Cámara de Senadores
+    "002": (3_586_367_767, 2_781_300_519),  # Cámara de Representantes
+    "003": (4_546_693_909, 2_847_665_451),  # Comisión Administrativa (programas 226, 227, 228)
+}
+
 _RE_PLANO = r"-?\d+"
 _RE_MILES = r"-?\d{1,3}(\.\d{3})+"
 
@@ -198,8 +216,11 @@ def nuevo_nodo(id_: str, nombre: str, codigo: str) -> dict:
     }
 
 
-def acumular(raiz: dict, ruta: list[tuple[str, str]], fuente: str, tipo: str | None, valor: int) -> None:
-    """Suma `valor` en la raíz y en cada nodo de la ruta, creándolos si hace falta."""
+def acumular(raiz: dict, ruta: list[tuple[str, str]], fuente: str, tipo: str | None, valor: int,
+             ejec: int | None = None) -> None:
+    """Suma `valor` en la raíz y en cada nodo de la ruta, creándolos si hace falta.
+    Si se pasa `ejec`, también suma lo ejecutado en cada nodo de la ruta (no en la raíz:
+    solo una parte del gasto total trae ejecución)."""
     raiz["valor"] += valor
     raiz["fuentes"][fuente] += valor
     if tipo is not None and NIVEL_MAX_TIPOS >= 0:
@@ -218,6 +239,8 @@ def acumular(raiz: dict, ruta: list[tuple[str, str]], fuente: str, tipo: str | N
             )
         hijo["valor"] += valor
         hijo["fuentes"][fuente] += valor
+        if ejec is not None:
+            hijo["ejec"] = hijo.get("ejec", 0) + ejec
         if tipo is not None and profundidad <= NIVEL_MAX_TIPOS:
             hijo["tipos"][tipo] += valor
         nodo = hijo
@@ -236,6 +259,8 @@ def finalizar(nodo: dict) -> dict:
             if v
         },
     }
+    if "ejec" in nodo:
+        salida["ejecutado"] = int(nodo["ejec"])
     if nodo["tipos"]:
         salida["tipos"] = {
             k: int(v)
@@ -259,7 +284,7 @@ def construir_recursos(rec: pd.DataFrame) -> dict:
     return finalizar(raiz)
 
 
-def construir_gasto(gas: pd.DataFrame) -> dict:
+def construir_gasto(gas: pd.DataFrame, leg: pd.DataFrame | None = None) -> dict:
     exigir(
         set(gas["tipo"]) <= set(TIPO_CODIGO),
         f"tipos de gasto desconocidos: {sorted(set(gas['tipo']) - set(TIPO_CODIGO))}",
@@ -277,8 +302,70 @@ def construir_gasto(gas: pd.DataFrame) -> dict:
             (f"{r.obj}-{r.aux}", r.obj_nombre),
         ]
         acumular(raiz, ruta, r.fuente, r.tipo, int(r.monto))
+    if leg is not None:
+        for r in leg.itertuples(index=False):
+            ruta = [
+                (r.clas, r.clas_nombre),
+                (r.inciso, r.inciso_nombre),
+                (r.ue, r.ue_nombre),
+                (r.prog, r.prog_nombre),
+                (TIPO_CODIGO[r.tipo], r.tipo),
+                (r.obj, r.obj_nombre),
+            ]
+            acumular(raiz, ruta, r.fuente, r.tipo, int(r.monto), ejec=int(r.ejec))
     return finalizar(raiz)
 
+
+
+# --------------------------------------------------------------------------- #
+# Poder Legislativo (datos curados aparte)
+# --------------------------------------------------------------------------- #
+def leer_legislativo(path: Path) -> pd.DataFrame:
+    """Lee el CSV curado del Poder Legislativo y lo deja con las columnas del gasto
+    (monto = crédito definitivo) más `ejec` (ejecutado). Valida contra los totales de control."""
+    df = pd.read_csv(path, encoding="utf-8", dtype=str, keep_default_na=False)
+    faltan = [c for c in COLS_LEGISLATIVO if c not in df.columns]
+    exigir(not faltan, f"Legislativo: faltan columnas {faltan}")
+    df = df[COLS_LEGISLATIVO].copy()
+    for c in df.columns:
+        df[c] = df[c].str.strip().str.replace(r"\s+", " ", regex=True)
+    exigir((df[["inciso", "ue", "ue_nombre", "prog", "prog_nombre", "concepto"]] != "").all().all(),
+           "Legislativo: hay celdas vacías en columnas obligatorias")
+    exigir(set(df["inciso"]) == {"1"}, "Legislativo: solo se espera el inciso 1")
+    exigir(set(df["tipo_gasto"]) <= set(TIPO_CODIGO),
+           f"Legislativo: tipos de gasto desconocidos {sorted(set(df['tipo_gasto']) - set(TIPO_CODIGO))}")
+    for c in ("credito_definitivo", "ejecutado"):
+        exigir(df[c].str.fullmatch(r"\d+").all(), f"Legislativo: {c} con valores no enteros o negativos")
+        df[c] = df[c].astype("int64")
+    exigir(bool((df["credito_definitivo"] > 0).all()), "Legislativo: hay filas con crédito en cero")
+    exigir(bool((df["ejecutado"] <= df["credito_definitivo"]).all()),
+           "Legislativo: hay filas con más ejecución que crédito")
+    exigir(set(df["fuente"].unique()) != {""} and (df["fuente"] != "").all(),
+           "Legislativo: falta la fuente documental de alguna fila")
+    df["obj"] = df["concepto"].map(slug)
+    exigir(not df.duplicated(["ue", "prog", "tipo_gasto", "obj"]).any(),
+           "Legislativo: hay conceptos repetidos dentro de una misma unidad, programa y tipo de gasto")
+    exigir(not df.groupby("ue")["ue_nombre"].nunique().gt(1).any()
+           and not df.groupby(["ue", "prog"])["prog_nombre"].nunique().gt(1).any(),
+           "Legislativo: un código tiene dos nombres")
+    exigir(set(df["ue"]) == set(CONTROL_LEGISLATIVO), "Legislativo: unidades ejecutoras distintas de las de control")
+    for ue, (cred, eje) in CONTROL_LEGISLATIVO.items():
+        g = df[df["ue"] == ue]
+        exigir(int(g["credito_definitivo"].sum()) == cred,
+               f"Legislativo UE {ue}: el crédito suma {int(g['credito_definitivo'].sum()):,}, el control dice {cred:,}")
+        exigir(int(g["ejecutado"].sum()) == eje,
+               f"Legislativo UE {ue}: lo ejecutado suma {int(g['ejecutado'].sum()):,}, el control dice {eje:,}")
+    print(f"  Legislativo: {len(df)} filas, crédito {int(df['credito_definitivo'].sum()):,}, "
+          f"ejecutado {int(df['ejecutado'].sum()):,} (cierra con los totales de control por unidad ejecutora)")
+    out = pd.DataFrame({
+        "clas": CLAS_LEGISLATIVO[0], "clas_nombre": CLAS_LEGISLATIVO[1],
+        "inciso": df["inciso"], "inciso_nombre": "Poder Legislativo",
+        "ue": df["ue"], "ue_nombre": df["ue_nombre"],
+        "prog": df["prog"], "prog_nombre": df["prog_nombre"],
+        "tipo": df["tipo_gasto"], "obj": df["obj"], "aux": "", "obj_nombre": df["concepto"],
+        "fuente": FUENTE_LEGISLATIVO, "monto": df["credito_definitivo"], "ejec": df["ejecutado"],
+    })
+    return out
 
 
 # --------------------------------------------------------------------------- #
@@ -567,7 +654,14 @@ def validar_arbol(nodo: dict, ids: set[str]) -> None:
             sum(o["valor"] for o in nodo["objetos"]) == nodo["valor"],
             f"los objetos del gasto no suman al valor en {nodo['id']}",
         )
+    if "ejecutado" in nodo:
+        exigir(0 <= nodo["ejecutado"] <= nodo["valor"], f"lo ejecutado excede el crédito en {nodo['id']}")
     hijos = nodo.get("hijos")
+    if hijos and "ejecutado" in nodo:
+        exigir(
+            all("ejecutado" in h for h in hijos) and sum(h["ejecutado"] for h in hijos) == nodo["ejecutado"],
+            f"lo ejecutado de los hijos no suma al padre en {nodo['id']}",
+        )
     if hijos:
         exigir(
             sum(h["valor"] for h in hijos) == nodo["valor"],
@@ -666,6 +760,8 @@ def main() -> None:
     ap = argparse.ArgumentParser(description="ETL Visualizador de Finanzas Estatales UY (2025)")
     ap.add_argument("--raw", type=Path, default=Path("data/raw"), help="carpeta con los CSV oficiales")
     ap.add_argument("--out", type=Path, default=Path("web/data"), help="carpeta de salida")
+    ap.add_argument("--legislativo", type=Path, default=ARCHIVO_LEGISLATIVO,
+                    help="CSV curado del Poder Legislativo (si no existe, se omite)")
     ap.add_argument("--pretty", action="store_true", help="JSON con sangría (más pesado, legible)")
     args = ap.parse_args()
 
@@ -678,10 +774,22 @@ def main() -> None:
         "hay incisos con más de una clasificación",
     )
 
+    leg = None
+    if args.legislativo.exists():
+        print("Leyendo Poder Legislativo (datos curados aparte)…")
+        leg = leer_legislativo(args.legislativo)
+        exigir(not set(leg["inciso"]) & set(gas["inciso"]),
+               "el Poder Legislativo ya figura en el CSV oficial de gasto: revisar para no duplicarlo")
+    else:
+        print(f"(sin {args.legislativo}: se omite el Poder Legislativo)")
+    # Para el puente por fuente, el gasto incluye el Legislativo (crédito definitivo).
+    gas_total = gas if leg is None else pd.concat(
+        [gas, leg[list(gas.columns)]], ignore_index=True)
+
     print("Construyendo árboles…")
     arbol_rec = construir_recursos(rec)
-    arbol_gas = construir_gasto(gas)
-    total_rec, total_gas = int(rec["monto"].sum()), int(gas["monto"].sum())
+    arbol_gas = construir_gasto(gas, leg)
+    total_rec, total_gas = int(rec["monto"].sum()), int(gas_total["monto"].sum())
     exigir(arbol_rec["valor"] == total_rec, "el árbol de recursos no suma el total del CSV")
     exigir(arbol_gas["valor"] == total_gas, "el árbol de gasto no suma el total del CSV")
     validar_arbol(arbol_rec, set())
@@ -703,7 +811,7 @@ def main() -> None:
     else:
         print("(sin archivo de puestos: se omite la capa de cargos)")
 
-    puente = construir_puente(rec, gas, arbol_rec, arbol_gas)
+    puente = construir_puente(rec, gas_total, arbol_rec, arbol_gas)
 
     carpeta = args.out / str(ANIO)
     gasto_recortado = partir_gasto(arbol_gas, carpeta / "gasto", args.pretty)
@@ -716,7 +824,8 @@ def main() -> None:
             "moneda": "UYU",
             "unidad": "pesos uruguayos corrientes (enteros, sin escalar)",
             "recursos": "Proyección 2025 (columna MONTO_MON_NAC_AÑO_0 de Recursos_2025-2029_VF.csv)",
-            "gasto": "Crédito vigente al 31/05/2025 (Crédito_vigente_2025_Gastos_VF.csv)",
+            "gasto": "Crédito vigente al 31/05/2025 (Crédito_vigente_2025_Gastos_VF.csv)"
+            + (" más el Poder Legislativo: crédito definitivo al 31/12/2025, de fuentes propias" if leg is not None else ""),
             "jerarquia_recursos": ["Capítulo", "Clase", "Recurso"],
             "jerarquia_gasto": [
                 "Clasificación de inciso", "Inciso", "Unidad ejecutora",
@@ -732,6 +841,19 @@ def main() -> None:
                 "de unidad ejecutora, programa, tipo de gasto, objeto y auxiliar.",
                 "Los nodos 'tipos' y 'fuentes' desglosan el valor del nodo por tipo de gasto y por fuente.",
             ] + ([
+                "Poder Legislativo (inciso 1): no está en los CSV oficiales de gasto. Se agregó como grupo aparte desde los "
+                "documentos de cada Cámara y de la Comisión Administrativa (ver datos_fuente/LEEME_legislativo_2025.md). "
+                "El valor de cada nodo es el crédito definitivo al 31/12/2025; el CSV oficial es crédito vigente a mayo de 2025, "
+                "así que la fecha de corte no es la misma.",
+                "Solo el Poder Legislativo trae ejecución 2025 (lo efectivamente gastado, `ejecutado`): el resto del gasto es solo crédito, "
+                "así que la ejecución no se puede comparar entre organismos.",
+                "Los documentos del Poder Legislativo no indican la fuente de financiamiento. Se asignó todo al fondo común "
+                "(Rentas Generales, código 11) como supuesto: no es un dato.",
+                "Los recursos no cambian al agregar el Poder Legislativo (solo recauda una suma muy chica). Por eso la diferencia entre "
+                "recursos y gasto crece en lo que suma su gasto.",
+                "Los nombres de los programas 221 a 223 del Senado y el 0 de Representantes son descriptivos: sus documentos "
+                "no traen programas con nombre oficial en esos casos.",
+            ] if leg is not None else []) + ([
                 "Cargos: el archivo de puestos de trabajo cubre solo los incisos "
                 + ", ".join(str(i) for i in resumen_puestos["incisos"])
                 + " (Presidencia, ministerios y Ambiente); no incluye ANEP, ASSE, Universidad de la República, "
@@ -746,6 +868,14 @@ def main() -> None:
             ] if resumen_puestos else []),
         },
         "totales": {"recursos": total_rec, "gasto": total_gas, "diferencia": total_rec - total_gas},
+        "legislativo": None if leg is None else {
+            "credito": int(leg["monto"].sum()),
+            "ejecutado": int(leg["ejec"].sum()),
+            "corte": "2025-12-31",
+            "fuente_supuesta": FUENTE_LEGISLATIVO,
+            "gasto_sin_legislativo": int(gas["monto"].sum()),
+            "diferencia_sin_legislativo": total_rec - int(gas["monto"].sum()),
+        },
         "puestos": resumen_puestos,
         "puente": puente,
         "recursos": arbol_rec,

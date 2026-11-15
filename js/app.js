@@ -340,22 +340,26 @@
       })));
   }
 
-  function filaRanking(f, conClasif) {
+  function filaRanking(f, conClasif, conEjec) {
     return h('tr', {},
       h('th', { scope: 'row' }, f.hash ? h('a', { href: f.hash }, f.nombre) : f.nombre),
       conClasif ? h('td', { class: 'col-clas' }, f.clasificacion) : null,
       h('td', { class: 'num', title: M.fmtCompleto(f.valor) }, M.fmtMonto(f.valor)),
       h('td', { class: 'num' }, M.fmtPct(f.pct)),
+      conEjec ? h('td', { class: 'num', title: f.ejecutado != null ? M.fmtCompleto(f.ejecutado) : null },
+        f.ejecutado != null ? `${M.fmtMonto(f.ejecutado)} (${M.fmtPct(f.pctEjecutado)})` : '—') : null,
       h('td', { class: 'col-fuentes' }, barraFuentes(f.fuentes)));
   }
 
   function tablaRanking({ titulo, nota, filas, columnaNombre, pctEtiqueta, conClasif, pagina = 25 }) {
     const tbody = h('tbody');
+    const conEjec = filas.some((f) => f.ejecutado != null);
     const cabeza = h('tr', {},
       h('th', { scope: 'col' }, columnaNombre),
       conClasif ? h('th', { scope: 'col', class: 'col-clas' }, 'Grupo') : null,
       h('th', { scope: 'col', class: 'num' }, 'Monto'),
       h('th', { scope: 'col', class: 'num' }, pctEtiqueta),
+      conEjec ? h('th', { scope: 'col', class: 'num' }, 'Ejecutado en 2025 (parte del monto)') : null,
       h('th', { scope: 'col', class: 'col-fuentes' }, 'De qué fondos sale'));
     const mas = h('p', { class: 'mas' });
     let mostradas = 0;
@@ -363,7 +367,7 @@
     function agregar() {
       const desde = mostradas;
       const hasta = Math.min(filas.length, mostradas + pagina);
-      for (; mostradas < hasta; mostradas++) tbody.append(filaRanking(filas[mostradas], conClasif));
+      for (; mostradas < hasta; mostradas++) tbody.append(filaRanking(filas[mostradas], conClasif, conEjec));
       mas.replaceChildren();
       if (mostradas < filas.length) {
         mas.append(h('button', { type: 'button', onclick: agregar }, `Mostrar más (${filas.length - mostradas} restantes)`));
@@ -535,7 +539,9 @@
           h('li', {}, `Gasto: ${m.gasto}.`),
           h('li', {}, `Unidad: ${m.unidad}.`),
           m.notas.map((t) => h('li', {}, t)),
-          h('li', {}, 'Los archivos oficiales que usamos no incluyen el Poder Legislativo (inciso 1), el Banco de Previsión Social (inciso 28) ni el inciso 30, que probablemente corresponde a la amortización de la deuda pública. Por eso no aparecen en el gráfico. La Constitución (art. 108) dice que cada Cámara aprueba su propio presupuesto, en los primeros doce meses de cada legislatura, y lo comunica al Poder Ejecutivo para que lo incluya en el Presupuesto Nacional. Puede que por eso no esté en estos archivos, pero los datos oficiales no lo explican.'),
+          h('li', {}, state.ov.legislativo
+            ? 'Los archivos oficiales de gasto no incluyen el Poder Legislativo (inciso 1), el Banco de Previsión Social (inciso 28) ni el inciso 30, que probablemente corresponde a la amortización de la deuda pública. El Poder Legislativo lo sumamos aparte, como el grupo “Parlamento”, con los datos publicados por cada Cámara y por la Comisión Administrativa. El BPS y el inciso 30 siguen sin aparecer en el gráfico. La Constitución (art. 108) dice que cada Cámara aprueba su propio presupuesto, en los primeros doce meses de cada legislatura, y lo comunica al Poder Ejecutivo para que lo incluya en el Presupuesto Nacional. Puede que por eso no esté en los archivos oficiales, pero los datos oficiales no lo explican.'
+            : 'Los archivos oficiales que usamos no incluyen el Poder Legislativo (inciso 1), el Banco de Previsión Social (inciso 28) ni el inciso 30, que probablemente corresponde a la amortización de la deuda pública. Por eso no aparecen en el gráfico. La Constitución (art. 108) dice que cada Cámara aprueba su propio presupuesto, en los primeros doce meses de cada legislatura, y lo comunica al Poder Ejecutivo para que lo incluya en el Presupuesto Nacional. Puede que por eso no esté en estos archivos, pero los datos oficiales no lo explican.'),
           state.ov.puestos ? h('li', {}, `Cargos: el archivo de puestos de trabajo cubre solo Presidencia, los ministerios y Ambiente (${state.ov.puestos.incisos.length} incisos). No incluye educación, salud, justicia ni otros organismos.`) : null,
           state.ov.puestos ? h('li', {}, 'Sueldos de los cargos (estimado): importe mensual nominal de cada cargo, ocupado o vacante, por 14. Los datos no detallan compensaciones adicionales ni incentivos, y no incluyen aportes patronales.') : null,
           state.ov.puestos ? h('li', {}, 'La fuente de financiamiento de los sueldos estimados se reparte en la misma proporción que la de las remuneraciones del programa: es un supuesto, no un dato.') : null,
@@ -557,7 +563,9 @@
       tarjetas.push(tarjeta('Lo que se espera cobrar', b($$(t.recursos)),
         ' con impuestos, tasas, multas y otros ingresos. Es un cálculo, no la plata ya cobrada.'));
       tarjetas.push(tarjeta('Lo que se puede gastar', b($$(t.gasto)),
-        ' ya autorizados hasta mayo de 2025. Eso no quiere decir que ya se haya gastado todo.'));
+        (state.ov.legislativo
+          ? ' ya autorizados: hasta mayo de 2025 para casi todo el Estado, y a fin de 2025 para el Parlamento. Eso no quiere decir que ya se haya gastado todo.'
+          : ' ya autorizados hasta mayo de 2025. Eso no quiere decir que ya se haya gastado todo.')));
       tarjetas.push(tarjeta('Lo que falta o sobra', dif < 0
         ? h('span', {}, 'Se puede gastar ', b($$(Math.abs(dif))), ' más de lo que se espera cobrar. ')
         : h('span', {}, 'Se espera cobrar ', b($$(Math.abs(dif))), ' más de lo que se puede gastar. '),
@@ -583,8 +591,18 @@
           `Entre todos suman un importe nominal de ${$$(r.cargos.importe_mensual)} por mes.`));
       }
       if (r.sinCargos) {
-        tarjetas.push(tarjeta('Cargos',
-          'No hay datos de cargos para esto. El archivo de puestos solo cubre Presidencia, los ministerios y Ambiente, y no todos sus programas.'));
+        tarjetas.push(tarjeta('Cargos', r.esParlamento
+          ? 'No hay datos de cargos para el Parlamento: el archivo de puestos no lo cubre. Sus sueldos se ven por rubro (sueldo básico, primas, aportes…) en el detalle.'
+          : 'No hay datos de cargos para esto. El archivo de puestos solo cubre Presidencia, los ministerios y Ambiente, y no todos sus programas.'));
+      }
+      if (r.ejecutado != null) {
+        tarjetas.push(tarjeta('Autorizado y gastado',
+          `De ${$$(r.valor)} autorizados a fin de 2025 se gastaron ${$$(r.ejecutado)} (${M.fmtPct(r.pctEjecutado)}). ` +
+          'Solo el Parlamento trae este dato, así que no se puede comparar con otros organismos.'));
+      }
+      if (r.esParlamento) {
+        tarjetas.push(tarjeta('De dónde sale la plata',
+          'Los documentos del Parlamento no dicen de qué fondo sale. Lo mostramos como “Fondo común” porque supone Rentas Generales: es un supuesto, no un dato.'));
       }
       if (r.sufijo === 'r' && r.tieneObjetos) {
         tarjetas.push(tarjeta('Cómo se parte',
@@ -625,7 +643,9 @@
       const dif = ov.totales.diferencia;
       tiles = [
         tile('Lo que se espera cobrar en 2025', M.fmtMonto(ov.totales.recursos), 'Impuestos, tasas, multas y otros cobros.', M.fmtCompleto(ov.totales.recursos)),
-        tile('Lo que se puede gastar', M.fmtMonto(ov.totales.gasto), 'Plata ya autorizada a mayo de 2025 (crédito vigente).', M.fmtCompleto(ov.totales.gasto)),
+        tile('Lo que se puede gastar', M.fmtMonto(ov.totales.gasto), ov.legislativo
+          ? 'Plata ya autorizada: a mayo de 2025 (crédito vigente), y a fin de 2025 para el Parlamento.'
+          : 'Plata ya autorizada a mayo de 2025 (crédito vigente).', M.fmtCompleto(ov.totales.gasto)),
         tile('Lo que falta o sobra', M.fmtMonto(dif),
           (dif < 0 ? 'Se puede gastar más de lo que se espera cobrar.' : 'Se espera cobrar más de lo que se puede gastar.') + ' No es el déficit oficial: ese se calcula de otra forma.',
           M.fmtCompleto(dif)),
@@ -638,12 +658,17 @@
       contexto = r.padre ? `${r.nivel} · ${r.padre}` : r.nivel;
       sub = (r.ayuda ? r.ayuda + ' ' : '') + textoDescripcion(r);
       tiles = [
-        tile(r.id.includes('/cargos') ? 'Estimado al año' : r.esGasto ? 'Plata autorizada para gastar' : 'Lo que se espera cobrar', M.fmtMonto(r.valor), null, M.fmtCompleto(r.valor)),
+        tile(r.id.includes('/cargos') ? 'Estimado al año' : r.esGasto ? 'Plata autorizada para gastar' : 'Lo que se espera cobrar', M.fmtMonto(r.valor),
+          r.esParlamento ? 'Crédito definitivo al 31/12/2025.' : null, M.fmtCompleto(r.valor)),
         tile('Qué parte es del total', M.fmtPct(r.pctTotal),
           r.esGasto
             ? `De cada $100 que se gastan, $${M.numEs(r.pctTotal * 100, 1)} van aquí.`
             : `De cada $100 que se cobran, $${M.numEs(r.pctTotal * 100, 1)} vienen de aquí.`),
       ];
+      if (r.ejecutado != null) {
+        tiles.push(tile('Ya gastado en 2025', M.fmtMonto(r.ejecutado),
+          `${M.fmtPct(r.pctEjecutado)} de lo autorizado. Es lo ejecutado, según los documentos del Parlamento.`, M.fmtCompleto(r.ejecutado)));
+      }
       if (r.tipos) tiles.push(tileTipos(r.tipos));
       if (r.cargos) tiles.push(tileCargos(r.cargos));
       if (r.tieneSueldos) tiles.push(tileSueldo(r.cargos));
