@@ -73,3 +73,7 @@ Vista experimental que dibuja el mismo flujo del Sankey general (recursos → fo
 - Mover el mouse (o arrastrar) cambia el ángulo; la rueda acerca; al pasar por un bloque se realzan sus flujos y aparece su tooltip; el clic lleva al detalle en el gráfico clásico (`index.html#<id>`).
 - Respeta `prefers-reduced-motion` (casi sin movimiento) y avisa si el navegador no tiene WebGL. En pantallas verticales las columnas se acercan y las etiquetas van hacia adentro.
 - Es un prototipo: la lectura precisa de montos sigue siendo el gráfico clásico y las tablas.
+
+### Ciudadanos en la vista "todo desplegado"
+
+A la izquierda de `todo3d.html` hay tres personajes (una mujer, un hombre y un nene, dibujados en `js/ciudadanos.js`) que sacan billetes del bolsillo y los tiran hacia los ingresos, para mostrar que la plata sale de la gente.

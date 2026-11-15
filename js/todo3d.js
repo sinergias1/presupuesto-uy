@@ -10,6 +10,7 @@
  * datos pasa por model.js (esc) o por textContent.
  */
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.min.js';
+import { dibujarCiudadanos } from './ciudadanos.js';
 
 const M = window.FinanzasModel;
 const $ = (id) => document.getElementById(id);
@@ -474,6 +475,68 @@ async function iniciar() {
   nodos.forEach((n) => porCol[n.col].push(n));
   porCol.forEach((l) => l.sort((a, b) => b.top - a.top));
   const colX = (c) => (c - (NCOLS - 1) / 2) * D.DX;
+  const yBase = Math.min(...nodos.map((n) => n.top - n.H));
+
+  // --- ciudadanos: de la gente sale la plata. Tres personajes a la izquierda tiran billetes hacia los ingresos
+  const gente = dibujarCiudadanos().map((d, k) => {
+    const tex = new THREE.CanvasTexture(d.canvas); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
+    const PH = D.altoTotal * 0.42, PW = PH * 0.5;
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(PW, PH), new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false }));
+    const px = colX(0) - D.DX * [2.0, 3.45, 4.7][k] - PW * 0.25;
+    const base = yBase - D.altoTotal * 0.02;
+    m.position.set(px, base + PH / 2, -0.5);
+    scene.add(m);
+    return { m, d, PH, PW, px, base, fase: k * 2.1 };
+  });
+  const NT = MOVIL ? 18 : 34;
+  const tiradas = [];
+  gente.forEach((p, k) => { for (let j = 0; j < NT; j++) tiradas.push({ p, t: -Math.random() * 3, dur: 2.6 + Math.random() * 1.6, hoja: null, giro: (Math.random() - 0.5) * 8 }); });
+  const lanzados = new THREE.InstancedMesh(new THREE.BoxGeometry(ANCHO_BILLETE, ANCHO_BILLETE / 2, ANCHO_BILLETE * 0.03), matBillete, tiradas.length);
+  lanzados.frustumCulled = false; lanzados.instanceMatrix.setUsage(THREE.DynamicDrawUsage); scene.add(lanzados);
+  const cTir = new THREE.Color();
+  function nuevaTirada(q) {
+    q.hoja = elegirHoja();
+    q.dur = 2.6 + Math.random() * 1.6; q.t = 0;
+    q.ty = q.hoja.top - Math.random() * q.hoja.H;
+    q.alto = Math.random() < 0.5; q.giro = (Math.random() - 0.5) * 9;
+    cTir.set(colorFuente(q.hoja.dom)).lerp(new THREE.Color(0xffffff), 0.12);
+    lanzados.setColorAt(q.i, cTir); lanzados.instanceColor.needsUpdate = true;
+  }
+  tiradas.forEach((q, i) => { q.i = i; nuevaTirada(q); q.t = -Math.random() * q.dur; });
+  function animarGente(dt, dist, tseg) {
+    const v = REDUCIR ? 0.15 : 1;
+    const tam = Math.max(Math.pow(dist / DIST_BILLETE, 0.9), 0.05);
+    gente.forEach((p) => {
+      p.m.rotation.z = Math.sin(tseg * 1.2 + p.fase) * 0.012;
+      p.m.position.y = p.base + p.PH / 2 + Math.sin(tseg * 2.1 + p.fase) * p.PH * 0.004;
+    });
+    for (const q of tiradas) {
+      q.t += dt * v;
+      if (q.t >= q.dur) nuevaTirada(q);
+      const p = q.p;
+      if (q.t < 0) { obj.scale.setScalar(0); obj.updateMatrix(); lanzados.setMatrixAt(q.i, obj.matrix); continue; }
+      const u = q.t / q.dur;
+      const pc = p.d.bolsillo, mn = p.d.mano;
+      const bx = p.px + (pc[0] - 0.5) * p.PW, by = p.base + p.PH / 2 + (0.5 - pc[1]) * p.PH;
+      const mx = p.px + (mn[0] - 0.5) * p.PW, my = p.base + p.PH / 2 + (0.5 - mn[1]) * p.PH;
+      const tx = q.hoja.x - 0.4, ty = q.ty;
+      let x, y, esc;
+      if (u < 0.2) { // del bolsillo a la mano
+        const a = suave(u / 0.2);
+        x = bx + (mx - bx) * a; y = by + (my - by) * a + Math.sin(a * Math.PI) * p.PH * 0.03; esc = 0.35 + 0.65 * a;
+      } else { // vuelo en arco hacia el ingreso
+        const a = (u - 0.2) / 0.8, e = a * (0.55 + 0.45 * a);
+        x = mx + (tx - mx) * e; y = my + (ty - my) * e + Math.sin(a * Math.PI) * Math.min(Math.abs(tx - mx), 400) * (q.alto ? 0.2 : 0.1); esc = 1;
+      }
+      obj.position.set(x, y, 0.3 + Math.sin(u * 3) * 0.2);
+      obj.rotation.set(u * q.giro, 0.3, u < 0.2 ? -0.5 : u * q.giro * 0.7);
+      const aparecer = Math.min(1, (1 - u) / 0.06);
+      obj.scale.setScalar(tam * 1.7 * esc * aparecer);
+      obj.updateMatrix();
+      lanzados.setMatrixAt(q.i, obj.matrix);
+    }
+    lanzados.instanceMatrix.needsUpdate = true;
+  }
   // primer índice cuyo borde de abajo queda por encima de y (o igual)
   function primeroDebajo(lista, y) {
     let lo = 0, hi = lista.length;
@@ -713,6 +776,7 @@ async function iniciar() {
     actualizarBloques(d);
     matBloque.opacity = 0.9 * entrada;
     animarBilletes(dt, d);
+    animarGente(dt, d, now / 1000);
     ubicarCarteles();
     renderer.render(scene, camera);
     requestAnimationFrame(cuadro);
