@@ -45,7 +45,17 @@ VERSION_ESQUEMA = 1
 PATRONES = {
     "recursos": "*Recursos_2025-2029*.csv",
     "gasto": "*dito_vigente_2025*.csv",
+    "puestos": "*Puestos_de_trabajo_2025*.csv",  # opcional
 }
+
+# Cargos (puestos de trabajo): el importe del archivo es mensual y nominal; se anualiza
+# con este factor (12 meses + aguinaldo + salario vacacional, aproximado).
+FACTOR_ANUAL = 14
+NOMBRE_SUELDOS = "Sueldos nominales de los cargos (estimado)"
+NOMBRE_RESTO = "Resto de remuneraciones"
+NIVEL_PARTE = "Parte de las remuneraciones"
+SIN_ESCALAFON = "Sin escalafón"
+
 
 # Fuentes de financiamiento descritas en la hoja de metadata. Los códigos 13 y 51
 # aparecen en Recursos pero la metadata no los describe: no se les inventa nombre.
@@ -83,6 +93,17 @@ COLS_GASTO = {
     "OBJGAS_DENOMINACION": "obj_nombre",
     "FINANCIAMIENTO": "fuente",
     "MONTO_MON_NAC_VIGENTE": "monto",
+}
+
+COLS_PUESTOS = {
+    "INCISO": "inciso",
+    "UNIDAD_EJECUTORA": "ue",
+    "PROGRAMA": "prog",
+    "DESC_REG": "regimen",
+    "ESCALAFON": "escalafon",
+    "OCUPADO": "ocupado",
+    "VACANTE": "vacante",
+    "IMPORTE_TOT": "importe",
 }
 
 # Niveles del árbol de gasto que llevan el desglose por tipo de gasto
@@ -258,6 +279,208 @@ def construir_gasto(gas: pd.DataFrame) -> dict:
     return finalizar(raiz)
 
 
+
+# --------------------------------------------------------------------------- #
+# Cargos (puestos de trabajo)
+# --------------------------------------------------------------------------- #
+def leer_puestos(path: Path) -> pd.DataFrame:
+    df = pd.read_csv(path, sep=";", encoding="cp1252", dtype=str, index_col=0, low_memory=False)
+    df.columns = df.columns.str.strip()
+    faltan = [c for c in COLS_PUESTOS if c not in df.columns]
+    exigir(not faltan, f"Puestos: faltan columnas {faltan}")
+    df = df[list(COLS_PUESTOS)].rename(columns=COLS_PUESTOS)
+    for c in df.columns:
+        df[c] = df[c].str.strip().str.replace(r"\s+", " ", regex=True)
+    # Algunos contratos (zafrales, función pública, etc.) no tienen escalafón: es válido.
+    n_sin = int(df["escalafon"].isna().sum())
+    df["escalafon"] = df["escalafon"].fillna(SIN_ESCALAFON)
+    print(f"  Puestos: {n_sin} filas sin escalafón se agrupan como '{SIN_ESCALAFON}'")
+    exigir(not df.isna().any().any(), "Puestos: hay celdas vacías en columnas usadas")
+    for c in ("ocupado", "vacante", "importe"):
+        df[c] = parsear_montos(df[c], f"Puestos {c}")
+        exigir(bool((df[c] >= 0).all()), f"Puestos: {c} con valores negativos")
+    for c in ("inciso", "ue", "prog"):
+        exigir(df[c].str.fullmatch(r"\d+").all(), f"Puestos: {c} con códigos no numéricos")
+        df[c] = df[c].astype(int)
+    print(f"  Puestos: {len(df):,} filas, {int(df['ocupado'].sum()):,} ocupados, "
+          f"{int(df['vacante'].sum()):,} vacantes, {len(df[df['importe'] == 0])} filas con importe 0")
+    return df
+
+
+def apartar(fuentes: dict, pesos: list[int]) -> list[dict]:
+    """Reparte `fuentes` (código -> monto) entre partes con los `pesos` dados, en
+    proporción, con enteros y exactitud en ambos sentidos: cada fuente suma su monto y
+    cada parte suma su peso. Se redondea hacia abajo y los pesos sobrantes (pocos) se
+    asignan emparejando filas y columnas pendientes."""
+    total = sum(pesos)
+    exigir(total == sum(fuentes.values()), "apartar: las fuentes no suman lo que suman las partes")
+    codigos = list(fuentes)
+    celdas = [[fuentes[f] * w // total for w in pesos] for f in codigos]
+    filas_pend = [fuentes[f] - sum(celdas[i]) for i, f in enumerate(codigos)]
+    cols_pend = [pesos[j] - sum(celdas[i][j] for i in range(len(codigos))) for j in range(len(pesos))]
+    exigir(min(filas_pend) >= 0 and min(cols_pend) >= 0, "apartar: sobrante negativo")
+    unid_f = [i for i, k in enumerate(filas_pend) for _ in range(k)]
+    unid_c = [j for j, k in enumerate(cols_pend) for _ in range(k)]
+    exigir(len(unid_f) == len(unid_c), "apartar: sobrantes desparejos")
+    for i, j in zip(unid_f, unid_c):
+        celdas[i][j] += 1
+    return [
+        {f: celdas[i][j] for i, f in enumerate(codigos) if celdas[i][j]}
+        for j in range(len(pesos))
+    ]
+
+
+def _ordenar(hijos: list[dict]) -> list[dict]:
+    return sorted(hijos, key=lambda h: (-h["valor"], h["nombre"]))
+
+
+def _resumen_cargos(g: pd.DataFrame) -> dict:
+    regs = []
+    for reg, gr in g.groupby("regimen"):
+        regs.append({
+            "nombre": reg,
+            "ocupados": int(gr["ocupado"].sum()),
+            "vacantes": int(gr["vacante"].sum()),
+            "importe_mensual": int(gr["importe"].sum()),
+        })
+    regs.sort(key=lambda r: (-(r["ocupados"] + r["vacantes"]), r["nombre"]))
+    return {
+        "ocupados": int(g["ocupado"].sum()),
+        "vacantes": int(g["vacante"].sum()),
+        "importe_mensual": int(g["importe"].sum()),
+        "regimenes": regs,
+    }
+
+
+def _sumar_cargos(lista: list[dict]) -> dict:
+    regs: dict[str, dict] = {}
+    for c in lista:
+        for r in c["regimenes"]:
+            t = regs.setdefault(r["nombre"], {"nombre": r["nombre"], "ocupados": 0, "vacantes": 0, "importe_mensual": 0})
+            for k in ("ocupados", "vacantes", "importe_mensual"):
+                t[k] += r[k]
+    return {
+        "ocupados": sum(c["ocupados"] for c in lista),
+        "vacantes": sum(c["vacantes"] for c in lista),
+        "importe_mensual": sum(c["importe_mensual"] for c in lista),
+        "regimenes": sorted(regs.values(), key=lambda r: (-(r["ocupados"] + r["vacantes"]), r["nombre"])),
+    }
+
+
+def partir_remuneraciones(prog: dict, g: pd.DataFrame) -> int:
+    """Dentro de 'Remuneraciones' de un programa: separa los sueldos de los cargos
+    (importe mensual x FACTOR_ANUAL, por régimen y escalafón) del resto. Devuelve el
+    estimado. El desglose original por objeto del gasto pasa a `objetos`."""
+    rem = next((h for h in prog.get("hijos", []) if h["codigo"] == "R"), None)
+    exigir(rem is not None, f"{prog['id']}: tiene cargos pero no gasto en Remuneraciones")
+    est = FACTOR_ANUAL * int(g["importe"].sum())
+    exigir(
+        est <= rem["valor"],
+        f"{prog['id']}: el estimado de sueldos ({est:,}) supera el gasto en remuneraciones ({rem['valor']:,})",
+    )
+    if est == 0:
+        return 0
+    resto = rem["valor"] - est
+    pesos = [est] + ([resto] if resto else [])
+    fu = apartar(rem["fuentes"], pesos)
+
+    regimenes = []
+    for reg, gr in g.groupby("regimen"):
+        v = FACTOR_ANUAL * int(gr["importe"].sum())
+        if v:
+            regimenes.append((reg, gr, v))
+    regimenes.sort(key=lambda t: (-t[2], t[0]))
+    fu_reg = apartar(fu[0], [t[2] for t in regimenes])
+    hijos_reg = []
+    for (reg, gr, v), f_reg in zip(regimenes, fu_reg):
+        escs = []
+        for esc, ge in gr.groupby("escalafon"):
+            ve = FACTOR_ANUAL * int(ge["importe"].sum())
+            if ve:
+                escs.append((esc, ge, ve))
+        escs.sort(key=lambda t: (-t[2], t[0]))
+        fu_esc = apartar(f_reg, [t[2] for t in escs])
+        nodo_reg = {
+            "id": f"{rem['id']}/cargos/{slug(reg)}", "nombre": reg, "codigo": reg, "valor": v,
+            "fuentes": f_reg, "nivel": "Tipo de contrato", "nivel_hijos": "Escalafón",
+            "cargos": {"ocupados": int(gr["ocupado"].sum()), "vacantes": int(gr["vacante"].sum())},
+            "hijos": [
+                {
+                    "id": f"{rem['id']}/cargos/{slug(reg)}/{slug(esc)}", "nombre": esc if esc == SIN_ESCALAFON else f"Escalafón {esc}",
+                    "codigo": esc, "valor": ve, "fuentes": f_esc, "nivel": "Escalafón",
+                    "cargos": {"ocupados": int(ge["ocupado"].sum()), "vacantes": int(ge["vacante"].sum())},
+                }
+                for (esc, ge, ve), f_esc in zip(escs, fu_esc)
+            ],
+        }
+        hijos_reg.append(nodo_reg)
+    nodo_a = {
+        "id": f"{rem['id']}/cargos", "nombre": NOMBRE_SUELDOS, "codigo": "cargos", "valor": est,
+        "fuentes": fu[0], "nivel": NIVEL_PARTE, "nivel_hijos": "Tipo de contrato",
+        "cargos": {"ocupados": int(g["ocupado"].sum()), "vacantes": int(g["vacante"].sum())},
+        "hijos": hijos_reg,
+    }
+    nuevos = [nodo_a]
+    if resto:
+        nuevos.append({
+            "id": f"{rem['id']}/resto", "nombre": NOMBRE_RESTO, "codigo": "resto", "valor": resto,
+            "fuentes": fu[1], "nivel": NIVEL_PARTE,
+        })
+    rem["objetos"] = rem.pop("hijos")
+    rem["hijos"] = _ordenar(nuevos)
+    rem["nivel_hijos"] = NIVEL_PARTE
+    return est
+
+
+def integrar_puestos(arbol_gas: dict, pu: pd.DataFrame) -> dict:
+    """Une los cargos al árbol de gasto por (inciso, unidad ejecutora, programa)."""
+    grupos = {k: g for k, g in pu.groupby(["inciso", "ue", "prog"])}
+    usados: set = set()
+    total_est = 0
+    incisos_con_datos: list[int] = []
+    for clas in arbol_gas["hijos"]:
+        cargos_clas = []
+        for inc in clas["hijos"]:
+            cargos_inc = []
+            for ue in inc["hijos"]:
+                cargos_ue = []
+                for prog in ue["hijos"]:
+                    clave = (int(inc["codigo"]), int(ue["codigo"]), int(prog["codigo"]))
+                    g = grupos.get(clave)
+                    if g is None:
+                        prog["sin_cargos"] = True
+                        continue
+                    usados.add(clave)
+                    total_est += partir_remuneraciones(prog, g)
+                    prog["cargos"] = _resumen_cargos(g)
+                    cargos_ue.append(prog["cargos"])
+                if cargos_ue:
+                    ue["cargos"] = _sumar_cargos(cargos_ue)
+                    cargos_inc.append(ue["cargos"])
+                else:
+                    ue["sin_cargos"] = True
+            if cargos_inc:
+                inc["cargos"] = _sumar_cargos(cargos_inc)
+                cargos_clas.append(inc["cargos"])
+                incisos_con_datos.append(int(inc["codigo"]))
+            else:
+                inc["sin_cargos"] = True
+        if cargos_clas:
+            clas["cargos"] = _sumar_cargos(cargos_clas)
+    exigir(usados == set(grupos), f"hay {len(set(grupos) - usados)} combinaciones de cargos sin programa en el gasto")
+    exigir(total_est == FACTOR_ANUAL * int(pu["importe"].sum()), "el estimado total no coincide con el importe del CSV")
+    cargos_total = _sumar_cargos([c["cargos"] for c in arbol_gas["hijos"] if "cargos" in c])
+    exigir(cargos_total["ocupados"] == int(pu["ocupado"].sum()), "los ocupados del árbol no suman los del CSV")
+    exigir(cargos_total["vacantes"] == int(pu["vacante"].sum()), "las vacantes del árbol no suman las del CSV")
+    return {
+        "ocupados": cargos_total["ocupados"],
+        "vacantes": cargos_total["vacantes"],
+        "importe_mensual": cargos_total["importe_mensual"],
+        "estimado_anual": total_est,
+        "incisos": sorted(incisos_con_datos),
+        "programas": len(grupos),
+    }
+
 # --------------------------------------------------------------------------- #
 # Puente recursos <-> gasto (por fuente de financiamiento)
 # --------------------------------------------------------------------------- #
@@ -325,6 +548,11 @@ def validar_arbol(nodo: dict, ids: set[str]) -> None:
         sum(nodo["fuentes"].values()) == nodo["valor"],
         f"las fuentes no suman al valor en {nodo['id']}",
     )
+    if nodo.get("objetos"):
+        exigir(
+            sum(o["valor"] for o in nodo["objetos"]) == nodo["valor"],
+            f"los objetos del gasto no suman al valor en {nodo['id']}",
+        )
     hijos = nodo.get("hijos")
     if hijos:
         exigir(
@@ -446,6 +674,21 @@ def main() -> None:
     ids_gasto: set[str] = set()
     validar_arbol(arbol_gas, ids_gasto)
 
+    resumen_puestos = None
+    hay_puestos = bool(sorted(args.raw.glob(PATRONES["puestos"])))
+    if hay_puestos:
+        print("Integrando cargos (puestos de trabajo)…")
+        pu = leer_puestos(localizar(args.raw, PATRONES["puestos"]))
+        resumen_puestos = integrar_puestos(arbol_gas, pu)
+        ids_gasto = set()
+        validar_arbol(arbol_gas, ids_gasto)
+        exigir(arbol_gas["valor"] == total_gas, "al integrar cargos cambió el total del gasto")
+        print(f"  Cargos: {resumen_puestos['ocupados']:,} ocupados, {resumen_puestos['vacantes']:,} vacantes; "
+              f"estimado anual {mm(resumen_puestos['estimado_anual'])} mil millones $U "
+              f"en {len(resumen_puestos['incisos'])} incisos")
+    else:
+        print("(sin archivo de puestos: se omite la capa de cargos)")
+
     puente = construir_puente(rec, gas, arbol_rec, arbol_gas)
 
     carpeta = args.out / str(ANIO)
@@ -474,9 +717,22 @@ def main() -> None:
                 "Cada hoja del árbol de gasto suma todos los proyectos con la misma combinación "
                 "de unidad ejecutora, programa, tipo de gasto, objeto y auxiliar.",
                 "Los nodos 'tipos' y 'fuentes' desglosan el valor del nodo por tipo de gasto y por fuente.",
-            ],
+            ] + ([
+                "Cargos: el archivo de puestos de trabajo cubre solo los incisos "
+                + ", ".join(str(i) for i in resumen_puestos["incisos"])
+                + " (Presidencia, ministerios y Ambiente); no incluye ANEP, ASSE, Universidad de la República, "
+                "Poder Judicial, Fiscalía ni otros organismos.",
+                f"Sueldos de los cargos (estimado) = importe mensual nominal de cada cargo (ocupado o vacante) x {FACTOR_ANUAL}, "
+                "para incluir aguinaldo y salario vacacional. Los datos no detallan compensaciones adicionales ni "
+                "incentivos, y no incluyen aportes patronales.",
+                "La fuente de financiamiento de los sueldos estimados se reparte en la misma proporción que la de "
+                "las remuneraciones del programa; es un supuesto, no un dato.",
+                "'Resto de remuneraciones' es el gasto en remuneraciones del programa menos el estimado de sueldos de los cargos; "
+                "el detalle por objeto del gasto de todo el rubro está en `objetos`.",
+            ] if resumen_puestos else []),
         },
         "totales": {"recursos": total_rec, "gasto": total_gas, "diferencia": total_rec - total_gas},
+        "puestos": resumen_puestos,
         "puente": puente,
         "recursos": arbol_rec,
         "gasto": gasto_recortado,

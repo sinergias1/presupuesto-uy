@@ -286,6 +286,11 @@
       nota ? h('div', { class: 'tile-n' }, nota) : null);
   }
 
+  function tileCargos(c) {
+    return tile('Cargos (puestos de trabajo)', `${M.numEs(c.ocupados, 0)} ocupados`,
+      `y ${M.numEs(c.vacantes, 0)} vacantes. Son cargos, no personas.`);
+  }
+
   function tileTipos(tipos) {
     return h('div', { class: 'tile' },
       h('div', { class: 'tile-l' }, 'En qué se gasta'),
@@ -379,6 +384,27 @@
           h('td', { class: 'num' }, M.fmtPct(f.pct))))))));
   }
 
+  function tablaRegimenes(filas) {
+    return h('section', { class: 'tabla-sec' },
+      h('h3', {}, 'Cargos por tipo de contrato'),
+      h('p', { class: 'tabla-nota' },
+        'El importe es mensual y nominal, y suma cargos ocupados y vacantes. Son cargos, no personas.'),
+      h('div', { class: 'tabla-wrap' }, h('table', { class: 'tabla' },
+        h('caption', { class: 'sr-only' }, 'Cargos por tipo de contrato'),
+        h('thead', {}, h('tr', {},
+          h('th', { scope: 'col' }, 'Tipo de contrato'),
+          h('th', { scope: 'col', class: 'num' }, 'Ocupados'),
+          h('th', { scope: 'col', class: 'num' }, 'Vacantes'),
+          h('th', { scope: 'col', class: 'num' }, 'Importe mensual'),
+          h('th', { scope: 'col', class: 'num' }, 'Promedio por cargo'))),
+        h('tbody', {}, filas.map((f) => h('tr', {},
+          h('th', { scope: 'row' }, f.nombre),
+          h('td', { class: 'num' }, M.numEs(f.ocupados, 0)),
+          h('td', { class: 'num' }, M.numEs(f.vacantes, 0)),
+          h('td', { class: 'num', title: M.fmtCompleto(f.importe) }, M.fmtMonto(f.importe)),
+          h('td', { class: 'num', title: M.fmtCompleto(Math.round(f.promedio)) }, M.fmtMonto(f.promedio))))))));
+  }
+
   function tablaPuente(filas) {
     return h('section', { class: 'tabla-sec' },
       h('h3', {}, 'Cada fondo: lo que entra y lo que sale'),
@@ -426,6 +452,14 @@
       }));
     }
     secciones.push(tablaFuentesNodo(M.filasFuentesDeNodo(state.ov, v.nodo)));
+    if (r.cargos && r.cargos.regimenes) secciones.push(tablaRegimenes(M.filasRegimenes(v.nodo)));
+    if (r.tieneObjetos) {
+      secciones.push(tablaRanking({
+        titulo: 'Todo el gasto en remuneraciones, por rubro',
+        nota: 'Es el detalle completo de este gasto, sin separar entre cargos y resto.',
+        filas: M.filasObjetos(v), columnaNombre: 'Rubro del gasto', pctEtiqueta: 'Parte de este total',
+      }));
+    }
     cont.replaceChildren(...secciones);
   }
 
@@ -441,6 +475,11 @@
       ['Unidad ejecutora', 'Una oficina o dirección dentro de un inciso, con su propio presupuesto.'],
       ['Programa', 'Un objetivo concreto en el que se gasta, por ejemplo “Seguridad pública”.'],
       ['Rubro del gasto', 'La compra o el pago puntual: un sueldo, un alquiler, un equipo.'],
+      ['Cargo', 'Un puesto de trabajo en el Estado. Un cargo puede estar ocupado o vacante. Son cargos, no personas.'],
+      ['Vacante', 'Un cargo que existe pero que hoy no tiene a nadie.'],
+      ['Tipo de contrato (régimen)', 'La forma en que se contrata: efectivo, presupuestado, contrato permanente, zafral, etc.'],
+      ['Escalafón', 'El grupo de cargos al que pertenece una función. En los datos aparece como una letra.'],
+      ['Sueldo nominal', 'El sueldo antes de descuentos e impuestos.'],
       ['Mil millones', 'Mil veces un millón. Por ejemplo, 1,0 mil millones son 1.000.000.000 de pesos.'],
     ];
     $('notas').replaceChildren(
@@ -454,6 +493,9 @@
           h('li', {}, `Gasto: ${m.gasto}.`),
           h('li', {}, `Unidad: ${m.unidad}.`),
           m.notas.map((t) => h('li', {}, t)),
+          state.ov.puestos ? h('li', {}, `Cargos: el archivo de puestos de trabajo cubre solo Presidencia, los ministerios y Ambiente (${state.ov.puestos.incisos.length} incisos). No incluye educación, salud, justicia ni otros organismos.`) : null,
+          state.ov.puestos ? h('li', {}, 'Sueldos de los cargos (estimado): importe mensual nominal de cada cargo, ocupado o vacante, por 14. Los datos no detallan compensaciones adicionales ni incentivos, y no incluyen aportes patronales.') : null,
+          state.ov.puestos ? h('li', {}, 'La fuente de financiamiento de los sueldos estimados se reparte en la misma proporción que la de las remuneraciones del programa: es un supuesto, no un dato.') : null,
           h('li', {}, 'Los nombres simples de los fondos y de los grupos de organismos son una traducción nuestra. Al pasar el cursor por un nodo se ve su nombre oficial.'),
           h('li', {}, 'El color de las franjas indica el fondo del que sale la plata. Lo que está en gris no tiene color propio.'))));
   }
@@ -480,7 +522,9 @@
       tarjetas.push(tarjeta('Para leer los números',
         '“Mil millones” es un 1 seguido de nueve ceros (1.000.000.000).'));
     } else if (r.esGasto) {
-      tarjetas.push(tarjeta('Cuánto es', `“${r.titulo}” tiene autorizado gastar `, b($$(r.valor)), '.'));
+      tarjetas.push(r.id.includes('/cargos')
+        ? tarjeta('Cuánto es', `“${r.titulo}” se estima en `, b($$(r.valor)), ' al año.')
+        : tarjeta('Cuánto es', `“${r.titulo}” tiene autorizado gastar `, b($$(r.valor)), '.'));
       tarjetas.push(tarjeta('Qué parte del total',
         `De cada $100 que gasta el Estado, $${M.numEs(r.pctTotal * 100, 1)} son de aquí.`));
       if (r.tipos && r.tipos.length) {
@@ -490,6 +534,29 @@
       tarjetas.push(tarjeta('Qué hay adentro', r.nHijos
         ? `Abajo puedes ver cómo se reparte entre ${r.nHijos} ${r.nivelSiguientePlural}.`
         : 'Este es el nivel más chico: ya no se divide en partes.'));
+      if (r.cargos && r.cargos.importe_mensual !== undefined) {
+        tarjetas.push(tarjeta('Cargos',
+          `Hay ${M.numEs(r.cargos.ocupados, 0)} cargos ocupados y ${M.numEs(r.cargos.vacantes, 0)} vacantes. ` +
+          `Entre todos suman un importe nominal de ${$$(r.cargos.importe_mensual)} por mes.`));
+      }
+      if (r.sinCargos) {
+        tarjetas.push(tarjeta('Cargos',
+          'No hay datos de cargos para esto. El archivo de puestos solo cubre Presidencia, los ministerios y Ambiente, y no todos sus programas.'));
+      }
+      if (r.sufijo === 'r' && r.tieneObjetos) {
+        tarjetas.push(tarjeta('Cómo se parte',
+          'Las remuneraciones se separan en dos: los sueldos de los cargos (un estimado) y el resto. ' +
+          'La fuente de financiamiento de cada parte se reparte en la misma proporción: es un supuesto, no un dato.'));
+      }
+      if (r.sufijo === 'cargos') {
+        tarjetas.push(tarjeta('Cómo se calculó',
+          'Se tomó el importe mensual de cada cargo, ocupado o vacante, y se multiplicó por 14 para incluir aguinaldo y salario vacacional. ' +
+          'Los datos no detallan compensaciones adicionales ni incentivos, y no incluyen los aportes patronales.'));
+      }
+      if (r.sufijo === 'resto') {
+        tarjetas.push(tarjeta('Qué es',
+          'Es el gasto en remuneraciones de este programa que no está en los sueldos de los cargos: aportes patronales, compensaciones, incentivos y otros pagos.'));
+      }
     } else {
       tarjetas.push(tarjeta('Cuánto es', `Por “${r.titulo}” el Estado espera cobrar `, b($$(r.valor)), '.'));
       tarjetas.push(tarjeta('Qué parte del total',
@@ -528,13 +595,14 @@
       contexto = r.padre ? `${r.nivel} · ${r.padre}` : r.nivel;
       sub = (r.ayuda ? r.ayuda + ' ' : '') + textoDescripcion(r);
       tiles = [
-        tile(r.esGasto ? 'Plata autorizada para gastar' : 'Lo que se espera cobrar', M.fmtMonto(r.valor), null, M.fmtCompleto(r.valor)),
+        tile(r.id.includes('/cargos') ? 'Estimado al año' : r.esGasto ? 'Plata autorizada para gastar' : 'Lo que se espera cobrar', M.fmtMonto(r.valor), null, M.fmtCompleto(r.valor)),
         tile('Qué parte es del total', M.fmtPct(r.pctTotal),
           r.esGasto
             ? `De cada $100 que se gastan, $${M.numEs(r.pctTotal * 100, 1)} van aquí.`
             : `De cada $100 que se cobran, $${M.numEs(r.pctTotal * 100, 1)} vienen de aquí.`),
       ];
       if (r.tipos) tiles.push(tileTipos(r.tipos));
+      if (r.cargos) tiles.push(tileCargos(r.cargos));
       renderMigas(M.migas(v), true);
       titDoc = `${r.titulo} · ¿De dónde sale la torta y cómo se reparte?`;
     }

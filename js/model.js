@@ -28,6 +28,9 @@
     'Programa': 'programas',
     'En qué se gasta': 'formas de gasto',
     'Rubro del gasto': 'rubros del gasto',
+    'Parte de las remuneraciones': 'partes',
+    'Tipo de contrato': 'tipos de contrato',
+    'Escalafón': 'escalafones',
     'Tipo de ingreso': 'tipos de ingreso',
     'Subtipo de ingreso': 'subtipos de ingreso',
     'Ingreso': 'ingresos',
@@ -343,14 +346,19 @@
     var total = esGasto ? ov.totales.gasto : ov.totales.recursos;
     var padre = vista.cadena.length > 1 ? vista.cadena[vista.cadena.length - 2] : null;
     var hijos = n.hijos || [];
-    var nivelSig = hijos.length ? niveles[prof + 1] || null : null;
+    var nivelSig = hijos.length ? n.nivel_hijos || niveles[prof + 1] || null : null;
     var tipos = n.tipos
       ? entradasDesc(n.tipos).map(function (e) { return { tipo: TIPOS_AMIGABLES[e[0]] || e[0], oficial: e[0], valor: e[1], pct: e[1] / n.valor }; })
       : null;
     return {
+      id: n.id,
       titulo: nombreDe(n.id, n.nombre),
       esGasto: esGasto,
-      nivel: niveles[prof] || '',
+      nivel: n.nivel || niveles[prof] || '',
+      cargos: n.cargos || null,
+      sinCargos: !!n.sin_cargos,
+      sufijo: n.id.slice(n.id.lastIndexOf('/') + 1),
+      tieneObjetos: !!(n.objetos && n.objetos.length),
       oficial: AMIGABLE[n.id] ? n.nombre : null,
       ayuda: ayudaDe(n.id),
       padre: padre ? nombreDe(padre.id, padre.nombre) : null,
@@ -380,6 +388,28 @@
   function filasHijos(vista) {
     var n = vista.nodo;
     return (n.hijos || []).map(function (h) { return filaDe(h, n.valor); });
+  }
+
+  /** Desglose por objeto del gasto de un nodo "Remuneraciones" que se separó en partes. */
+  function filasObjetos(vista) {
+    var n = vista.nodo;
+    return (n.objetos || []).map(function (o) { return filaDe(o, n.valor); });
+  }
+
+  /** Cargos por tipo de contrato (régimen) de un nodo que trae resumen de cargos. */
+  function filasRegimenes(nodo) {
+    var c = nodo.cargos;
+    if (!c || !c.regimenes) return [];
+    return c.regimenes.map(function (r) {
+      var cargos = r.ocupados + r.vacantes;
+      return {
+        nombre: r.nombre,
+        ocupados: r.ocupados,
+        vacantes: r.vacantes,
+        importe: r.importe_mensual,
+        promedio: cargos ? r.importe_mensual / cargos : 0,
+      };
+    });
   }
 
   function filasFuentesDeNodo(ov, nodo) {
@@ -447,6 +477,8 @@
     leyendaFuentes: leyendaFuentes,
     resumenNodo: resumenNodo,
     filasHijos: filasHijos,
+    filasObjetos: filasObjetos,
+    filasRegimenes: filasRegimenes,
     filasFuentesDeNodo: filasFuentesDeNodo,
     filasGeneral: filasGeneral,
     tooltipNodo: tooltipNodo,

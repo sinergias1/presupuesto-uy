@@ -20,3 +20,13 @@ Abrir http://localhost:8000 (no abrir `index.html` con doble clic: el navegador 
 - `data/2025/overview.json` y `data/2025/gasto/inciso_*.json`: árboles generados por el ETL.
 - `etl.py`: convierte los CSV oficiales (`;`, cp1252) en esos JSON.
   `python etl.py --raw data/raw --out data --pretty`.
+
+## Cargos (puestos de trabajo)
+
+Si en `data/raw` hay un archivo `*Puestos_de_trabajo_2025*.csv`, `etl.py` lo integra al gasto:
+
+- Une por inciso, unidad ejecutora y programa (las 177 combinaciones del archivo existen en el gasto).
+- Dentro de `Remuneraciones` de cada programa agrega dos partes: **Sueldos nominales de los cargos (estimado)** (importe mensual de cada cargo, ocupado o vacante, por 14) y **Resto de remuneraciones**. La primera se abre por tipo de contrato y escalafón. El detalle original por objeto del gasto queda en `objetos`.
+- Cobertura: solo Presidencia, ministerios y Ambiente (incisos 2 a 15 y 36). No incluye ANEP, ASSE, Universidad de la República, Poder Judicial, Fiscalía ni otros organismos.
+- Los datos no detallan compensaciones adicionales ni incentivos, y no incluyen aportes patronales. La fuente de financiamiento de la parte estimada se reparte en proporción: es un supuesto.
+- El ETL verifica que todo siga sumando al peso y que el estimado nunca supere al gasto real en remuneraciones.
