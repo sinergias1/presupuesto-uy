@@ -97,7 +97,7 @@ El 3D es solo para computadoras, tablets e iPads. En un celular (el lado corto d
 
 ## Compras adjudicadas (v12, piloto)
 
-`etl_compras.py` cuelga las compras del catálogo de compras estatales (ARCE, `compras_2025.db`) a la derecha de los rubros del gasto: **rubro → artículo comprado → proveedor**. Se corre después de `etl.py`:
+`etl_compras.py` cuelga las compras del catálogo de compras estatales (ARCE, `compras_2025.db`) a la derecha de los rubros del gasto: **rubro → artículo comprado → proveedor → compra individual**. Se corre después de `etl.py`:
 
     python etl_compras.py --db ruta/a/compras_2025.db
 

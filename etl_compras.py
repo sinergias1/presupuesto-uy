@@ -126,14 +126,15 @@ def main():
             ue = next(h for h in raiz["hijos"] if h["codigo"] == u["ue"])
             rubros = hojas_rubro(ue)
             filas = con.execute(
-                """select i.classification_id, i.classification_description, i.supplier_name, i.monto_total
+                """select i.classification_id, i.classification_description, i.supplier_name, i.monto_total,
+                          r.id, r.objeto_compra, r.fecha_compra, r.resolucion
                    from releases r join items i on i.release_id=r.id
                    where r.buyer_name=? and r.buyer_id=?""", (u["buyer_name"], u["buyer_id"])).fetchall()
             res = {"adjudicado": 0, "sin_monto": 0, "sin_rubro": 0, "asignado": 0, "escalado": 0, "renglones": len(filas)}
             # rubro -> artículo(id,desc) -> proveedor -> monto (pesos enteros)
             acu = defaultdict(lambda: defaultdict(lambda: defaultdict(float)))
-            sin_rubro = defaultdict(float); tipo_de = {}
-            for cid, desc, prov, monto in filas:
+            sin_rubro = defaultdict(float); tipo_de = {}; nom_orig = {}; det = defaultdict(dict)
+            for cid, desc, prov, monto, rid, objeto, fecha, estado in filas:
                 if monto is None:
                     res["sin_monto"] += 1; continue
                 res["adjudicado"] += monto
@@ -141,8 +142,12 @@ def main():
                 if rubro: tipo_de.setdefault(rubro, tipo)
                 if rubro is None or rubro not in rubros:
                     res["sin_rubro"] += monto; sin_rubro[(desc or "").split(" (Cód")[0]] += monto; continue
+                nom_orig[str(cid)] = acentuar((desc or "").split(" (Cód")[0].strip().capitalize())
                 art = (str(cid), acentuar((desc or "").split(" (Cód")[0].strip().capitalize()))
-                acu[rubro][art][(prov or "Proveedor sin nombre").strip().title()] += monto
+                pnom = (prov or "Proveedor sin nombre").strip().title()
+                acu[rubro][art][pnom] += monto
+                d = det[(rubro, art, pnom)].setdefault(rid, [acentuar((objeto or "Compra sin descripción").strip()), fecha, estado, 0.0])
+                d[3] += monto
             for rubro, arts in acu.items():
                 ocurr = rubros[rubro]
                 tipo_pref = tipo_de[rubro]
@@ -172,8 +177,17 @@ def main():
                     hijos = []
                     for cid, nom, v_art, pesos in art_nodos:
                         pv = repartir(v_art, {p: int(m) + 1 for p, m in pesos.items()})
-                        pv_nodos = [nodo(f"{r['id']}/c{cid}/{slug(p)}", p, slug(p), v, r["fuentes"], compras=True, nivel="Proveedor")
-                                    for p, v in sorted(pv.items(), key=lambda x: -x[1])]
+                        pv_nodos = []
+                        for p, v in sorted(pv.items(), key=lambda x: -x[1]):
+                            rel = det[(rubro, (cid, nom_orig[cid]), p)]
+                            rp = repartir(v, {k: int(x[3]) + 1 for k, x in rel.items()})
+                            hojas = []
+                            for k, vv in sorted(rp.items(), key=lambda x: -x[1]):
+                                o, fch, est, _ = rel[k]
+                                hojas.append(nodo(f"{r['id']}/c{cid}/{slug(p)}/r{k}", (o[:90] + "…") if len(o) > 90 else o, f"r{k}", vv, r["fuentes"],
+                                                  compras=True, nivel="Compra", detalle=f"Compra N.º {k} · {fch or 's/f'} · {est or 'estado no informado'}"))
+                            pv_nodos.append(nodo(f"{r['id']}/c{cid}/{slug(p)}", p, slug(p), v, r["fuentes"], hojas or None,
+                                                 compras=True, nivel="Proveedor", nivel_hijos="Compra"))
                         hijos.append(nodo(f"{r['id']}/c{cid}", nom, f"c{cid}", v_art, r["fuentes"], pv_nodos, compras=True,
                                           nivel="Artículo comprado", nivel_hijos="Proveedor"))
                     tot_art = sum(h["valor"] for h in hijos)
