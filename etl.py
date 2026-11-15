@@ -101,6 +101,7 @@ COLS_PUESTOS = {
     "PROGRAMA": "prog",
     "DESC_REG": "regimen",
     "ESCALAFON": "escalafon",
+    "DENOMINACION": "denominacion",
     "OCUPADO": "ocupado",
     "VACANTE": "vacante",
     "IMPORTE_TOT": "importe",
@@ -367,6 +368,14 @@ def _sumar_cargos(lista: list[dict]) -> dict:
     }
 
 
+def _denominaciones(g: pd.DataFrame) -> list[list]:
+    """[denominación, ocupados, vacantes, importe mensual] por cargo, de más a menos cargos."""
+    agg = g.groupby("denominacion")[["ocupado", "vacante", "importe"]].sum().reset_index()
+    agg["cargos"] = agg["ocupado"] + agg["vacante"]
+    agg = agg.sort_values(["cargos", "denominacion"], ascending=[False, True])
+    return [[r.denominacion, int(r.ocupado), int(r.vacante), int(r.importe)] for r in agg.itertuples(index=False)]
+
+
 def partir_remuneraciones(prog: dict, g: pd.DataFrame) -> int:
     """Dentro de 'Remuneraciones' de un programa: separa los sueldos de los cargos
     (importe mensual x FACTOR_ANUAL, por régimen y escalafón) del resto. Devuelve el
@@ -403,12 +412,15 @@ def partir_remuneraciones(prog: dict, g: pd.DataFrame) -> int:
         nodo_reg = {
             "id": f"{rem['id']}/cargos/{slug(reg)}", "nombre": reg, "codigo": reg, "valor": v,
             "fuentes": f_reg, "nivel": "Tipo de contrato", "nivel_hijos": "Escalafón",
-            "cargos": {"ocupados": int(gr["ocupado"].sum()), "vacantes": int(gr["vacante"].sum())},
+            "cargos": {"ocupados": int(gr["ocupado"].sum()), "vacantes": int(gr["vacante"].sum()),
+                       "importe_mensual": int(gr["importe"].sum())},
             "hijos": [
                 {
                     "id": f"{rem['id']}/cargos/{slug(reg)}/{slug(esc)}", "nombre": esc if esc == SIN_ESCALAFON else f"Escalafón {esc}",
                     "codigo": esc, "valor": ve, "fuentes": f_esc, "nivel": "Escalafón",
-                    "cargos": {"ocupados": int(ge["ocupado"].sum()), "vacantes": int(ge["vacante"].sum())},
+                    "cargos": {"ocupados": int(ge["ocupado"].sum()), "vacantes": int(ge["vacante"].sum()),
+                               "importe_mensual": int(ge["importe"].sum())},
+                    "denominaciones": _denominaciones(ge),
                 }
                 for (esc, ge, ve), f_esc in zip(escs, fu_esc)
             ],
@@ -417,7 +429,8 @@ def partir_remuneraciones(prog: dict, g: pd.DataFrame) -> int:
     nodo_a = {
         "id": f"{rem['id']}/cargos", "nombre": NOMBRE_SUELDOS, "codigo": "cargos", "valor": est,
         "fuentes": fu[0], "nivel": NIVEL_PARTE, "nivel_hijos": "Tipo de contrato",
-        "cargos": {"ocupados": int(g["ocupado"].sum()), "vacantes": int(g["vacante"].sum())},
+        "cargos": {"ocupados": int(g["ocupado"].sum()), "vacantes": int(g["vacante"].sum()),
+                   "importe_mensual": int(g["importe"].sum())},
         "hijos": hijos_reg,
     }
     nuevos = [nodo_a]
@@ -477,6 +490,7 @@ def integrar_puestos(arbol_gas: dict, pu: pd.DataFrame) -> dict:
         "vacantes": cargos_total["vacantes"],
         "importe_mensual": cargos_total["importe_mensual"],
         "estimado_anual": total_est,
+        "factor_anual": FACTOR_ANUAL,
         "incisos": sorted(incisos_con_datos),
         "programas": len(grupos),
     }

@@ -267,12 +267,22 @@
   // --------------------------------------------------------- cabecera
   function renderMigas(items, enGrafico) {
     const ol = h('ol', { class: 'migas' });
-    items.forEach((m, i) => {
-      const ultimo = i === items.length - 1;
-      ol.append(h('li', {}, ultimo
-        ? h('span', { 'aria-current': 'page', title: m.texto }, m.texto)
-        : h('a', { href: m.hash, title: m.texto }, m.texto)));
-    });
+    const migaDe = (m, ultimo) => ultimo
+      ? h('span', { 'aria-current': 'page', title: m.texto }, m.texto)
+      : h('a', { href: m.hash, title: m.texto }, m.texto);
+    // Si el camino es largo: Inicio, un "…" que despliega los pasos del medio y los últimos tres.
+    const MAX = 5;
+    if (items.length > MAX) {
+      const ocultos = items.slice(1, items.length - 3);
+      ol.append(h('li', {}, migaDe(items[0], false)));
+      ol.append(h('li', { class: 'migas-mas' },
+        h('details', {},
+          h('summary', { title: 'Ver los pasos del medio', 'aria-label': `Ver ${ocultos.length} pasos del medio` }, '…'),
+          h('ul', {}, ocultos.map((m) => h('li', {}, migaDe(m, false)))))));
+      items.slice(items.length - 3).forEach((m, i, a) => ol.append(h('li', {}, migaDe(m, i === a.length - 1))));
+    } else {
+      items.forEach((m, i) => ol.append(h('li', {}, migaDe(m, i === items.length - 1))));
+    }
     const nav = $('migas');
     nav.replaceChildren(ol);
     // En la vista con gráfico las migas van arriba a la izquierda del propio gráfico.
@@ -289,6 +299,13 @@
   function tileCargos(c) {
     return tile('Cargos (puestos de trabajo)', `${M.numEs(c.ocupados, 0)} ocupados`,
       `y ${M.numEs(c.vacantes, 0)} vacantes. Son cargos, no personas.`);
+  }
+
+  function tileSueldo(c) {
+    const tot = c.ocupados + c.vacantes;
+    return tile('Sueldo nominal por mes', M.fmtMonto(c.importe_mensual),
+      tot ? `Promedio por cargo: ${M.fmtMonto(c.importe_mensual / tot)} al mes, antes de descuentos.` : null,
+      M.fmtCompleto(c.importe_mensual));
   }
 
   function tileTipos(tipos) {
@@ -384,21 +401,22 @@
           h('td', { class: 'num' }, M.fmtPct(f.pct))))))));
   }
 
-  function tablaRegimenes(filas) {
+  function tablaRegimenes(filas, opc) {
+    const o = Object.assign({ titulo: 'Cargos por tipo de contrato', columna: 'Tipo de contrato',
+      nota: 'El importe es mensual y nominal, y suma cargos ocupados y vacantes. Son cargos, no personas.' }, opc || {});
     return h('section', { class: 'tabla-sec' },
-      h('h3', {}, 'Cargos por tipo de contrato'),
-      h('p', { class: 'tabla-nota' },
-        'El importe es mensual y nominal, y suma cargos ocupados y vacantes. Son cargos, no personas.'),
+      h('h3', {}, o.titulo),
+      h('p', { class: 'tabla-nota' }, o.nota),
       h('div', { class: 'tabla-wrap' }, h('table', { class: 'tabla' },
-        h('caption', { class: 'sr-only' }, 'Cargos por tipo de contrato'),
+        h('caption', { class: 'sr-only' }, o.titulo),
         h('thead', {}, h('tr', {},
-          h('th', { scope: 'col' }, 'Tipo de contrato'),
+          h('th', { scope: 'col' }, o.columna),
           h('th', { scope: 'col', class: 'num' }, 'Ocupados'),
           h('th', { scope: 'col', class: 'num' }, 'Vacantes'),
           h('th', { scope: 'col', class: 'num' }, 'Importe mensual'),
           h('th', { scope: 'col', class: 'num' }, 'Promedio por cargo'))),
         h('tbody', {}, filas.map((f) => h('tr', {},
-          h('th', { scope: 'row' }, f.nombre),
+          h('th', { scope: 'row', title: f.ayuda || null }, f.hash ? h('a', { href: f.hash }, f.nombre) : f.nombre),
           h('td', { class: 'num' }, M.numEs(f.ocupados, 0)),
           h('td', { class: 'num' }, M.numEs(f.vacantes, 0)),
           h('td', { class: 'num', title: M.fmtCompleto(f.importe) }, M.fmtMonto(f.importe)),
@@ -453,6 +471,20 @@
     }
     secciones.push(tablaFuentesNodo(M.filasFuentesDeNodo(state.ov, v.nodo)));
     if (r.cargos && r.cargos.regimenes) secciones.push(tablaRegimenes(M.filasRegimenes(v.nodo)));
+    const hijosCargos = M.filasCargosHijos(v.nodo);
+    if (hijosCargos.length) {
+      secciones.push(tablaRegimenes(hijosCargos, {
+        titulo: `Cargos y sueldo mensual, por ${(r.nivelSiguiente || 'grupo').toLowerCase()}`,
+        columna: r.nivelSiguiente || 'Grupo',
+        nota: 'El sueldo es mensual, nominal (antes de descuentos) y suma cargos ocupados y vacantes. El promedio es por cargo. Son cargos, no personas.',
+      }));
+    }
+    if (r.tieneDenominaciones) {
+      secciones.push(tablaRegimenes(M.filasDenominaciones(v.nodo), {
+        titulo: 'Cada tipo de cargo y su sueldo mensual', columna: 'Cargo',
+        nota: 'Cada fila es un tipo de cargo de este grupo. El sueldo es mensual y nominal (antes de descuentos); el promedio es por cargo, ocupado o vacante.',
+      }));
+    }
     if (r.tieneObjetos) {
       secciones.push(tablaRanking({
         titulo: 'Todo el gasto en remuneraciones, por rubro',
@@ -478,11 +510,21 @@
       ['Cargo', 'Un puesto de trabajo en el Estado. Un cargo puede estar ocupado o vacante. Son cargos, no personas.'],
       ['Vacante', 'Un cargo que existe pero que hoy no tiene a nadie.'],
       ['Tipo de contrato (régimen)', 'La forma en que se contrata: efectivo, presupuestado, contrato permanente, zafral, etc.'],
-      ['Escalafón', 'El grupo de cargos al que pertenece una función. En los datos aparece como una letra.'],
+      ['Escalafón', 'El grupo de cargos al que pertenece una función, por tipo de trabajo. En los datos aparece como una letra; mira “¿Qué es cada escalafón?” arriba.'],
       ['Sueldo nominal', 'El sueldo antes de descuentos e impuestos.'],
       ['Mil millones', 'Mil veces un millón. Por ejemplo, 1,0 mil millones son 1.000.000.000 de pesos.'],
     ];
+    const esc = M.ESCALAFONES;
+    const bloqueEscalafones = state.ov.puestos ? h('details', {},
+      h('summary', {}, '¿Qué es cada escalafón?'),
+      h('p', { class: 'tabla-nota' },
+        'El escalafón es el grupo de cargos al que pertenece una función, como un “cajón” por tipo de trabajo. En los datos aparece como una letra. Las letras A a F, J a R vienen de la ley de funcionarios públicos (Ley 15.809); las marcadas con * las dedujimos mirando qué cargos tienen.'),
+      h('dl', { class: 'glosario' }, Object.keys(esc).flatMap((k) => [
+        h('dt', {}, esc[k][0] + (esc[k][2] ? '' : ' *')),
+        h('dd', {}, esc[k][1])])),
+      h('p', { class: 'tabla-nota' }, 'Las escalas de sueldo oficiales por grado (por ejemplo las de la ONSC) son de 2020: no las usamos. Los sueldos de esta página salen del archivo de puestos de trabajo 2025.')) : null;
     $('notas').replaceChildren(
+      bloqueEscalafones,
       h('details', {},
         h('summary', {}, 'Palabras que conviene conocer'),
         h('dl', { class: 'glosario' }, palabras.flatMap(([t, d]) => [h('dt', {}, t), h('dd', {}, d)]))),
@@ -603,6 +645,7 @@
       ];
       if (r.tipos) tiles.push(tileTipos(r.tipos));
       if (r.cargos) tiles.push(tileCargos(r.cargos));
+      if (r.tieneSueldos) tiles.push(tileSueldo(r.cargos));
       renderMigas(M.migas(v), true);
       titDoc = `${r.titulo} · ¿De dónde sale la torta y cómo se reparte?`;
     }

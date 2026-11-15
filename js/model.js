@@ -61,10 +61,55 @@
     'Inversiones': 'Obras y equipamiento',
   };
 
-  function nombreDe(id, oficial) { return AMIGABLE[id] ? AMIGABLE[id][0] : oficial; }
-  function ayudaDe(id) { return AMIGABLE[id] ? AMIGABLE[id][1] : null; }
+  // Escalafones: [nombre simple, qué es, ¿lo definen la ley y las fuentes? (false = se dedujo de los datos)].
+  var ESCALAFONES = {
+    'A': ['Profesionales (escalafón A)', 'Cargos que piden título universitario: abogados, médicos, contadores, ingenieros y similares.', true],
+    'B': ['Técnicos (escalafón B)', 'Cargos que piden una formación técnica específica para tareas especializadas.', true],
+    'C': ['Administrativos (escalafón C)', 'Trabajo de oficina: atender trámites, registrar datos, archivar y ordenar papeles.', true],
+    'D': ['Especializados (escalafón D)', 'Tareas que piden una habilidad o capacitación especial, pero no un título universitario.', true],
+    'E': ['Oficios (escalafón E)', 'Trabajos manuales de oficio: electricistas, carpinteros, mecánicos, albañiles y similares.', true],
+    'F': ['Servicios auxiliares (escalafón F)', 'Tareas de apoyo: limpieza, portería, conducción de vehículos y vigilancia.', true],
+    'J': ['Docentes de otros organismos (escalafón J)', 'Docentes que trabajan en organismos distintos de la Universidad de la República y de la ANEP.', true],
+    'K': ['Militares (escalafón K)', 'Personal de las Fuerzas Armadas. En los datos aparece sobre todo en Defensa Nacional.', true],
+    'L': ['Policías (escalafón L)', 'Personal de la Policía. En los datos aparece sobre todo en el Ministerio del Interior.', true],
+    'M': ['Servicio exterior (escalafón M)', 'Diplomáticos y personal que representa al país en otros países.', true],
+    'N': ['Justicia y fiscalía (escalafón N)', 'La ley lo llama "personal judicial". En estos datos aparecen sobre todo abogados y fiscales del Estado.', true],
+    'P': ['Cargos políticos (escalafón P)', 'Cargos que se llenan por elección o por decisión política, como ministros y subsecretarios.', true],
+    'Q': ['Cargos de confianza (escalafón Q)', 'Personas que elige directamente una autoridad para que la acompañen. Se llaman "particular confianza".', true],
+    'R': ['Otros cargos (escalafón R)', 'Cargos que no entran en ninguno de los otros grupos, como asesores o informáticos.', true],
+    'S': ['Cárceles (escalafón S)', 'En los datos son los operadores penitenciarios, que trabajan en las cárceles. La ley no lo describe: es una deducción a partir de los cargos.', false],
+    'CO2': ['Dirección (CO2)', 'Cargos de dirección, como directores de división. Es una deducción a partir de los nombres de los cargos.', false],
+    'CO3': ['Dirección (CO3)', 'Cargos de dirección, como gerentes de área. Es una deducción a partir de los nombres de los cargos.', false],
+    'PC1': ['Nivel superior (PC1)', 'Un subgrupo "Superior" dentro del Ministerio del Interior. Es una deducción a partir de los nombres de los cargos.', false],
+    'SIN': ['Sin escalafón', 'Cargos que en los datos no tienen escalafón, como zafrales, función pública y encuestadores.', false],
+  };
+
+  /** Clave de escalafón de un nodo (A, L, CO3, SIN...) o null si el nodo no es un escalafón. */
+  function escalafonClave(id, oficial) {
+    if (!oficial || !/\/r\/cargos\/[^/]+\/[^/]+$/.test(id || '')) return null;
+    if (oficial === 'Sin escalafón') return 'SIN';
+    var m = /^Escalafón (\S+)$/.exec(oficial);
+    return m && ESCALAFONES[m[1]] ? m[1] : null;
+  }
+  var NOMBRE_SUELDOS_CORTO = 'Sueldos de los cargos (estimado)';
+  var AYUDA_SUELDOS = 'Sueldos nominales de los cargos (estimado): lo que dicen los datos de cargos, multiplicado por 14 pagos al año. No incluye compensaciones adicionales, incentivos ni aportes patronales.';
+  function esSueldos(id) { return /\/r\/cargos$/.test(id || ''); }
+
+  function nombreDe(id, oficial) {
+    if (AMIGABLE[id]) return AMIGABLE[id][0];
+    if (esSueldos(id)) return NOMBRE_SUELDOS_CORTO;
+    var e = escalafonClave(id, oficial);
+    return e ? ESCALAFONES[e][0] : oficial;
+  }
+  function ayudaDe(id, oficial) {
+    if (AMIGABLE[id]) return AMIGABLE[id][1];
+    if (esSueldos(id)) return AYUDA_SUELDOS;
+    var e = escalafonClave(id, oficial);
+    return e ? ESCALAFONES[e][1] : null;
+  }
   function extraDe(id, oficial) {
-    return AMIGABLE[id] ? { ayuda: AMIGABLE[id][1], oficial: oficial } : {};
+    var a = ayudaDe(id, oficial);
+    return a ? { ayuda: a, oficial: oficial } : {};
   }
   function conExtra(def, id, oficial) {
     var e = extraDe(id, oficial);
@@ -304,7 +349,7 @@
 
     var defsHijo = [];
     if (!hijos.length) {
-      defsHijo.push(conExtra({ id: nodo.id, label: nombreDe(nodo.id, nodo.nombre), col: colHijo, kind: kind, fuente: null, nav: null, drillable: false }, nodo.id, nodo.nombre));
+      defsHijo.push(conExtra({ id: nodo.id, label: nombreDe(nodo.id, nodo.nombre), col: colHijo, kind: kind, fuente: null, nav: null, drillable: false, cargos: nodo.cargos || null }, nodo.id, nodo.nombre));
       fuentesOrden.forEach(function (e) { enlazar(e[0], nodo.id, e[1]); });
     } else {
       var visibles = hijos;
@@ -315,7 +360,7 @@
       }
       visibles.forEach(function (h) {
         var dr = esDrillable(h);
-        defsHijo.push(conExtra({ id: h.id, label: nombreDe(h.id, h.nombre), col: colHijo, kind: kind, fuente: null, nav: dr ? h.id : null, drillable: dr }, h.id, h.nombre));
+        defsHijo.push(conExtra({ id: h.id, label: nombreDe(h.id, h.nombre), col: colHijo, kind: kind, fuente: null, nav: dr ? h.id : null, drillable: dr, cargos: h.cargos || null }, h.id, h.nombre));
         entradasDesc(h.fuentes).forEach(function (e) { enlazar(e[0], h.id, e[1]); });
       });
       if (cola.length) {
@@ -359,8 +404,11 @@
       sinCargos: !!n.sin_cargos,
       sufijo: n.id.slice(n.id.lastIndexOf('/') + 1),
       tieneObjetos: !!(n.objetos && n.objetos.length),
-      oficial: AMIGABLE[n.id] ? n.nombre : null,
-      ayuda: ayudaDe(n.id),
+      oficial: ayudaDe(n.id, n.nombre) ? n.nombre : null,
+      ayuda: ayudaDe(n.id, n.nombre),
+      escalafon: escalafonClave(n.id, n.nombre),
+      tieneDenominaciones: !!(n.denominaciones && n.denominaciones.length),
+      tieneSueldos: !!(n.cargos && n.cargos.importe_mensual),
       padre: padre ? nombreDe(padre.id, padre.nombre) : null,
       valor: n.valor,
       pctTotal: n.valor / total,
@@ -412,6 +460,23 @@
     });
   }
 
+  /** Hijos con cargos (tipo de contrato o escalafón): cuántos cargos y cuánto sueldo mensual. */
+  function filasCargosHijos(nodo) {
+    return (nodo.hijos || []).filter(function (h) { return h.cargos && h.cargos.importe_mensual != null; }).map(function (h) {
+      var c = h.cargos, cargos = c.ocupados + c.vacantes;
+      return { nombre: nombreDe(h.id, h.nombre), ocupados: c.ocupados, vacantes: c.vacantes, importe: c.importe_mensual,
+        promedio: cargos ? c.importe_mensual / cargos : 0, ayuda: ayudaDe(h.id, h.nombre), hash: esDrillable(h) ? '#' + h.id : null };
+    });
+  }
+
+  /** Cargos de un escalafón, uno por denominación: [nombre, ocupados, vacantes, importe mensual]. */
+  function filasDenominaciones(nodo) {
+    return (nodo.denominaciones || []).map(function (d) {
+      var cargos = d[1] + d[2];
+      return { nombre: d[0], ocupados: d[1], vacantes: d[2], importe: d[3], promedio: cargos ? d[3] / cargos : 0 };
+    });
+  }
+
   function filasFuentesDeNodo(ov, nodo) {
     return entradasDesc(nodo.fuentes).map(function (e) {
       return { codigo: e[0], nombre: fuenteNombre(ov, e[0]), valor: e[1], pct: e[1] / nodo.valor };
@@ -434,10 +499,19 @@
   }
 
   // ---------------------------------------------------------------- tooltips
+  /** "3.755 cargos ocupados y 523 vacantes. Sueldo mensual promedio por cargo: $ 66 mil." */
+  function textoCargos(c) {
+    var t = numEs(c.ocupados, 0) + ' cargos ocupados y ' + numEs(c.vacantes, 0) + ' vacantes.';
+    var tot = c.ocupados + c.vacantes;
+    if (c.importe_mensual && tot) t += ' Sueldo nominal mensual promedio por cargo: ' + fmtMonto(c.importe_mensual / tot) + '.';
+    return t;
+  }
+
   function tooltipNodo(n, total, color) {
     var h = ['<div class="tt"><div class="tt-v">', esc(fmtMonto(n.valor)), '</div><div class="tt-n">'];
     if (n.kind === 'fuente' && color) h.push('<span class="tt-key" style="background:', esc(color), '"></span>');
     h.push(esc(n.label), '</div><div class="tt-s">', esc(fmtPct(total ? n.valor / total : 0) + ' del total de este gráfico'), '</div>');
+    if (n.cargos) h.push('<div class="tt-h">', esc(textoCargos(n.cargos)), '</div>');
     if (n.ayuda) h.push('<div class="tt-h">', esc(n.ayuda), '</div>');
     if (n.drillable) h.push('<div class="tt-h">Haz clic para ver el detalle ›</div>');
     if (n.kind === 'otros') h.push('<div class="tt-h">Junta los elementos más chicos. La lista completa está en la tabla de abajo.</div>');
@@ -479,6 +553,10 @@
     filasHijos: filasHijos,
     filasObjetos: filasObjetos,
     filasRegimenes: filasRegimenes,
+    filasCargosHijos: filasCargosHijos,
+    filasDenominaciones: filasDenominaciones,
+    ESCALAFONES: ESCALAFONES,
+    textoCargos: textoCargos,
     filasFuentesDeNodo: filasFuentesDeNodo,
     filasGeneral: filasGeneral,
     tooltipNodo: tooltipNodo,

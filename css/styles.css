@@ -210,3 +210,14 @@ h1 { margin: 0 0 8px; font-size: clamp(24px, 4vw, 34px); line-height: 1.15; font
 @media (forced-colors: active) {
   .sw, .fbar > span, .tipo-b i { forced-color-adjust: none; }
 }
+
+/* migas largas: "…" despliega los pasos del medio */
+.migas-mas details { position: relative; display: inline-block; }
+.migas-mas summary { cursor: pointer; list-style: none; padding: 0 .35em; border-radius: 4px; }
+.migas-mas summary::-webkit-details-marker { display: none; }
+.migas-mas summary:focus-visible { outline: 2px solid currentColor; }
+.migas-mas ul { position: absolute; z-index: 20; left: 0; top: 1.6em; margin: 0; padding: .5em .75em; list-style: none;
+  background: var(--surface); color: var(--ink); border: 1px solid var(--axis); border-radius: 8px; box-shadow: 0 4px 14px rgba(0,0,0,.15);
+  min-width: 14em; max-width: min(24em, 86vw); }
+.migas-mas ul li { padding: .2em 0; white-space: normal; }
+.migas-mas ul li::before, .migas-mas ul li::after { content: none; }
