@@ -697,12 +697,19 @@
         filas, columnaNombre: r.nivelSiguiente || 'Nombre', pctEtiqueta: 'Parte de este total',
       }));
     }
-    if (r.sinMonto && r.sinMonto.length) {
+    // En un rubro: las compras sin monto de todos sus proveedores. En un proveedor: solo las suyas (de ese artículo).
+    let sinMonto = r.sinMonto;
+    if (!sinMonto && v.nodo.nivel === 'Proveedor') {
+      const rubro = [...v.cadena].reverse().find((x) => x.compras_sin_monto);
+      const art = v.cadena[v.cadena.length - 2];
+      if (rubro) sinMonto = rubro.compras_sin_monto.filter((x) => x.proveedor === v.nodo.nombre && art && x.articulo === art.nombre);
+    }
+    if (sinMonto && sinMonto.length) {
       secciones.push(tablaSimple({
         titulo: 'Compras adjudicadas sin monto informado',
         nota: 'Estas compras figuran en el catálogo de compras estatales sin monto, así que no tienen ancho en el gráfico. El monto suele estar en la resolución (enlace a la derecha).',
         columnas: [{ t: 'Compra' }, { t: 'Proveedor' }, { t: 'Fecha' }, { t: 'Cantidad', num: true }, { t: 'Ver en el portal' }],
-        filas: r.sinMonto.map((x) => [
+        filas: sinMonto.map((x) => [
           h('span', {}, x.objeto, h('br'), h('small', {}, `${x.articulo} · N.º ${x.rid}`)),
           x.proveedor, x.fecha || '—',
           x.unidades ? `${M.numEs(x.unidades, 0)} ${(x.unidad || 'unidad').replace(/^unidad$/, x.unidades === 1 ? 'unidad' : 'unidades')}`.trim() : '—',
