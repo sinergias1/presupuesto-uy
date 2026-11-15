@@ -29,6 +29,37 @@
   const $ = (id) => document.getElementById(id);
 
   // ------------------------------------------------------------------ DOM
+  // cartelito que sigue al mouse y aparece/desaparece con transición de opacidad
+  const cartel = { el: null, t: null, x: 0, y: 0 };
+  addEventListener('mousemove', (ev) => {
+    cartel.x = ev.clientX; cartel.y = ev.clientY;
+    if (cartel.el && cartel.el.classList.contains('visible')) ubicarCartel();
+  }, { passive: true });
+  function ubicarCartel() {
+    const w = cartel.el.offsetWidth, hh = cartel.el.offsetHeight;
+    const x = Math.min(Math.max(8, cartel.x + 16), innerWidth - w - 8);
+    const y = Math.min(Math.max(8, cartel.y + 18), innerHeight - hh - 8);
+    cartel.el.style.transform = `translate(${x}px, ${y}px)`;
+  }
+  function mostrarCartel(texto) {
+    if (!cartel.el) {
+      cartel.el = document.createElement('div');
+      cartel.el.className = 'cartel-mouse'; cartel.el.setAttribute('role', 'status');
+      document.body.appendChild(cartel.el);
+    }
+    cartel.el.textContent = texto;
+    ubicarCartel();
+    requestAnimationFrame(() => cartel.el.classList.add('visible'));
+    clearTimeout(cartel.t);
+    cartel.t = setTimeout(() => cartel.el.classList.remove('visible'), 2800);
+  }
+  // Esc: subir un nivel
+  addEventListener('keydown', (ev) => {
+    if (ev.key !== 'Escape' || !state.vista || state.vista.tipo === 'general') return;
+    const migas = M.migas(state.vista);
+    if (migas.length > 1) location.hash = migas[migas.length - 2].hash;
+  });
+
   function h(tag, attrs, ...hijos) {
     const el = document.createElement(tag);
     for (const [k, v] of Object.entries(attrs || {})) {
@@ -230,7 +261,7 @@
 
     const hayOtros = spec.nodes.some((n) => n.kind === 'otros');
     $('pista').textContent =
-      'Haz clic en un bloque con › para ver qué hay adentro, o en un nombre de las tablas de abajo. Doble clic en un fondo para subir un nivel. Pasa el cursor (o toca) para ver el monto exacto.' +
+      'Haz clic en un bloque con › para ver qué hay adentro, o en un nombre de las tablas de abajo. Doble clic en un fondo: volver al inicio. Esc: subir un nivel. Pasa el cursor (o toca) para ver el monto exacto.' +
       (hayOtros ? ' «Otros» junta los elementos más chicos; la lista completa está en la tabla.' : '');
     $('guia').textContent = v.tipo === 'general'
       ? 'Cómo leerlo: la plata va de izquierda a derecha. Cuanto más ancha la franja, más plata. El color muestra de qué fondo sale.'
@@ -258,8 +289,10 @@
           const n = state.idx.nodos.get(p.name);
           if (!n || n.nav) return;
           if (n.kind === 'fuente') { location.hash = '#'; return; } // un fondo: sube al inicio, donde se ve a dónde va esa plata
-          const migas = M.migas(state.vista);
-          location.hash = migas[migas.length - 2].hash;
+          // un bloque sin salida: no navega; avisa con un cartelito que sigue al mouse
+          mostrarCartel(n.kind === 'otros'
+            ? 'Acá hay muchos elementos chicos juntos. Mirá la lista completa en la tabla de abajo.'
+            : 'No hay nada más a la derecha de este bloque. Subí un nivel (migas o Esc) para seguir explorando.');
         });
       }
       const movil = L.clave === 'angosto';

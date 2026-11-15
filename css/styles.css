@@ -223,3 +223,11 @@ h1 { margin: 0 0 8px; font-size: clamp(24px, 4vw, 34px); line-height: 1.15; font
 .migas-mas ul li::before, .migas-mas ul li::after { content: none; }
 
 .vuelta3d { margin-left: 8px; text-transform: none; letter-spacing: 0; font-weight: 600; }
+
+/* cartelito que sigue al mouse (2D, doble clic en un bloque sin salida) */
+.cartel-mouse {
+  position: fixed; left: 0; top: 0; z-index: 50; max-width: 250px; padding: 8px 11px;
+  font-size: 13px; line-height: 1.35; color: #fff; background: rgba(28, 32, 40, .82);
+  border-radius: 8px; pointer-events: none; opacity: 0; transition: opacity .3s ease;
+}
+.cartel-mouse.visible { opacity: 1; }

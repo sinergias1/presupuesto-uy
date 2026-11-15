@@ -462,8 +462,7 @@ async function iniciar() {
     zoomHacia(1 + Math.sign(ev.deltaY) * 0.1, ev.clientX, ev.clientY);
   }, { passive: false });
   // doble clic (o doble toque): en un bloque que no se abre más, lleva al detalle en 2D; en el vacío vuelve al centro
-  const idDetalle = (n) => (/^(gasto|recursos)\//.test(n.id) ? n.id.split('#')[0] : (V && V.vista && V.vista.tipo !== 'general' ? V.vista.nodo.id : null));
-  let ultimoDoble = 0;
+    let ultimoDoble = 0;
   function dobleAccion(cx, cy) {
     if (performance.now() - ultimoDoble < 400 || performance.now() - ultimaNav < 800) return; // el primer clic de un doble clic acaba de abrir otra vista
     ultimoDoble = performance.now();
@@ -472,7 +471,8 @@ async function iniciar() {
     if (p.n.nav) { location.hash = '#' + p.n.nav; return; }
     // un fondo no se abre más: sube al nivel de arriba (inicio) donde se ve a dónde va esa plata
     if (p.n.kind === 'fuente' && V && V.vista && V.vista.tipo !== 'general') { location.hash = '#'; return; }
-    const id = idDetalle(p.n);
+    // un bloque sin salida (o "Otros"): lleva al 2D del nivel donde estás (ahí está la tabla), no a una vista de un solo nodo
+    const id = V && V.vista && V.vista.tipo !== 'general' ? V.vista.nodo.id : null;
     location.href = 'detalle.html' + (id ? '#' + id : '');
   }
   canvas.addEventListener('dblclick', (ev) => dobleAccion(ev.clientX, ev.clientY));
