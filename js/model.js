@@ -54,7 +54,7 @@
     'gasto/a': ['Presidencia y ministerios', 'Administración Central: Presidencia de la República y los ministerios.'],
     'gasto/b': ['Pagos generales del Estado', 'Otros Organismos: intereses de la deuda, apoyo a la seguridad social, subsidios y partidas que se reparten después.'],
     'gasto/p': ['Parlamento', 'Poder Legislativo: Cámara de Senadores, Cámara de Representantes y Comisión Administrativa (con la Institución Nacional de Derechos Humanos). No está en los archivos oficiales de gasto: lo sumamos con datos de cada Cámara, a fin de 2025.'],
-    'gasto/p/1/002/0': ['Sin programa informado', 'Los documentos de la Cámara de Representantes no dividen su gasto en programas.'],
+    'gasto/p/1/002/0': ['Todo el gasto de la Cámara', 'Los documentos de la Cámara de Representantes no dividen su gasto en programas, así que este nivel junta todo su gasto.'],
     'gasto/c': ['Educación, salud y justicia', 'Organismos del Art. 220: organismos con autonomía, como ANEP, ASSE, la Universidad de la República, el Poder Judicial y la Fiscalía.'],
   };
   var TIPOS_AMIGABLES = {
