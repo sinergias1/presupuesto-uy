@@ -99,3 +99,4 @@ body.cargando #lienzo { opacity: .55; transition: opacity .2s; }
 /* botones de salto entre vistas */
 .boton-2d { padding: 6px 12px; border: 1px solid rgba(111, 208, 255, .55); border-radius: 999px; background: rgba(10, 18, 32, .72); color: #bfe4ff; text-decoration: none; }
 .boton-2d:hover, .boton-2d:focus-visible { background: rgba(111, 208, 255, .18); color: #fff; outline: none; }
+.tt-pista { margin-top: 6px; color: #6fd0ff; font-size: 11.5px; }

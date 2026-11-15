@@ -371,6 +371,7 @@ async function iniciar() {
         const color = n.kind === 'fuente' ? colorFuente(n.fuente) : null;
         tip.replaceChildren();
         tip.insertAdjacentHTML('beforeend', M.tooltipNodo(n, V.spec.total, color));
+        if (!n.nav && n.kind !== 'ajuste') { const h = document.createElement('div'); h.className = 'tt-pista'; h.textContent = 'Doble clic: ver más detalle en 2D'; tip.firstChild.append(h); }
         tip.hidden = false;
       } else {
         tip.hidden = true;
@@ -391,7 +392,7 @@ async function iniciar() {
   };
   const mundoPorPixel = () => 2 * cam.dist * Math.tan((camera.fov * Math.PI / 360)) / innerHeight;
   const punteros = new Map();
-  let ptrDown = null, movioMucho = false, distPinza = 0;
+  let ptrDown = null, movioMucho = false, distPinza = 0, ultimaNav = 0;
   const plano = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
   const puntoMundo = (cx, cy, salida) => {
     ndc.set((cx / innerWidth) * 2 - 1, -(cy / innerHeight) * 2 + 1);
@@ -449,7 +450,7 @@ async function iniciar() {
     canvas.style.cursor = 'default';
     if (clic && eraUno && ptrDown && !movioMucho) {
       const p = elegir(ev.clientX, ev.clientY);
-      if (p && p.n.nav) location.hash = '#' + p.n.nav; // navega dentro del 3D
+      if (p && p.n.nav) { ultimaNav = performance.now(); location.hash = '#' + p.n.nav; } // navega dentro del 3D
     }
     if (!punteros.size) ptrDown = null;
   }
@@ -460,7 +461,26 @@ async function iniciar() {
     ev.preventDefault();
     zoomHacia(1 + Math.sign(ev.deltaY) * 0.1, ev.clientX, ev.clientY);
   }, { passive: false });
-  canvas.addEventListener('dblclick', () => volverAlCentro());
+  // doble clic (o doble toque): en un bloque que no se abre más, lleva al detalle en 2D; en el vacío vuelve al centro
+  const idDetalle = (n) => (/^(gasto|recursos)\//.test(n.id) ? n.id : (vista && vista.tipo !== 'general' ? vista.nodo.id : null));
+  let ultimoDoble = 0;
+  function dobleAccion(cx, cy) {
+    if (performance.now() - ultimoDoble < 400 || performance.now() - ultimaNav < 800) return; // el primer clic de un doble clic acaba de abrir otra vista
+    ultimoDoble = performance.now();
+    const p = elegir(cx, cy);
+    if (!p) { volverAlCentro(); return; }
+    if (p.n.nav) { location.hash = '#' + p.n.nav; return; }
+    const id = idDetalle(p.n);
+    location.href = 'detalle.html' + (id ? '#' + id : '');
+  }
+  canvas.addEventListener('dblclick', (ev) => dobleAccion(ev.clientX, ev.clientY));
+  let ultimoToque = null;
+  canvas.addEventListener('pointerup', (ev) => {
+    if (ev.pointerType !== 'touch' || movioMucho) return;
+    const ahora = performance.now();
+    if (ultimoToque && ahora - ultimoToque.t < 350 && Math.hypot(ev.clientX - ultimoToque.x, ev.clientY - ultimoToque.y) < 30) { dobleAccion(ev.clientX, ev.clientY); ultimoToque = null; }
+    else ultimoToque = { t: ahora, x: ev.clientX, y: ev.clientY };
+  });
   $('zoom-mas').addEventListener('click', () => zoomHacia(0.8, innerWidth / 2, innerHeight / 2));
   $('zoom-menos').addEventListener('click', () => zoomHacia(1.25, innerWidth / 2, innerHeight / 2));
   $('zoom-centro').addEventListener('click', volverAlCentro);
