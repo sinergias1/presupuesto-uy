@@ -61,6 +61,10 @@ Los nodos de la Cámara de Senadores (`gasto/p/1/001`) y de la Cámara de Repres
 
 Vista experimental que dibuja el mismo flujo del Sankey general (recursos → fondos → gasto) como billetes y monedas en 3D (unos 2.600 en computadora, 1.100 en celular, con `InstancedMesh`) que avanzan girando sobre fondo negro, con three.js 0.160 (desde CDN). No cambia ningún dato: usa `FinanzasModel.specGeneral` de `js/model.js`, así que los nodos, flujos y nombres son los mismos que en el gráfico clásico.
 
+**Navegable.** La vista 3D tiene el mismo drill-down que el gráfico clásico, con las mismas rutas por hash (`3d.html#gasto/a/4`, `3d.html#recursos/ingresos-tributarios`): clic en un bloque con › entra, las migas de arriba (o la tecla Esc) suben un nivel, y cada nivel usa `FinanzasModel.resolver` + `specNodo`, así que los datos son idénticos. Los incisos se cargan de `data/2025/gasto/` cuando se entra.
+
+**Densidad y velocidad según el monto.** Para cada flujo: `peso = (monto / monto del flujo mayor de la vista) ^ GAMMA` (GAMMA = 0,55 en `flujo3d.js`). La cantidad de billetes es proporcional a `peso × superficie de la franja` y la velocidad va de `VEL_MIN` a `VEL_MAX` según el peso. Con GAMMA = 1 sería estrictamente proporcional, pero lo chico quedaría casi invisible y congelado. La escala es relativa a cada vista, no al total del Estado.
+
 - `js/flujo3d.js`, `css/flujo3d.css`, `3d.html`.
 - Mover el mouse (o arrastrar) cambia el ángulo; la rueda acerca; al pasar por un bloque se realzan sus flujos y aparece su tooltip; el clic lleva al detalle en el gráfico clásico (`index.html#<id>`).
 - Respeta `prefers-reduced-motion` (casi sin movimiento) y avisa si el navegador no tiene WebGL. En pantallas verticales las columnas se acercan y las etiquetas van hacia adentro.

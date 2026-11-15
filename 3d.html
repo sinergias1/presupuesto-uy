@@ -13,17 +13,18 @@
   <div id="etiquetas" aria-hidden="true"></div>
 
   <header class="hud hud-izq">
-    <p class="kicker">URUGUAY · PRESUPUESTO 2025 · PROTOTIPO 3D</p>
-    <h1>La plata del Estado, en movimiento</h1>
-    <p class="sub">Cada billete y cada moneda es plata. Va de lo que se cobra (izquierda), pasa por un fondo (centro) y termina en lo que se gasta (derecha). Cuantos más billetes, más plata.</p>
+    <p class="kicker" id="kicker">URUGUAY · PRESUPUESTO 2025 · PROTOTIPO 3D</p>
+    <nav id="migas" class="migas" aria-label="Dónde estás"></nav>
+    <h1 id="titulo">La plata del Estado, en movimiento</h1>
+    <p class="sub" id="sub">Cada billete y cada moneda es plata. Va de lo que se cobra (izquierda), pasa por un fondo (centro) y termina en lo que se gasta (derecha). Cuantos más billetes, más plata.</p>
     <ul id="leyenda" class="leyenda" aria-label="De qué fondo sale la plata"></ul>
   </header>
 
   <aside class="hud hud-der" id="cifras" aria-label="Totales"></aside>
 
   <footer class="hud hud-abajo">
-    <span>Mueve el mouse (o arrastra) para mirar desde otro ángulo · rueda para acercarte · clic en un bloque con › para ver su detalle</span>
-    <a href="index.html">← Volver al gráfico clásico</a>
+    <span>Mueve el mouse (o arrastra) para mirar desde otro ángulo · rueda para acercarte · clic en un bloque con › para entrar · Esc para subir un nivel</span>
+    <a id="clasico" href="index.html">← Volver al gráfico clásico</a>
   </footer>
 
   <div id="tip" class="tip" role="status" hidden></div>

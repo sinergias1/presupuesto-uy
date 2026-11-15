@@ -63,3 +63,12 @@ h1 { margin: 0 0 8px; font-size: clamp(22px, 3.2vw, 34px); line-height: 1.1; fon
 
 .vertical .lbl span { display: none; }
 .vertical .lbl { font-size: 10px; }
+
+.migas { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin: 0 0 8px; font-family: var(--mono); font-size: 11.5px; }
+.migas a { color: #6fd0ff; text-decoration: none; border-bottom: 1px solid rgba(111, 208, 255, .35); }
+.migas a:hover, .migas a:focus-visible { color: #fff; border-color: #fff; outline: none; }
+.migas .sep { color: var(--ink-2); }
+.migas .actual { color: var(--ink-2); }
+.lbl.nav b { color: #fff; }
+body.cargando #lienzo { opacity: .55; transition: opacity .2s; }
+.lbl b { max-width: 250px; overflow: hidden; text-overflow: ellipsis; }
