@@ -20,7 +20,7 @@ const colorFuente = (codigo) => COLOR_FUENTE[codigo] || GRIS;
 const REDUCIR = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const MOVIL = Math.min(innerWidth, innerHeight) < 700;
 if (innerWidth / innerHeight < 0.85) document.body.classList.add('vertical');
-const N_OBJETOS = MOVIL ? 2600 : 6500;
+const N_OBJETOS = MOVIL ? 1100 : 2600;
 
 // En pantallas verticales (celular) las columnas se acercan y el gráfico se alarga, y las
 // etiquetas de los costados van hacia adentro para no salirse de la pantalla.
@@ -202,18 +202,18 @@ async function iniciar() {
   const total = spec.links.reduce((a, l) => a + l.valor, 0);
   const parts = [];
   enlaces.forEach((e, idx) => {
-    const cuantas = Math.max(24, Math.round((e.l.valor / total) * N_OBJETOS));
+    const cuantas = Math.max(14, Math.round((e.l.valor / total) * N_OBJETOS));
     for (let k = 0; k < cuantas; k++) {
       parts.push({
         e, idx, t: Math.random(), v: Math.random(), z: (Math.random() - 0.5) * (PROF * 0.9),
-        vel: 0.05 + Math.random() * 0.06, esc: 0.8 + Math.random() * 0.45,
-        fase: Math.random() * 6.283, giro: (Math.random() < 0.5 ? -1 : 1) * (1.2 + Math.random() * 2.2),
+        vel: 0.022 + Math.random() * 0.026, esc: 0.8 + Math.random() * 0.45,
+        fase: Math.random() * 6.283, giro: (Math.random() < 0.5 ? -1 : 1) * (0.6 + Math.random() * 1.1),
         moneda: Math.random() < 0.38, inc: (Math.random() - 0.5) * 1.1,
       });
     }
   });
   const nBill = parts.filter((q) => !q.moneda).length, nMon = parts.length - nBill;
-  const ancho = VERTICAL ? 0.3 : 0.44;
+  const ancho = VERTICAL ? 0.22 : 0.32;
   const matBillete = new THREE.MeshStandardMaterial({ map: texturaBillete(), roughness: 0.55, metalness: 0.05 });
   const matMoneda = new THREE.MeshStandardMaterial({ map: texturaMoneda(), roughness: 0.28, metalness: 0.55 });
   const billetes = new THREE.InstancedMesh(new THREE.BoxGeometry(ancho, ancho / 2, ancho * 0.03), matBillete, nBill);
@@ -272,7 +272,7 @@ async function iniciar() {
   ajustar();
 
   const cam = { yaw: 0, pitch: 0, yawT: 0, pitchT: 0, dist: 60, distT: 27, arrastrando: false };
-  const distBase = () => { const asp = innerWidth / innerHeight; return VERTICAL ? 34 : asp < 1.5 ? 28 : 22.5; };
+  const distBase = () => { const asp = innerWidth / innerHeight; return VERTICAL ? 34 : asp < 1.5 ? 30 : 26; };
   cam.distT = distBase();
   const MIN = 14, MAX = 52;
   let ultimoMov = 0;
