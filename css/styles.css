@@ -280,3 +280,7 @@ h1 { margin: 0 0 8px; font-size: clamp(24px, 4vw, 34px); line-height: 1.15; font
   .tile:last-child:nth-child(odd) { grid-column: 1 / -1; }
   .tabla td.vacia { display: none; }
 }
+
+.enlaces-compra{display:inline-block;margin-top:.25rem;font-size:.85em;font-weight:400}
+.enlaces-compra a{white-space:nowrap}
+.enlaces-compra a::after{content:none!important}

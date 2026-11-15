@@ -475,9 +475,16 @@
       })));
   }
 
+  /** Enlaces externos (solo https) a la compra en el portal oficial. */
+  function enlacesExternos(lista) {
+    const ok = (lista || []).filter((e) => e && /^https:\/\/www\.comprasestatales\.gub\.uy\//.test(e.u));
+    if (!ok.length) return null;
+    return h('span', { class: 'enlaces-compra' }, ok.map((e, i) => [i ? ' · ' : '', h('a', { href: e.u, target: '_blank', rel: 'noopener noreferrer' }, e.t + ' ↗')]).flat());
+  }
+
   function filaRanking(f, conClasif, conEjec) {
     return h('tr', {},
-      h('th', { scope: 'row' }, f.hash ? h('a', { href: f.hash }, f.nombre) : f.nombre),
+      h('th', { scope: 'row' }, f.hash ? h('a', { href: f.hash }, f.nombre) : f.nombre, f.enlaces ? h('br') : null, enlacesExternos(f.enlaces)),
       conClasif ? h('td', { class: 'col-clas' }, f.clasificacion) : null,
       h('td', { class: 'num', title: M.fmtCompleto(f.valor) }, M.fmtMonto(f.valor)),
       h('td', { class: 'num' }, M.fmtPct(f.pct)),
@@ -796,6 +803,9 @@
         : tarjeta('Cuánto es', `“${r.titulo}” tiene autorizado gastar `, b($$(r.valor)), '.'));
       tarjetas.push(tarjeta('Qué parte del total',
         `De cada $100 que gasta el Estado, $${M.numEs(r.pctTotal * 100, 1)} son de aquí.`));
+      if (r.enlaces) {
+        tarjetas.push(tarjeta('Ver la compra', (r.detalleCompra ? r.detalleCompra + '. ' : ''), enlacesExternos(r.enlaces)));
+      }
       if (r.comprasRubro) {
         tarjetas.push(tarjeta('Las compras de este rubro',
           `Abajo se ven las compras adjudicadas en 2025 (catálogo de compras estatales de ARCE): qué se compró y a qué proveedor. Adjudicar es decidir comprar; el pago puede llegar después. ` +

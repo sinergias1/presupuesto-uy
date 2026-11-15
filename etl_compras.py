@@ -49,6 +49,18 @@ def acentuar(texto: str) -> str:
     return re.sub(r"[A-Za-zñÑ]+", una, texto)
 
 
+PORTAL = "https://www.comprasestatales.gub.uy"
+
+
+def enlaces_compra(rid, con_resolucion):
+    """Páginas públicas de la compra en el portal de Compras Estatales (ARCE).
+    El acta/resolución en PDF solo existe cuando la compra ya tiene resolución."""
+    e = [{"t": "Ver la compra en el portal de compras estatales", "u": f"{PORTAL}/consultas/detalle/id/{rid}"}]
+    if con_resolucion:
+        e.append({"t": "Resolución (PDF)", "u": f"{PORTAL}/Resoluciones/acta_{rid}.pdf"})
+    return e
+
+
 def repartir(valor: int, pesos: dict) -> dict:
     """Reparte `valor` entero según `pesos` (resto mayor), sumando exacto."""
     tot = sum(pesos.values())
@@ -185,7 +197,8 @@ def main():
                             for k, vv in sorted(rp.items(), key=lambda x: -x[1]):
                                 o, fch, est, _ = rel[k]
                                 hojas.append(nodo(f"{r['id']}/c{cid}/{slug(p)}/r{k}", (o[:90] + "…") if len(o) > 90 else o, f"r{k}", vv, r["fuentes"],
-                                                  compras=True, nivel="Compra", detalle=f"Compra N.º {k} · {fch or 's/f'} · {est or 'estado no informado'}"))
+                                                  compras=True, nivel="Compra", detalle=f"Compra N.º {k} · {fch or 's/f'} · {est or 'estado no informado'}",
+                                                  enlaces=enlaces_compra(k, bool(est))))
                             pv_nodos.append(nodo(f"{r['id']}/c{cid}/{slug(p)}", p, slug(p), v, r["fuentes"], hojas or None,
                                                  compras=True, nivel="Proveedor", nivel_hijos="Compra"))
                         hijos.append(nodo(f"{r['id']}/c{cid}", nom, f"c{cid}", v_art, r["fuentes"], pv_nodos, compras=True,

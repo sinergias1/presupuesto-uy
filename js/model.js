@@ -417,6 +417,8 @@
       nivel: n.nivel || niveles[prof] || '',
       cargos: n.cargos || null,
       sinCargos: !!n.sin_cargos,
+      enlaces: n.enlaces || null,
+      detalleCompra: n.detalle || null,
       enCompras: n.compras === true || !!n.compras_resto,
       comprasResto: !!n.compras_resto,
       comprasRubro: n.compras && n.compras !== true ? n.compras : null,
@@ -451,6 +453,7 @@
       pct: totalRef ? n.valor / totalRef : 0,
       fuentes: n.fuentes || {},
       hash: esDrillable(n) ? '#' + n.id : null,
+      enlaces: n.enlaces || null,
     };
     if (n.ejecutado != null) {
       fila.ejecutado = n.ejecutado;
