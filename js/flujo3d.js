@@ -462,7 +462,7 @@ async function iniciar() {
     zoomHacia(1 + Math.sign(ev.deltaY) * 0.1, ev.clientX, ev.clientY);
   }, { passive: false });
   // doble clic (o doble toque): en un bloque que no se abre más, lleva al detalle en 2D; en el vacío vuelve al centro
-  const idDetalle = (n) => (/^(gasto|recursos)\//.test(n.id) ? n.id : (vista && vista.tipo !== 'general' ? vista.nodo.id : null));
+  const idDetalle = (n) => (/^(gasto|recursos)\//.test(n.id) ? n.id : (V && V.vista && V.vista.tipo !== 'general' ? V.vista.nodo.id : null));
   let ultimoDoble = 0;
   function dobleAccion(cx, cy) {
     if (performance.now() - ultimoDoble < 400 || performance.now() - ultimaNav < 800) return; // el primer clic de un doble clic acaba de abrir otra vista
