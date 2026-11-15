@@ -602,7 +602,7 @@
       }
       if (r.esParlamento) {
         tarjetas.push(tarjeta('De dónde sale la plata',
-          'Los documentos del Parlamento no dicen de qué fondo sale. Lo mostramos como “Fondo común” porque supone Rentas Generales: es un supuesto, no un dato.'));
+          'La plata del Parlamento sale de Rentas Generales, que en esta página se llama “Fondo común”.'));
       }
       if (r.sufijo === 'r' && r.tieneObjetos) {
         tarjetas.push(tarjeta('Cómo se parte',

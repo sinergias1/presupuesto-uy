@@ -113,7 +113,7 @@ NIVEL_MAX_TIPOS = 4
 
 # Poder Legislativo (inciso 1): no está en los CSV oficiales. Se agrega desde un CSV curado
 # (datos_fuente/legislativo_2025.csv) como grupo aparte. Los montos son crédito definitivo
-# al 31/12/2025 y vienen con su ejecución; se asigna todo al fondo común (Rentas Generales).
+# al 31/12/2025 y vienen con su ejecución; todo sale de Rentas Generales (fuente 11, confirmado).
 ARCHIVO_LEGISLATIVO = Path(__file__).resolve().parent / "datos_fuente" / "legislativo_2025.csv"
 CLAS_LEGISLATIVO = ("P", "Poder Legislativo")
 FUENTE_LEGISLATIVO = "11"
@@ -847,8 +847,8 @@ def main() -> None:
                 "así que la fecha de corte no es la misma.",
                 "Solo el Poder Legislativo trae ejecución 2025 (lo efectivamente gastado, `ejecutado`): el resto del gasto es solo crédito, "
                 "así que la ejecución no se puede comparar entre organismos.",
-                "Los documentos del Poder Legislativo no indican la fuente de financiamiento. Se asignó todo al fondo común "
-                "(Rentas Generales, código 11) como supuesto: no es un dato.",
+                "El gasto del Poder Legislativo se financia con Rentas Generales (código 11, el 'Fondo común' de la página): "
+                "se asignó todo a esa fuente.",
                 "Los recursos no cambian al agregar el Poder Legislativo (solo recauda una suma muy chica). Por eso la diferencia entre "
                 "recursos y gasto crece en lo que suma su gasto.",
                 "Los nombres de los programas 221 a 223 del Senado y el 0 de Representantes son descriptivos: sus documentos "
@@ -872,7 +872,7 @@ def main() -> None:
             "credito": int(leg["monto"].sum()),
             "ejecutado": int(leg["ejec"].sum()),
             "corte": "2025-12-31",
-            "fuente_supuesta": FUENTE_LEGISLATIVO,
+            "fuente_financiamiento": FUENTE_LEGISLATIVO,
             "gasto_sin_legislativo": int(gas["monto"].sum()),
             "diferencia_sin_legislativo": total_rec - int(gas["monto"].sum()),
         },

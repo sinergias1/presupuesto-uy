@@ -40,7 +40,7 @@ El inciso 1 no figura en los CSV oficiales de gasto (tampoco el 28, BPS, ni el 3
 - Jerarquía: Parlamento > Poder Legislativo (inciso 1) > unidad ejecutora (001 Senado, 002 Representantes, 003 Comisión Administrativa, que incluye la INDDHH como programa 228) > programa > tipo de gasto > concepto.
 - El valor de cada nodo es el **crédito definitivo al 31/12/2025**; el resto del gasto es crédito vigente a mayo de 2025. La diferencia de fecha de corte se avisa en la página.
 - Los nodos del Parlamento traen además `ejecutado` (lo gastado en 2025), que se ve en tarjetas, tablas y tooltips. Solo el Parlamento trae ejecución, así que no es comparable con otros organismos.
-- La fuente de financiamiento no figura en los documentos: se asigna todo al fondo común (código 11) como **supuesto declarado**.
+- Todo el gasto del Parlamento sale de Rentas Generales (fuente 11, el "Fondo común" de la página), confirmado por la autora del proyecto.
 - Los recursos no cambian: el gasto total pasa de 926,3 a 936,5 mil millones $U y la diferencia, de −66,6 a −76,8.
 - Sin datos de cargos (el archivo de puestos no lo cubre): se usa el aviso de "sin cargos".
 - El ETL se detiene si el CSV deja de cerrar con los totales de control por unidad ejecutora (tomados de cada PDF), si algún nodo ejecuta más que su crédito o si los hijos no suman al padre.
