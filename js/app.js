@@ -463,13 +463,13 @@
     const out = [];
     out.push(tablaSimple({
       titulo: 'Integrantes por partido',
-      nota: `Cuántos integrantes tiene cada partido en la nómina del ${M.fmtFecha(l.fecha_nomina)}.`,
+      nota: 'Cuántos integrantes tiene cada partido en la nómina de la Cámara.',
       columnas: [{ t: 'Partido' }, { t: 'Integrantes', num: true }, { t: 'Parte del total', num: true }],
       filas: M.filasPartidos(l).map((p) => [p.nombre, M.numEs(p.integrantes, 0), M.fmtPct(p.pct)]),
     }));
     out.push(tablaSimple({
       titulo: `Quiénes integran la Cámara ${esSenado ? 'de Senadores' : 'de Representantes'}`,
-      nota: `Nómina pública ${nombreCamara}, en orden alfabético, al ${M.fmtFecha(l.fecha_nomina)}. ` +
+      nota: `Nómina pública ${nombreCamara}, en orden alfabético. ` +
         (esSenado ? 'La vicepresidenta de la República preside el Senado y figura en la lista.' : 'Los suplentes figuran con una observación.'),
       columnas: esSenado
         ? [{ t: 'Nombre' }, { t: 'Partido' }, { t: 'Observación' }]
@@ -481,7 +481,6 @@
     out.push(tablaSimple({
       titulo: 'Sueldos nominales por mes',
       nota: 'Son montos mensuales, nominales (antes de descuentos): gravados por aporte jubilatorio, IRPF y FONASA. ' +
-        (l.vigencia_sueldos ? `Rigen desde ${M.fmtFecha(l.vigencia_sueldos)}, así que no son exactamente los de 2025. ` : 'La planilla no dice desde cuándo rigen, así que pueden no ser los de 2025. ') +
         `Entre los ${M.numEs(l.personas.length, 0)} integrantes suman ${M.fmtCompleto(l.mensual_legisladores)} por mes, unos ${M.fmtMonto(l.anual_legisladores)} al año con ${l.pagos_al_anio} pagos.`,
       columnas: [{ t: 'Cargo' }, { t: 'Personas', num: true }, { t: 'Sueldo', num: true }, { t: 'Gastos de representación', num: true }, { t: 'Total nominal', num: true }],
       filas: l.sueldos.map((s) => [s.cargo, s.cantidad != null ? M.numEs(s.cantidad, 0) : '—', conMonto(s.sueldo), conMonto(s.gastos_representacion), conMonto(s.total)]),
@@ -500,7 +499,7 @@
   function tablaEscala(e) {
     return tablaSimple({
       titulo: 'Escala de sueldos básicos de los funcionarios del Senado',
-      nota: `Sueldo básico mensual por cargo, vigente desde el ${M.fmtFecha(e.vigencia)}. Es la escala, no lo que cobra cada persona: no incluye las primas y compensaciones que se suman al básico, y no hay datos de cuántas personas ocupan cada cargo.`,
+      nota: `Sueldo básico mensual por cargo. Es la escala, no lo que cobra cada persona: no incluye las primas y compensaciones que se suman al básico, y no hay datos de cuántas personas ocupan cada cargo.`,
       columnas: [{ t: 'Cargo' }, { t: 'Grupo' }, { t: 'Sueldo básico por mes', num: true }],
       filas: e.filas.map((f) => [f[2].charAt(0) + f[2].slice(1).toLowerCase(), `Escalafón ${f[0]} · ${f[1]}`, h('span', { title: M.fmtCompleto(f[3]) }, M.fmtMonto(f[3]))]),
       pagina: 20,
@@ -691,7 +690,7 @@
       }
       if (r.escalaFuncionarios) {
         tarjetas.push(tarjeta('Sueldos de los funcionarios',
-          `Abajo está la escala de sueldos básicos del personal del Senado, vigente desde el ${M.fmtFecha(r.escalaFuncionarios.vigencia)}. ` +
+          'Abajo está la escala de sueldos básicos del personal del Senado. ' +
           'Dice cuánto cobra cada cargo, pero no cuántas personas hay en cada uno.'));
       }
       if (r.esParlamento) {
@@ -762,11 +761,10 @@
       if (r.legisladores) {
         const l = r.legisladores, n = l.personas.length, p = M.sueldoPrincipal(l);
         tiles.push(tile('Integrantes de la Cámara', M.numEs(n, 0),
-          `Nómina al ${M.fmtFecha(l.fecha_nomina)}. ${l.camara === 'Senadores' ? 'Incluye a la vicepresidenta y a 6 suplentes de senadores que pasaron a ministros.' : 'Incluye suplentes en ejercicio.'}`));
+          `Nómina publicada por la Cámara. ${l.camara === 'Senadores' ? 'Incluye a la vicepresidenta y a 6 suplentes de senadores que pasaron a ministros.' : 'Incluye suplentes en ejercicio.'}`));
         if (p) {
           tiles.push(tile('Sueldo nominal por mes de cada legislador', M.fmtMonto(p.total),
-            `${M.fmtCompleto(p.sueldo)} de sueldo y ${M.fmtCompleto(p.gastos_representacion)} de gastos de representación, antes de descuentos.` +
-            (l.vigencia_sueldos ? ` Vigente desde ${M.fmtFecha(l.vigencia_sueldos)}.` : ' La planilla no indica desde cuándo rige.'),
+            `${M.fmtCompleto(p.sueldo)} de sueldo y ${M.fmtCompleto(p.gastos_representacion)} de gastos de representación, antes de descuentos.`,
             M.fmtCompleto(p.total)));
         }
       }

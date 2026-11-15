@@ -976,11 +976,12 @@ def main() -> None:
                 "se asignó todo a esa fuente.",
                 "Los recursos no cambian al agregar el Poder Legislativo (solo recauda una suma muy chica). Por eso la diferencia entre "
                 "recursos y gasto crece en lo que suma su gasto.",
-                "Legisladores: la nómina del Senado es de la consulta del 28/08/2025 (vicepresidenta y 30 senadores; 6 son suplentes de "
-                "senadores que pasaron a ministros o subsecretarios). La de Representantes es del 13/11/2026 e incluye suplentes en ejercicio, "
-                "así que puede no coincidir con 2025.",
-                "Los sueldos de los legisladores son nominales (antes de descuentos) y salen de las planillas de cada Cámara; los del Senado "
-                "rigen desde enero de 2026. Representantes trae las mismas cifras pero sin fecha de vigencia. No son exactamente los de 2025.",
+                "Legisladores: las nóminas y los sueldos se usan como si fueran de 2025 (decisión del proyecto: la diferencia es chica). "
+                "Las fechas reales de los documentos: nómina del Senado, consulta del 28/08/2025 (vicepresidenta y 30 senadores; 6 son suplentes de "
+                "senadores que pasaron a ministros o subsecretarios); nómina de Representantes, 13/11/2026 (incluye suplentes en ejercicio); "
+                "sueldos del Senado, vigentes desde enero de 2026; sueldos de Representantes, sin fecha en el archivo; escala de funcionarios "
+                "del Senado, 1/8/2026.",
+                "Los sueldos de los legisladores son nominales (antes de descuentos) y salen de las planillas de cada Cámara.",
                 "Sueldo anual de los legisladores (cálculo): cantidad de integrantes x (sueldo nominal + gastos de representación) x 14. No incluye "
                 "aportes patronales ni partidas para secretarios, y por eso no es comparable con el crédito de sueldos del presupuesto.",
                 "Los nombres de los programas 221 a 223 del Senado y el 0 de Representantes son descriptivos: sus documentos "

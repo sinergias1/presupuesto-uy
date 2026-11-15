@@ -49,6 +49,7 @@ El inciso 1 no figura en los CSV oficiales de gasto (tampoco el 28, BPS, ni el 3
 
 Los nodos de la Cámara de Senadores (`gasto/p/1/001`) y de la Cámara de Representantes (`gasto/p/1/002`) traen un bloque `legisladores` con la nómina pública, los integrantes por partido y los sueldos nominales. Salen de `datos_fuente/`:
 
+- Se usan como si fueran de 2025 (decisión del proyecto: la diferencia es chica); las fechas reales están en cada fila de los CSV y en "Sobre los datos".
 - `legisladores.csv`: 31 integrantes del Senado (vicepresidenta y 30 senadores; 6 son suplentes de senadores que pasaron a ministros) según la consulta de Integración histórica del Parlamento del 28/08/2025, y 99 representantes según la nómina de la Cámara al 13/11/2026 (incluye suplentes en ejercicio). Cada Cámara tiene su propia fecha.
 - `remuneraciones_legisladores.csv`: sueldo nominal y gastos de representación por mes. Senado: planilla vigente desde enero de 2026 (senador $399.346 en total; vicepresidencia $797.987). Representantes: mismas cifras, pero el archivo no indica la vigencia.
 - `partidas_senado.csv`: partidas con cargo al rubro de gastos (secretarios parlamentarios, telefonía).
