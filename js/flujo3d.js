@@ -117,7 +117,7 @@ async function iniciar() {
   renderer.setPixelRatio(Math.min(devicePixelRatio || 1, MOVIL ? 1.5 : 2));
   renderer.setClearColor(0x04060a, 1);
   const scene = new THREE.Scene();
-  scene.fog = new THREE.FogExp2(0x04060a, 0.022);
+  scene.fog = new THREE.FogExp2(0x04060a, VERTICAL ? 0.008 : 0.022);
   const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 200);
 
   const grid = new THREE.GridHelper(70, 70, 0x1c3a5e, 0x0e1e33);
@@ -134,8 +134,8 @@ async function iniciar() {
   ge.setAttribute('position', new THREE.BufferAttribute(pe, 3));
   scene.add(new THREE.Points(ge, new THREE.PointsMaterial({ color: 0x5f8fd0, size: 0.08, transparent: true, opacity: 0.55, sizeAttenuation: true, depthWrite: false })));
 
-  scene.add(new THREE.AmbientLight(0xffffff, 1.9));
-  const sol = new THREE.DirectionalLight(0xffffff, 2.6); sol.position.set(-6, 10, 14); scene.add(sol);
+  scene.add(new THREE.AmbientLight(0xffffff, MOVIL ? 2.4 : 1.9));
+  const sol = new THREE.DirectionalLight(0xffffff, MOVIL ? 3.2 : 2.6); sol.position.set(-6, 10, 14); scene.add(sol);
   const luz2 = new THREE.DirectionalLight(0x7fb4ff, 0.9); luz2.position.set(8, -4, 10); scene.add(luz2);
 
   function texturaBillete() {
@@ -160,8 +160,8 @@ async function iniciar() {
     g.fillStyle = '#566170'; g.font = 'bold 44px system-ui, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('$U', 64, 68);
     const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t;
   }
-  const ancho = VERTICAL ? 0.22 : 0.32;
-  const matBillete = new THREE.MeshStandardMaterial({ map: texturaBillete(), roughness: 0.55, metalness: 0.05 });
+  const ancho = VERTICAL ? 0.3 : 0.32;
+  const matBillete = new THREE.MeshStandardMaterial({ map: texturaBillete(), roughness: 0.55, metalness: 0.05, });
   const matMoneda = new THREE.MeshStandardMaterial({ map: texturaMoneda(), roughness: 0.28, metalness: 0.55 });
   const geoBillete = new THREE.BoxGeometry(ancho, ancho / 2, ancho * 0.03);
   const geoMon = new THREE.CylinderGeometry(ancho * 0.32, ancho * 0.32, ancho * 0.07, 20);
@@ -247,7 +247,7 @@ async function iniciar() {
     let ib = 0, im = 0;
     parts.forEach((q) => {
       const c = new THREE.Color(q.e.l.fuente ? colorFuente(q.e.l.fuente) : GRIS);
-      c.lerp(new THREE.Color(0xffffff), 0.18 + Math.random() * 0.12);
+      c.lerp(new THREE.Color(0xffffff), (MOVIL ? 0.04 : 0.18) + Math.random() * 0.1);
       q.mesh = q.moneda ? monedas : billetes;
       q.i = q.moneda ? im++ : ib++;
       q.mesh.setColorAt(q.i, c);
@@ -494,13 +494,27 @@ async function iniciar() {
       v3.set(ax, ay, 0).project(camera);
       p.px = (v3.x * 0.5 + 0.5) * innerWidth;
       p.py = (-v3.y * 0.5 + 0.5) * innerHeight;
+      if (VERTICAL && col === 0) p.px = 8;                    // en celular, cada lado pega su cartel al borde
+      else if (VERTICAL && col === ultima) p.px = innerWidth - 8;
       porCol[col].push(p);
     });
-    const sep = VERTICAL ? 24 : 46;
+    const sep = VERTICAL ? 26 : 46;
+    if (VERTICAL) {
+      // en pantalla angosta las etiquetas de todas las columnas comparten el mismo ancho: se ordenan juntas
+      const todas = [].concat(...porCol).sort((a, b) => a.py - b.py);
+      const tope = innerHeight - 130;
+      for (let i = 1; i < todas.length; i++) if (todas[i].py - todas[i - 1].py < sep) todas[i].py = todas[i - 1].py + sep;
+      if (todas.length && todas[todas.length - 1].py > tope) {
+        todas[todas.length - 1].py = tope;
+        for (let i = todas.length - 2; i >= 0; i--) if (todas[i + 1].py - todas[i].py < sep) todas[i].py = todas[i + 1].py - sep;
+      }
+    }
     porCol.forEach((lista) => {
-      lista.sort((a, b) => a.py - b.py);
-      for (let i = 1; i < lista.length; i++) {
-        if (lista[i].py - lista[i - 1].py < sep) lista[i].py = lista[i - 1].py + sep;
+      if (!VERTICAL) {
+        lista.sort((a, b) => a.py - b.py);
+        for (let i = 1; i < lista.length; i++) {
+          if (lista[i].py - lista[i - 1].py < sep) lista[i].py = lista[i - 1].py + sep;
+        }
       }
       lista.forEach((p) => {
         const izq = VERTICAL ? 'translate(0,-50%)' : 'translate(-100%,-50%)';
