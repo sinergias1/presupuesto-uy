@@ -157,6 +157,16 @@
     return (v < 0 ? '−' : '') + '$U ' + numEs(Math.abs(v), 0);
   }
 
+  var MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+  /** '2025-08-28' -> '28/08/2025'; '2026-01' -> 'enero de 2026'. */
+  function fmtFecha(iso) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || '');
+    if (m) return m[3] + '/' + m[2] + '/' + m[1];
+    m = /^(\d{4})-(\d{2})$/.exec(iso || '');
+    if (m) return MESES[Number(m[2]) - 1] + ' de ' + m[1];
+    return iso || '';
+  }
+
   function fmtPct(x) {
     var p = x * 100;
     if (p > 0 && p < 0.1) return '<0,1 %';
@@ -407,6 +417,8 @@
       ejecutado: n.ejecutado != null ? n.ejecutado : null,
       pctEjecutado: n.ejecutado != null && n.valor ? n.ejecutado / n.valor : null,
       esParlamento: /^gasto\/p(\/|$)/.test(n.id),
+      legisladores: n.legisladores || null,
+      escalaFuncionarios: n.escala_funcionarios || null,
       sufijo: n.id.slice(n.id.lastIndexOf('/') + 1),
       tieneObjetos: !!(n.objetos && n.objetos.length),
       oficial: ayudaDe(n.id, n.nombre) ? n.nombre : null,
@@ -486,6 +498,26 @@
     });
   }
 
+  /** Integrantes de una Cámara por partido: nombre, cantidad y parte del total. */
+  function filasPartidos(l) {
+    var total = l.partidos.reduce(function (a, p) { return a + p.integrantes; }, 0);
+    return l.partidos.map(function (p) { return { nombre: p.nombre, codigo: p.codigo, integrantes: p.integrantes, pct: total ? p.integrantes / total : 0 }; });
+  }
+
+  /** Una fila por integrante: [nombre, partido (nombre completo), departamento, observación]. */
+  function filasPersonas(l) {
+    var nombres = {};
+    l.partidos.forEach(function (p) { nombres[p.codigo] = p.nombre; });
+    return l.personas.map(function (p) { return { nombre: p[0], partido: nombres[p[1]] || p[1], departamento: p[2], observacion: p[3] }; });
+  }
+
+  /** El cargo que cobra la mayoría de los integrantes (el sueldo "típico" de la Cámara). */
+  function sueldoPrincipal(l) {
+    var mejor = null;
+    l.sueldos.forEach(function (s) { if (s.cantidad && (!mejor || s.cantidad > mejor.cantidad)) mejor = s; });
+    return mejor;
+  }
+
   function filasFuentesDeNodo(ov, nodo) {
     return entradasDesc(nodo.fuentes).map(function (e) {
       return { codigo: e[0], nombre: fuenteNombre(ov, e[0]), valor: e[1], pct: e[1] / nodo.valor };
@@ -551,6 +583,10 @@
     fmtMonto: fmtMonto,
     fmtCompleto: fmtCompleto,
     fmtPct: fmtPct,
+    fmtFecha: fmtFecha,
+    filasPartidos: filasPartidos,
+    filasPersonas: filasPersonas,
+    sueldoPrincipal: sueldoPrincipal,
     esc: esc,
     fuenteSlot: fuenteSlot,
     fuenteNombre: fuenteNombre,

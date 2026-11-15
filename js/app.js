@@ -427,6 +427,86 @@
           h('td', { class: 'num', title: M.fmtCompleto(Math.round(f.promedio)) }, M.fmtMonto(f.promedio))))))));
   }
 
+  /** Tabla simple y accesible; con `pagina` agrega "Mostrar más". `filas`: arrays de celdas (texto o nodo). */
+  function tablaSimple({ titulo, nota, columnas, filas, pagina = 25 }) {
+    const tbody = h('tbody');
+    let mostradas = 0;
+    const mas = h('p', { class: 'mas' });
+    function agregar() {
+      const hasta = Math.min(filas.length, mostradas + pagina);
+      for (; mostradas < hasta; mostradas++) {
+        const f = filas[mostradas];
+        tbody.append(h('tr', {}, f.map((c, i) => i === 0
+          ? h('th', { scope: 'row' }, c)
+          : h('td', { class: columnas[i].num ? 'num' : null }, c))));
+      }
+      mas.replaceChildren();
+      if (mostradas < filas.length) {
+        mas.append(h('button', { type: 'button', onclick: agregar }, `Mostrar más (${filas.length - mostradas} restantes)`));
+      }
+    }
+    agregar();
+    return h('section', { class: 'tabla-sec' },
+      h('h3', {}, titulo),
+      nota ? h('p', { class: 'tabla-nota' }, nota) : null,
+      h('div', { class: 'tabla-wrap' }, h('table', { class: 'tabla' },
+        h('caption', { class: 'sr-only' }, titulo),
+        h('thead', {}, h('tr', {}, columnas.map((c) => h('th', { scope: 'col', class: c.num ? 'num' : null }, c.t)))),
+        tbody)),
+      mas);
+  }
+
+  function tablasLegisladores(l) {
+    const esSenado = l.camara === 'Senadores';
+    const conMonto = (v) => h('span', { title: M.fmtCompleto(v) }, M.fmtMonto(v));
+    const nombreCamara = esSenado ? 'del Senado' : 'de la Cámara de Representantes';
+    const out = [];
+    out.push(tablaSimple({
+      titulo: 'Integrantes por partido',
+      nota: `Cuántos integrantes tiene cada partido en la nómina del ${M.fmtFecha(l.fecha_nomina)}.`,
+      columnas: [{ t: 'Partido' }, { t: 'Integrantes', num: true }, { t: 'Parte del total', num: true }],
+      filas: M.filasPartidos(l).map((p) => [p.nombre, M.numEs(p.integrantes, 0), M.fmtPct(p.pct)]),
+    }));
+    out.push(tablaSimple({
+      titulo: `Quiénes integran la Cámara ${esSenado ? 'de Senadores' : 'de Representantes'}`,
+      nota: `Nómina pública ${nombreCamara}, en orden alfabético, al ${M.fmtFecha(l.fecha_nomina)}. ` +
+        (esSenado ? 'La vicepresidenta de la República preside el Senado y figura en la lista.' : 'Los suplentes figuran con una observación.'),
+      columnas: esSenado
+        ? [{ t: 'Nombre' }, { t: 'Partido' }, { t: 'Observación' }]
+        : [{ t: 'Nombre' }, { t: 'Partido' }, { t: 'Departamento' }, { t: 'Observación' }],
+      filas: M.filasPersonas(l).map((p) => esSenado
+        ? [p.nombre, p.partido, p.observacion || '—']
+        : [p.nombre, p.partido, p.departamento, p.observacion || '—']),
+    }));
+    out.push(tablaSimple({
+      titulo: 'Sueldos nominales por mes',
+      nota: 'Son montos mensuales, nominales (antes de descuentos): gravados por aporte jubilatorio, IRPF y FONASA. ' +
+        (l.vigencia_sueldos ? `Rigen desde ${M.fmtFecha(l.vigencia_sueldos)}, así que no son exactamente los de 2025. ` : 'La planilla no dice desde cuándo rigen, así que pueden no ser los de 2025. ') +
+        `Entre los ${M.numEs(l.personas.length, 0)} integrantes suman ${M.fmtCompleto(l.mensual_legisladores)} por mes, unos ${M.fmtMonto(l.anual_legisladores)} al año con ${l.pagos_al_anio} pagos.`,
+      columnas: [{ t: 'Cargo' }, { t: 'Personas', num: true }, { t: 'Sueldo', num: true }, { t: 'Gastos de representación', num: true }, { t: 'Total nominal', num: true }],
+      filas: l.sueldos.map((s) => [s.cargo, s.cantidad != null ? M.numEs(s.cantidad, 0) : '—', conMonto(s.sueldo), conMonto(s.gastos_representacion), conMonto(s.total)]),
+    }));
+    if (l.partidas) {
+      out.push(tablaSimple({
+        titulo: 'Otras partidas con cargo al gasto del Senado',
+        nota: 'Se pagan con cargo al rubro de gastos de funcionamiento, no a sueldos. Son montos mensuales.',
+        columnas: [{ t: 'Partida' }, { t: 'Para quién', num: false }, { t: 'Monto por mes', num: true }, { t: 'Observación' }],
+        filas: l.partidas.map((x) => [x.partida, x.unidad, conMonto(x.monto), x.observacion]),
+      }));
+    }
+    return out;
+  }
+
+  function tablaEscala(e) {
+    return tablaSimple({
+      titulo: 'Escala de sueldos básicos de los funcionarios del Senado',
+      nota: `Sueldo básico mensual por cargo, vigente desde el ${M.fmtFecha(e.vigencia)}. Es la escala, no lo que cobra cada persona: no incluye las primas y compensaciones que se suman al básico, y no hay datos de cuántas personas ocupan cada cargo.`,
+      columnas: [{ t: 'Cargo' }, { t: 'Grupo' }, { t: 'Sueldo básico por mes', num: true }],
+      filas: e.filas.map((f) => [f[2].charAt(0) + f[2].slice(1).toLowerCase(), `Escalafón ${f[0]} · ${f[1]}`, h('span', { title: M.fmtCompleto(f[3]) }, M.fmtMonto(f[3]))]),
+      pagina: 20,
+    });
+  }
+
   function tablaPuente(filas) {
     return h('section', { class: 'tabla-sec' },
       h('h3', {}, 'Cada fondo: lo que entra y lo que sale'),
@@ -489,6 +569,8 @@
         nota: 'Cada fila es un tipo de cargo de este grupo. El sueldo es mensual y nominal (antes de descuentos); el promedio es por cargo, ocupado o vacante.',
       }));
     }
+    if (r.legisladores) secciones.push(...tablasLegisladores(r.legisladores));
+    if (r.escalaFuncionarios) secciones.push(tablaEscala(r.escalaFuncionarios));
     if (r.tieneObjetos) {
       secciones.push(tablaRanking({
         titulo: 'Todo el gasto en remuneraciones, por rubro',
@@ -600,6 +682,18 @@
           `De ${$$(r.valor)} autorizados a fin de 2025 se gastaron ${$$(r.ejecutado)} (${M.fmtPct(r.pctEjecutado)}). ` +
           'Solo el Parlamento trae este dato, así que no se puede comparar con otros organismos.'));
       }
+      if (r.legisladores) {
+        const l = r.legisladores;
+        tarjetas.push(tarjeta('Quiénes son y cuánto cobran',
+          `Abajo está la lista de los ${M.numEs(l.personas.length, 0)} integrantes, publicada por la propia Cámara, con su partido. ` +
+          `Si todos cobraran el sueldo nominal más los gastos de representación durante 14 pagos al año, sumarían unos ${$$(l.anual_legisladores)}. ` +
+          'Es un cálculo nuestro: no incluye aportes patronales ni las partidas para secretarios, y no es lo mismo que el crédito de sueldos del presupuesto.'));
+      }
+      if (r.escalaFuncionarios) {
+        tarjetas.push(tarjeta('Sueldos de los funcionarios',
+          `Abajo está la escala de sueldos básicos del personal del Senado, vigente desde el ${M.fmtFecha(r.escalaFuncionarios.vigencia)}. ` +
+          'Dice cuánto cobra cada cargo, pero no cuántas personas hay en cada uno.'));
+      }
       if (r.esParlamento) {
         tarjetas.push(tarjeta('De dónde sale la plata',
           'La plata del Parlamento sale de Rentas Generales, que en esta página se llama “Fondo común”.'));
@@ -665,6 +759,17 @@
             ? `De cada $100 que se gastan, $${M.numEs(r.pctTotal * 100, 1)} van aquí.`
             : `De cada $100 que se cobran, $${M.numEs(r.pctTotal * 100, 1)} vienen de aquí.`),
       ];
+      if (r.legisladores) {
+        const l = r.legisladores, n = l.personas.length, p = M.sueldoPrincipal(l);
+        tiles.push(tile('Integrantes de la Cámara', M.numEs(n, 0),
+          `Nómina al ${M.fmtFecha(l.fecha_nomina)}. ${l.camara === 'Senadores' ? 'Incluye a la vicepresidenta y a 6 suplentes de senadores que pasaron a ministros.' : 'Incluye suplentes en ejercicio.'}`));
+        if (p) {
+          tiles.push(tile('Sueldo nominal por mes de cada legislador', M.fmtMonto(p.total),
+            `${M.fmtCompleto(p.sueldo)} de sueldo y ${M.fmtCompleto(p.gastos_representacion)} de gastos de representación, antes de descuentos.` +
+            (l.vigencia_sueldos ? ` Vigente desde ${M.fmtFecha(l.vigencia_sueldos)}.` : ' La planilla no indica desde cuándo rige.'),
+            M.fmtCompleto(p.total)));
+        }
+      }
       if (r.ejecutado != null) {
         tiles.push(tile('Ya gastado en 2025', M.fmtMonto(r.ejecutado),
           `${M.fmtPct(r.pctEjecutado)} de lo autorizado. Es lo ejecutado, según los documentos del Parlamento.`, M.fmtCompleto(r.ejecutado)));

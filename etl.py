@@ -129,6 +129,20 @@ CONTROL_LEGISLATIVO = {
     "003": (4_546_693_909, 2_847_665_451),  # Comisión Administrativa (programas 226, 227, 228)
 }
 
+# Legisladores (nóminas y sueldos nominales): datos curados de los documentos de cada Cámara.
+CARPETA_FUENTES = Path(__file__).resolve().parent / "datos_fuente"
+UE_LEGISLADORES = {"Senadores": "001", "Representantes": "002"}
+PARTIDOS = {
+    "FA": "Frente Amplio", "PN": "Partido Nacional", "PC": "Partido Colorado",
+    "CA": "Cabildo Abierto", "IS": "Identidad Soberana", "PI": "Partido Independiente",
+}
+# Integrantes y bancas por partido, según los totales de cada nómina original.
+CONTROL_LEGISLADORES = {
+    "Senadores": (31, {"FA": 17, "PN": 9, "PC": 5}),  # vicepresidenta + 30 senadores
+    "Representantes": (99, {"FA": 48, "PN": 29, "PC": 17, "CA": 2, "IS": 2, "PI": 1}),
+}
+PAGOS_AL_ANIO = FACTOR_ANUAL  # 12 sueldos + aguinaldo + salario vacacional, aproximado
+
 _RE_PLANO = r"-?\d+"
 _RE_MILES = r"-?\d{1,3}(\.\d{3})+"
 
@@ -366,6 +380,109 @@ def leer_legislativo(path: Path) -> pd.DataFrame:
         "fuente": FUENTE_LEGISLATIVO, "monto": df["credito_definitivo"], "ejec": df["ejecutado"],
     })
     return out
+
+
+def leer_legisladores(carpeta: Path) -> dict[str, dict]:
+    """Nóminas y sueldos nominales de senadores y representantes. Devuelve, por cámara, el bloque
+    `legisladores` que se cuelga de su unidad ejecutora. Todo se valida contra los controles."""
+    nom = pd.read_csv(carpeta / "legisladores.csv", encoding="utf-8", dtype=str, keep_default_na=False)
+    rem = pd.read_csv(carpeta / "remuneraciones_legisladores.csv", encoding="utf-8", dtype=str, keep_default_na=False)
+    par = pd.read_csv(carpeta / "partidas_senado.csv", encoding="utf-8", dtype=str, keep_default_na=False)
+    esc = pd.read_csv(carpeta / "senado_escala_funcionarios.csv", encoding="utf-8", dtype=str, keep_default_na=False)
+    for nombre, df, cols in (
+        ("legisladores", nom, ["camara", "nombre", "partido", "departamento", "observacion", "fecha_nomina", "fuente"]),
+        ("remuneraciones_legisladores", rem, ["camara", "cargo", "categoria", "sueldo_nominal", "gastos_representacion", "vigencia", "fuente"]),
+        ("partidas_senado", par, ["camara", "partida", "unidad", "monto_mensual", "observacion"]),
+        ("senado_escala_funcionarios", esc, ["escalafon", "serie", "cargo", "sueldo_basico", "vigencia", "fuente"]),
+    ):
+        faltan = [c for c in cols if c not in df.columns]
+        exigir(not faltan, f"{nombre}: faltan columnas {faltan}")
+    for c in ("sueldo_nominal", "gastos_representacion"):
+        exigir(rem[c].str.fullmatch(r"\d+").all(), f"remuneraciones_legisladores: {c} no entero")
+        rem[c] = rem[c].astype("int64")
+    exigir(par["monto_mensual"].str.fullmatch(r"\d+").all(), "partidas_senado: monto no entero")
+    par["monto_mensual"] = par["monto_mensual"].astype("int64")
+    exigir(esc["sueldo_basico"].str.fullmatch(r"\d+").all(), "senado_escala_funcionarios: sueldo no entero")
+    esc["sueldo_basico"] = esc["sueldo_basico"].astype("int64")
+    exigir(set(nom["camara"]) == set(UE_LEGISLADORES), "legisladores: cámaras inesperadas")
+    exigir(set(nom["partido"]) <= set(PARTIDOS), f"legisladores: partidos desconocidos {sorted(set(nom['partido']) - set(PARTIDOS))}")
+    exigir(bool((nom["nombre"] != "").all()), "legisladores: hay nombres vacíos")
+
+    salida = {}
+    for camara, ue in UE_LEGISLADORES.items():
+        g = nom[nom["camara"] == camara]
+        total, por_partido = CONTROL_LEGISLADORES[camara]
+        exigir(len(g) == total, f"{camara}: {len(g)} integrantes, el control dice {total}")
+        exigir(not g["nombre"].duplicated().any(), f"{camara}: nombres repetidos")
+        exigir(g["partido"].value_counts().to_dict() == por_partido,
+               f"{camara}: bancas por partido {g['partido'].value_counts().to_dict()} != control {por_partido}")
+        exigir(g["fecha_nomina"].nunique() == 1 and g["fuente"].nunique() == 1, f"{camara}: fecha o fuente mezcladas")
+        r = rem[rem["camara"] == camara]
+        exigir(len(r) >= 1, f"{camara}: sin sueldos")
+        # cantidad de personas que cobra cada cargo de la escala
+        if camara == "Senadores":
+            cantidad = {"Vicepresidente": 1, "Senador y Secretario": total - 1}
+            legisl = [c for c in cantidad]
+        else:
+            cantidad = {"Representante Nacional": total}
+            legisl = list(cantidad)
+        exigir(set(legisl) <= set(r["cargo"]), f"{camara}: falta el sueldo de algún cargo")
+        sueldos = []
+        mensual = 0
+        for x in r.itertuples(index=False):
+            n = cantidad.get(x.cargo)
+            fila = {"cargo": x.cargo, "sueldo": int(x.sueldo_nominal), "gastos_representacion": int(x.gastos_representacion),
+                    "total": int(x.sueldo_nominal + x.gastos_representacion)}
+            if n is not None:
+                fila["cantidad"] = n
+                mensual += n * fila["total"]
+            sueldos.append(fila)
+        bloque = {
+            "camara": camara,
+            "fecha_nomina": g["fecha_nomina"].iloc[0],
+            "fuente_nomina": g["fuente"].iloc[0],
+            "vigencia_sueldos": r["vigencia"].iloc[0] or None,
+            "fuente_sueldos": r["fuente"].iloc[0],
+            "partidos": [{"codigo": k, "nombre": PARTIDOS[k], "integrantes": int(v)}
+                         for k, v in sorted(g["partido"].value_counts().items(), key=lambda kv: (-kv[1], kv[0]))],
+            "personas": [[x.nombre, x.partido, x.departamento, x.observacion]
+                         for x in g.sort_values("nombre").itertuples(index=False)],
+            "sueldos": sueldos,
+            "mensual_legisladores": int(mensual),
+            "anual_legisladores": int(mensual) * PAGOS_AL_ANIO,
+            "pagos_al_anio": PAGOS_AL_ANIO,
+        }
+        if camara == "Senadores":
+            p = par[par["camara"] == camara]
+            exigir(len(p) == 4, "partidas del Senado: se esperaban 4")
+            bloque["partidas"] = [{"partida": x.partida, "unidad": x.unidad, "monto": int(x.monto_mensual), "observacion": x.observacion}
+                                  for x in p.itertuples(index=False)]
+        salida[ue] = bloque
+    # Escala de sueldos de los funcionarios del Senado (programa 222)
+    exigir(len(esc) > 0 and esc["vigencia"].nunique() == 1, "escala de funcionarios del Senado: vigencia mezclada")
+    salida["escala_funcionarios_senado"] = {
+        "vigencia": esc["vigencia"].iloc[0],
+        "fuente": esc["fuente"].iloc[0],
+        "filas": [[x.escalafon, x.serie, x.cargo, int(x.sueldo_basico)] for x in esc.itertuples(index=False)],
+    }
+    print(f"  Legisladores: Senado {len(nom[nom['camara'] == 'Senadores'])}, Representantes {len(nom[nom['camara'] == 'Representantes'])}; "
+          f"escala de funcionarios del Senado: {len(esc)} cargos (cierra con los controles)")
+    return salida
+
+
+def colgar_legisladores(arbol_gas: dict, datos: dict) -> None:
+    """Cuelga el bloque `legisladores` de la unidad ejecutora de cada Cámara y la escala de
+    sueldos de funcionarios del programa 222 del Senado."""
+    clas = next((c for c in arbol_gas["hijos"] if c["codigo"] == CLAS_LEGISLATIVO[0]), None)
+    exigir(clas is not None, "legisladores: no está el grupo del Poder Legislativo en el árbol de gasto")
+    inc = next(i for i in clas["hijos"] if i["codigo"] == "1")
+    ues = {u["codigo"]: u for u in inc["hijos"]}
+    for ue in UE_LEGISLADORES.values():
+        exigir(ue in ues, f"legisladores: no existe la unidad ejecutora {ue}")
+        ues[ue]["legisladores"] = datos[ue]
+    prog = next((p for p in ues["001"]["hijos"] if p["codigo"] == "222"), None)
+    exigir(prog is not None, "legisladores: no existe el programa 222 del Senado")
+    prog["escala_funcionarios"] = datos["escala_funcionarios_senado"]
 
 
 # --------------------------------------------------------------------------- #
@@ -796,6 +913,14 @@ def main() -> None:
     ids_gasto: set[str] = set()
     validar_arbol(arbol_gas, ids_gasto)
 
+    legisladores = None
+    carpeta_leg = args.legislativo.parent
+    if leg is not None and (carpeta_leg / "legisladores.csv").exists():
+        print("Leyendo legisladores (nóminas y sueldos)…")
+        datos_leg = leer_legisladores(carpeta_leg)
+        colgar_legisladores(arbol_gas, datos_leg)
+        legisladores = {u: {k: d[k] for k in ("camara", "fecha_nomina", "vigencia_sueldos")} for u, d in datos_leg.items() if u in UE_LEGISLADORES.values()}
+
     resumen_puestos = None
     hay_puestos = bool(sorted(args.raw.glob(PATRONES["puestos"])))
     if hay_puestos:
@@ -851,6 +976,13 @@ def main() -> None:
                 "se asignó todo a esa fuente.",
                 "Los recursos no cambian al agregar el Poder Legislativo (solo recauda una suma muy chica). Por eso la diferencia entre "
                 "recursos y gasto crece en lo que suma su gasto.",
+                "Legisladores: la nómina del Senado es de la consulta del 28/08/2025 (vicepresidenta y 30 senadores; 6 son suplentes de "
+                "senadores que pasaron a ministros o subsecretarios). La de Representantes es del 13/11/2026 e incluye suplentes en ejercicio, "
+                "así que puede no coincidir con 2025.",
+                "Los sueldos de los legisladores son nominales (antes de descuentos) y salen de las planillas de cada Cámara; los del Senado "
+                "rigen desde enero de 2026. Representantes trae las mismas cifras pero sin fecha de vigencia. No son exactamente los de 2025.",
+                "Sueldo anual de los legisladores (cálculo): cantidad de integrantes x (sueldo nominal + gastos de representación) x 14. No incluye "
+                "aportes patronales ni partidas para secretarios, y por eso no es comparable con el crédito de sueldos del presupuesto.",
                 "Los nombres de los programas 221 a 223 del Senado y el 0 de Representantes son descriptivos: sus documentos "
                 "no traen programas con nombre oficial en esos casos.",
             ] if leg is not None else []) + ([
@@ -873,6 +1005,7 @@ def main() -> None:
             "ejecutado": int(leg["ejec"].sum()),
             "corte": "2025-12-31",
             "fuente_financiamiento": FUENTE_LEGISLATIVO,
+            "legisladores": legisladores,
             "gasto_sin_legislativo": int(gas["monto"].sum()),
             "diferencia_sin_legislativo": total_rec - int(gas["monto"].sum()),
         },

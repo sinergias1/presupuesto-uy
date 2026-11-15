@@ -44,3 +44,14 @@ El inciso 1 no figura en los CSV oficiales de gasto (tampoco el 28, BPS, ni el 3
 - Los recursos no cambian: el gasto total pasa de 926,3 a 936,5 mil millones $U y la diferencia, de −66,6 a −76,8.
 - Sin datos de cargos (el archivo de puestos no lo cubre): se usa el aviso de "sin cargos".
 - El ETL se detiene si el CSV deja de cerrar con los totales de control por unidad ejecutora (tomados de cada PDF), si algún nodo ejecuta más que su crédito o si los hijos no suman al padre.
+
+## Legisladores (nóminas y sueldos)
+
+Los nodos de la Cámara de Senadores (`gasto/p/1/001`) y de la Cámara de Representantes (`gasto/p/1/002`) traen un bloque `legisladores` con la nómina pública, los integrantes por partido y los sueldos nominales. Salen de `datos_fuente/`:
+
+- `legisladores.csv`: 31 integrantes del Senado (vicepresidenta y 30 senadores; 6 son suplentes de senadores que pasaron a ministros) según la consulta de Integración histórica del Parlamento del 28/08/2025, y 99 representantes según la nómina de la Cámara al 13/11/2026 (incluye suplentes en ejercicio). Cada Cámara tiene su propia fecha.
+- `remuneraciones_legisladores.csv`: sueldo nominal y gastos de representación por mes. Senado: planilla vigente desde enero de 2026 (senador $399.346 en total; vicepresidencia $797.987). Representantes: mismas cifras, pero el archivo no indica la vigencia.
+- `partidas_senado.csv`: partidas con cargo al rubro de gastos (secretarios parlamentarios, telefonía).
+- `senado_escala_funcionarios.csv`: escala de sueldos básicos de los funcionarios del Senado (1/8/2026), que se muestra en el programa 222. Es una escala por cargo, sin cantidad de personas.
+- El "sueldo anual de los legisladores" es un cálculo (personas x total nominal x 14) y no es comparable con el crédito de sueldos del presupuesto: no incluye aportes patronales ni partidas para secretarios.
+- El ETL se detiene si el número de integrantes o las bancas por partido no coinciden con los controles, o si falta algún sueldo.
