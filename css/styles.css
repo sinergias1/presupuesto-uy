@@ -231,3 +231,4 @@ h1 { margin: 0 0 8px; font-size: clamp(24px, 4vw, 34px); line-height: 1.15; font
   border-radius: 8px; pointer-events: none; opacity: 0; transition: opacity .3s ease;
 }
 .cartel-mouse.visible { opacity: 1; }
+.es-celular .vuelta3d { display: none; }

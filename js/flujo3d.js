@@ -105,6 +105,7 @@ const cargarArchivo = async (archivo) => (await cargarJSON(BASE + archivo)).nodo
 
 async function iniciar() {
   if (!M) throw new Error('model.js no cargó');
+  if (window.ES_CELULAR) return; // los celulares usan la vista 2D (ver dispositivo.js)
   if (!webglDisponible()) {
     aviso('Tu navegador no puede mostrar gráficos 3D (WebGL). <a href="detalle.html">Ver el detalle en 2D</a>.');
     return;

@@ -42,7 +42,9 @@
     const y = Math.min(Math.max(8, cartel.y - hh - 16), innerHeight - hh - 8);
     cartel.el.style.transform = `translate(${x}px, ${y}px)`;
   }
-  function mostrarCartel(texto) {
+  const esToque = () => window.matchMedia('(pointer: coarse)').matches || !!window.ES_CELULAR;
+  function mostrarCartel(texto, pos) {
+    if (pos) { cartel.x = pos.x; cartel.y = pos.y; }
     if (!cartel.el) {
       cartel.el = document.createElement('div');
       cartel.el.className = 'cartel-mouse'; cartel.el.setAttribute('role', 'status');
@@ -261,8 +263,9 @@
     renderOmitidos(spec);
 
     const hayOtros = spec.nodes.some((n) => n.kind === 'otros');
-    $('pista').textContent =
-      'Haz clic en un bloque con › para ver qué hay adentro, o en un nombre de las tablas de abajo. Doble clic en un fondo: volver al inicio. Esc: subir un nivel. Pasa el cursor (o toca) para ver el monto exacto.' +
+    $('pista').textContent = (esToque()
+      ? 'Toca un bloque con › para ver qué hay adentro, o un nombre de las tablas de abajo. Para volver, usa las migas de arriba. Toca cualquier bloque para ver el monto exacto.'
+      : 'Haz clic en un bloque con › para ver qué hay adentro, o en un nombre de las tablas de abajo. Doble clic en un fondo: volver al inicio. Esc: subir un nivel. Pasa el cursor para ver el monto exacto.') +
       (hayOtros ? ' «Otros» junta los elementos más chicos; la lista completa está en la tabla.' : '');
     $('guia').textContent = v.tipo === 'general'
       ? 'Cómo leerlo: la plata va de izquierda a derecha. Cuanto más ancha la franja, más plata. El color muestra de qué fondo sale.'
@@ -281,7 +284,15 @@
         state.chart.on('click', (p) => {
           if (p.dataType !== 'node' || !state.idx) return;
           const n = state.idx.nodos.get(p.name);
-          if (n && n.nav) { state.ultimaNav = performance.now(); location.hash = '#' + n.nav; }
+          if (n && n.nav) { state.ultimaNav = performance.now(); location.hash = '#' + n.nav; return; }
+          // en pantallas táctiles no hay doble clic cómodo: un toque en un bloque sin salida avisa con el cartelito
+          if (n && esToque() && (n.kind === 'otros' || n.kind === 'gasto' || n.kind === 'recurso')) {
+            const ze = p.event, rc = $('grafico').getBoundingClientRect(); // posición del toque dentro del gráfico
+            mostrarCartel(n.kind === 'otros'
+              ? 'Acá hay muchos elementos chicos juntos. Mirá la lista completa en la tabla de abajo.'
+              : 'Sin más detalle a la derecha. Usá las migas de arriba para volver atrás.',
+            ze && ze.offsetX != null ? { x: rc.left + ze.offsetX, y: rc.top + ze.offsetY } : null);
+          }
         });
         // doble clic en un bloque que no se abre más: un fondo sube al inicio; otro ("Otros"…) sube un nivel
         state.chart.on('dblclick', (p) => {

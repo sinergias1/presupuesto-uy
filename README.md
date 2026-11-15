@@ -87,6 +87,10 @@ A la izquierda de `index.html` hay una familia dibujada en línea azul (`js/ciud
 - Los links viejos `index.html#gasto/...` o `#recursos/...` redirigen a `detalle.html` con el mismo hash.
 
 
+### Celulares (v11)
+
+El 3D es solo para computadoras, tablets e iPads. En un celular (el lado corto de la pantalla mide menos de 600 px) `index.html` y `3d.html` redirigen solos a `detalle.html` (la vista 2D), que se lee mejor en pantalla chica y gasta menos batería. La detección está en `js/dispositivo.js`. En la vista 2D de un celular, un toque en un bloque sin salida muestra un cartelito en lugar del doble clic.
+
 ## Licencia
 
 © 2026 Uruguay Papers. Todos los derechos reservados: el código y el diseño no se pueden copiar ni reutilizar sin permiso por escrito (ver `LICENSE`). Los datos de origen son abiertos (MEF y Contaduría General de la Nación) y se rigen por los términos de esas fuentes.
