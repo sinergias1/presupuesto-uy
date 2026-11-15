@@ -272,6 +272,7 @@ async function iniciar() {
     };
     entrada = 0; t0 = performance.now();
     cam.distT = distBase();
+    MIN = Math.round(cam.distT * 0.66); // no se puede acercar tanto como para que todo tape todo
     cam.dist = cam.distT + 8;
     window.__flujo3d = { listo: true, vista: vista.tipo === 'general' ? '' : vista.nodo.id, particulas: parts.length, nodos: pos.size, enlaces: enlaces.length,
       detalle: enlaces.map((e) => ({ de: e.l.source, a: e.l.target, valor: e.l.valor, cuantas: e.cuantas, vel: e.velBase })) };
@@ -353,7 +354,7 @@ async function iniciar() {
     if (VERTICAL) return dos ? 30 : 34;
     return dos ? (asp < 1.5 ? 29 : 26) : (asp < 1.5 ? 35 : 32);
   };
-  const MIN = 12, MAX = 52;
+  let MIN = 12; const MAX = 52;
   let ultimoMov = 0;
   let t0 = performance.now();
 
@@ -448,7 +449,7 @@ async function iniciar() {
       else {
         document.body.classList.add('cargando');
         vista = Object.assign({ tipo: 'nodo' }, await M.resolver(ov, id, cargarArchivo));
-        spec = M.specNodo(ov, vista, { maxHijos: Math.max(5, Math.min(13, Math.floor((innerHeight - 70) / (MOVIL ? 56 : 72)))) });
+        spec = M.specNodo(ov, vista, { maxHijos: Math.max(5, Math.min(13, Math.floor((innerHeight - 190) / (MOVIL ? 52 : 70)))) });
       }
       if (mi !== ficha) return;
       hudDe(spec, vista);
@@ -515,12 +516,15 @@ async function iniciar() {
     });
     // Los carteles pueden ocupar varias líneas (el nombre se muestra entero): se separan según su altura real.
     const alto = (p) => (p.hh || (p.hh = p.etiqueta.offsetHeight || 44));
-    const repartir = (lista, tope) => {
+    const repartir = (lista, tope, techo) => {
+      const adelante = () => {
+        for (let i = 1; i < lista.length; i++) {
+          const min = (alto(lista[i - 1]) + alto(lista[i])) / 2 + 5;
+          if (lista[i].py - lista[i - 1].py < min) lista[i].py = lista[i - 1].py + min;
+        }
+      };
       lista.sort((x, y) => x.py - y.py);
-      for (let i = 1; i < lista.length; i++) {
-        const min = (alto(lista[i - 1]) + alto(lista[i])) / 2 + 5;
-        if (lista[i].py - lista[i - 1].py < min) lista[i].py = lista[i - 1].py + min;
-      }
+      adelante();
       const n = lista.length;
       if (n && lista[n - 1].py + alto(lista[n - 1]) / 2 > tope) {
         lista[n - 1].py = tope - alto(lista[n - 1]) / 2;
@@ -529,11 +533,16 @@ async function iniciar() {
           if (lista[i + 1].py - lista[i].py < min) lista[i].py = lista[i + 1].py - min;
         }
       }
+      // nunca debajo del título / los totales (tienen prioridad sobre el borde de abajo)
+      if (n && lista[0].py - alto(lista[0]) / 2 < techo) { lista[0].py = techo + alto(lista[0]) / 2; adelante(); }
     };
+    const hudI = document.querySelector('.hud-izq').getBoundingClientRect().bottom + 10;
+    const cif = $('cifras');
+    const hudD = cif.classList.contains('en-izq') ? 16 : cif.getBoundingClientRect().bottom + 10;
     const tope = innerHeight - (VERTICAL ? 130 : 44);
-    if (VERTICAL) repartir([].concat(...porCol), tope); // en celular todos comparten el ancho: se ordenan juntos
+    if (VERTICAL) repartir([].concat(...porCol), tope, hudI); // en celular todos comparten el ancho: se ordenan juntos
     porCol.forEach((lista) => {
-      if (!VERTICAL) repartir(lista, tope);
+      if (!VERTICAL) repartir(lista, tope, lista === porCol[0] ? hudI : hudD);
       lista.forEach((p) => {
         const izq = VERTICAL ? 'translate(0,-50%)' : 'translate(-100%,-50%)';
         const der = VERTICAL ? 'translate(-100%,-50%)' : 'translate(0,-50%)';
