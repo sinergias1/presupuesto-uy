@@ -94,3 +94,13 @@ El 3D es solo para computadoras, tablets e iPads. En un celular (el lado corto d
 ## Licencia
 
 © 2026 Uruguay Papers. Todos los derechos reservados: el código y el diseño no se pueden copiar ni reutilizar sin permiso por escrito (ver `LICENSE`). Los datos de origen son abiertos (MEF y Contaduría General de la Nación) y se rigen por los términos de esas fuentes.
+
+## Compras adjudicadas (v12, piloto)
+
+`etl_compras.py` cuelga las compras del catálogo de compras estatales (ARCE, `compras_2025.db`) a la derecha de los rubros del gasto: **rubro → artículo comprado → proveedor**. Se corre después de `etl.py`:
+
+    python etl_compras.py --db ruta/a/compras_2025.db
+
+- `datos_fuente/compras_unidades.csv`: unidad compradora de la base → inciso / unidad ejecutora (la base no trae códigos, solo nombres). Piloto: Secretaría del Ministerio del Interior.
+- `datos_fuente/compras_reglas.csv`: regla artículo comprado → rubro del presupuesto (curada a mano; la base no trae el rubro).
+- Adjudicar es decidir comprar; el pago puede llegar después. Lo adjudicado por encima del crédito de un rubro se muestra hasta el tope; lo que no figura en el catálogo queda en «Resto sin detalle de compra». Los renglones sin monto (≈26% en el piloto) no se incluyen.

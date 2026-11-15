@@ -789,11 +789,18 @@
       tarjetas.push(tarjeta('Para leer los números',
         '“Mil millones” es un 1 seguido de nueve ceros (1.000.000.000).'));
     } else if (r.esGasto) {
-      tarjetas.push(r.id.includes('/cargos')
+      tarjetas.push(r.enCompras
+        ? tarjeta('Cuánto es', r.comprasResto ? `Del rubro, ${$$(r.valor)} no tienen detalle de compra en el catálogo.` : `Se adjudicaron compras por `, ...(r.comprasResto ? [] : [b($$(r.valor)), ' en “' + r.titulo + '”.']))
+        : r.id.includes('/cargos')
         ? tarjeta('Cuánto es', `“${r.titulo}” se estima en `, b($$(r.valor)), ' al año.')
         : tarjeta('Cuánto es', `“${r.titulo}” tiene autorizado gastar `, b($$(r.valor)), '.'));
       tarjetas.push(tarjeta('Qué parte del total',
         `De cada $100 que gasta el Estado, $${M.numEs(r.pctTotal * 100, 1)} son de aquí.`));
+      if (r.comprasRubro) {
+        tarjetas.push(tarjeta('Las compras de este rubro',
+          `Abajo se ven las compras adjudicadas en 2025 (catálogo de compras estatales de ARCE): qué se compró y a qué proveedor. Adjudicar es decidir comprar; el pago puede llegar después. ` +
+          (r.comprasRubro.escalado ? 'Se adjudicó más que lo autorizado en este rubro, y se muestra hasta lo autorizado.' : 'Lo que no figura en el catálogo queda en “Resto sin detalle de compra”.')));
+      }
       if (r.tipos && r.tipos.length) {
         const t = r.tipos[0];
         tarjetas.push(tarjeta('En qué se va', 'La parte más grande, ', b(M.fmtPct(t.pct)), `, es de ${t.tipo.toLowerCase()}.`));
@@ -886,7 +893,7 @@
       contexto = r.padre ? `${r.nivel} · ${r.padre}` : r.nivel;
       sub = (r.ayuda ? r.ayuda + ' ' : '') + textoDescripcion(r);
       tiles = [
-        tile(r.id.includes('/cargos') ? 'Estimado al año' : r.esGasto ? 'Plata autorizada para gastar' : 'Lo que se espera cobrar', M.fmtMonto(r.valor),
+        tile(r.enCompras ? 'Compras adjudicadas' : r.id.includes('/cargos') ? 'Estimado al año' : r.esGasto ? 'Plata autorizada para gastar' : 'Lo que se espera cobrar', M.fmtMonto(r.valor),
           r.esParlamento ? 'Crédito definitivo al 31/12/2025.' : null, M.fmtCompleto(r.valor)),
         tile('Qué parte es del total', M.fmtPct(r.pctTotal),
           r.esGasto

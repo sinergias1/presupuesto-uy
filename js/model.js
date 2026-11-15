@@ -34,6 +34,8 @@
     'Tipo de ingreso': 'tipos de ingreso',
     'Subtipo de ingreso': 'subtipos de ingreso',
     'Ingreso': 'ingresos',
+    'Artículo comprado': 'artículos comprados',
+    'Proveedor': 'proveedores',
   };
 
   // Nombres simples para lo que se repite en todas las vistas: [nombre, explicación].
@@ -372,7 +374,7 @@
       }
       visibles.forEach(function (h) {
         var dr = esDrillable(h);
-        defsHijo.push(conExtra({ id: h.id, label: nombreDe(h.id, h.nombre), col: colHijo, kind: kind, fuente: null, nav: dr ? h.id : null, drillable: dr, cargos: h.cargos || null, ejecutado: h.ejecutado != null ? h.ejecutado : null }, h.id, h.nombre));
+        defsHijo.push(conExtra({ id: h.id, label: nombreDe(h.id, h.nombre), col: colHijo, kind: kind, fuente: null, nav: dr ? h.id : null, drillable: dr, cargos: h.cargos || null, ejecutado: h.ejecutado != null ? h.ejecutado : null, compras: h.compras === true ? 'compra' : (h.compras_resto ? 'resto' : (h.compras ? 'rubro' : null)), escalado: !!(h.compras && h.compras.escalado) }, h.id, h.nombre));
         entradasDesc(h.fuentes).forEach(function (e) { enlazar(e[0], h.id, e[1]); });
       });
       if (cola.length) {
@@ -414,6 +416,9 @@
       nivel: n.nivel || niveles[prof] || '',
       cargos: n.cargos || null,
       sinCargos: !!n.sin_cargos,
+      enCompras: n.compras === true || !!n.compras_resto,
+      comprasResto: !!n.compras_resto,
+      comprasRubro: n.compras && n.compras !== true ? n.compras : null,
       ejecutado: n.ejecutado != null ? n.ejecutado : null,
       pctEjecutado: n.ejecutado != null && n.valor ? n.ejecutado / n.valor : null,
       esParlamento: /^gasto\/p(\/|$)/.test(n.id),
@@ -557,6 +562,9 @@
     }
     if (n.cargos) h.push('<div class="tt-h">', esc(textoCargos(n.cargos)), '</div>');
     if (n.ayuda) h.push('<div class="tt-h">', esc(n.ayuda), '</div>');
+    if (n.compras === 'compra') h.push('<div class="tt-h">', esc('Compra adjudicada en 2025 (catálogo de compras estatales). Adjudicar es decidir comprar: el pago puede llegar después.'), '</div>');
+    if (n.compras === 'resto') h.push('<div class="tt-h">', esc('Parte de este rubro que no aparece en el catálogo de compras: otros tipos de gasto, compras sin monto o sin clasificar.'), '</div>');
+    if (n.compras === 'rubro') h.push('<div class="tt-h">', esc('Este rubro incluye compras adjudicadas en 2025.' + (n.escalado ? ' Se adjudicó más de lo autorizado en este rubro: se muestra hasta el tope.' : '')), '</div>');
     if (n.drillable) h.push('<div class="tt-h">' + ((typeof window !== 'undefined' && window.ES_CELULAR) ? 'Toca' : 'Haz clic') + ' para ver el detalle ›</div>');
     if (n.kind === 'otros') h.push('<div class="tt-h">Junta los elementos más chicos. La lista completa está en la tabla de abajo.</div>');
     if (n.kind === 'ajuste') {
