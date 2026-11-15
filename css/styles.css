@@ -221,3 +221,5 @@ h1 { margin: 0 0 8px; font-size: clamp(24px, 4vw, 34px); line-height: 1.15; font
   min-width: 14em; max-width: min(24em, 86vw); }
 .migas-mas ul li { padding: .2em 0; white-space: normal; }
 .migas-mas ul li::before, .migas-mas ul li::after { content: none; }
+
+.vuelta3d { margin-left: 8px; text-transform: none; letter-spacing: 0; font-weight: 600; }

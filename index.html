@@ -3,67 +3,44 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>¿De dónde sale la torta y cómo se reparte? Presupuesto del Estado uruguayo 2025</title>
-  <meta name="description" content="Mira de dónde sale la plata del Estado uruguayo y cómo se reparte entre ministerios, escuelas, hospitales y más. Datos abiertos del presupuesto 2025.">
-  <meta name="color-scheme" content="light dark">
-  <link rel="stylesheet" href="css/styles.css">
-  <!-- ECharts fijado a una versión. Para no depender del CDN, guardar el archivo en
-       vendor/echarts.min.js: la página lo usa automáticamente si el CDN falla. -->
-  <script src="https://cdn.jsdelivr.net/npm/echarts@5.6.0/dist/echarts.min.js" defer></script>
-  <script src="js/model.js" defer></script>
-  <script src="js/app.js" defer></script>
+  <title>¿A dónde va la plata del Estado? Presupuesto de Uruguay 2025 en 3D</title>
+  <meta name="description" content="Todo el recorrido de la plata del Estado uruguayo desplegado en 3D: desde cada ingreso hasta cada rubro de gasto. Se recorre con zoom y mouse.">
+  <script>if (/^#\/?(gasto|recursos)\//.test(location.hash)) location.replace("detalle.html" + location.hash);</script>
+  <link rel="stylesheet" href="css/flujo3d.css">
+  <link rel="stylesheet" href="css/todo3d.css">
 </head>
-<body>
-  <a class="saltar" href="#contenido">Saltar al contenido</a>
+<body class="todo">
+  <canvas id="lienzo" aria-hidden="true"></canvas>
+  <div class="vineta" aria-hidden="true"></div>
+  <div id="cabezas" aria-hidden="true"></div>
+  <div id="etiquetas" aria-hidden="true"></div>
 
-  <header class="cabecera">
-    <div class="wrap">
-      <p class="eyebrow">Presupuesto del Estado uruguayo · 2025</p>
-      <h1>¿De dónde sale la torta y cómo se reparte?</h1>
-      <p class="lead">Cada año el Estado junta plata con impuestos, tasas y otros cobros, y la reparte entre ministerios, escuelas, hospitales y más. Aquí puedes seguir ese recorrido. Empieza por lo general y haz clic para ver cada parte más de cerca.</p>
-      <p class="lead lead-datos">Los montos están en pesos uruguayos ($U). Los datos son abiertos y vienen del Ministerio de Economía y Finanzas (MEF) y la Contaduría General de la Nación.</p>
-    </div>
+  <header class="hud hud-izq">
+    <p class="anio">Año: <b>2025</b></p>
+    <p class="kicker">URUGUAY · PRESUPUESTO 2025 · TODO DESPLEGADO</p>
+    <h1>Todo el recorrido de la plata</h1>
+    <p class="sub">De izquierda a derecha: cada ingreso, los fondos y cada gasto, hasta el último rubro. Acercate con la rueda a donde quieras ver el detalle; arrastrá para moverte. Los nombres aparecen a medida que te acercás.</p>
+    <ul id="leyenda" class="leyenda" aria-label="De qué fondo sale la plata"></ul>
   </header>
 
-  <main id="contenido" class="wrap">
-    <div id="migas-home"><nav id="migas" aria-label="Ruta de navegación"></nav></div>
-    <div id="estado" role="status"></div>
+  <aside class="hud hud-der" id="cifras" aria-label="Totales"></aside>
 
-    <section id="vista" hidden>
-      <div class="encabezado">
-        <p id="contexto" class="eyebrow"></p>
-        <h2 id="titulo" tabindex="-1"></h2>
-        <p id="subtitulo" class="sub"></p>
-      </div>
+  <div class="controles" role="group" aria-label="Vista">
+    <button id="zoom-mas" type="button" aria-label="Acercar" title="Acercar (+)">+</button>
+    <button id="zoom-menos" type="button" aria-label="Alejar" title="Alejar (−)">−</button>
+    <button id="zoom-centro" type="button" aria-label="Ver todo" title="Ver todo (0 o doble clic)">⌖</button>
+  </div>
 
-      <div id="tiles" class="tiles"></div>
-      <section id="explica" class="explica" aria-labelledby="explica-t"></section>
-
-      <div class="card" id="grafico-card">
-        <div id="migas-slot" class="migas-slot"></div>
-        <p id="guia" class="guia"></p>
-        <div class="leyenda-fila">
-          <span class="ley-titulo">De qué fondo sale la plata:</span>
-          <ul id="leyenda" class="leyenda"></ul>
-        </div>
-        <div id="grafico" role="img" aria-label="Diagrama de flujo de la plata"></div>
-        <p id="pista" class="pista"></p>
-        <details id="omitidos" class="omitidos" hidden></details>
-      </div>
-
-      <div id="tablas"></div>
-    </section>
-
-    <section id="notas" class="notas"></section>
-  </main>
-
-  <footer class="pie">
-    <div class="wrap">
-      <p>Fuente de los datos: <a href="https://presupuestonacional.gub.uy/datos_abiertos_presupuesto_2025-2029" target="_blank" rel="noopener">Datos abiertos del Presupuesto Nacional 2025–2029</a>, del Ministerio de Economía y Finanzas (MEF) y la Contaduría General de la Nación. Los montos están en pesos uruguayos ($U) corrientes. Proyecto de código abierto.</p>
-    </div>
+  <footer class="hud hud-abajo">
+    <span>Rueda o pellizco: zoom · Arrastrá (o flechas): moverte · Doble clic en un bloque o cinta: verlo por niveles · Doble clic en el vacío: ver todo</span>
+    <span class="enlaces-pie"><a class="boton-2d" href="3d.html">Navegación por niveles →</a> <a href="detalle.html">Detalle en 2D →</a></span>
   </footer>
 
-  <p id="anuncio" class="sr-only" aria-live="polite"></p>
-  <noscript><p class="wrap aviso">Esta visualización necesita JavaScript.</p></noscript>
+  <div id="tip" class="tip" role="status" hidden></div>
+  <p id="aviso" class="aviso" hidden></p>
+  <noscript><p class="aviso">Esta vista necesita JavaScript. <a href="detalle.html">Ir al detalle en 2D</a></p></noscript>
+
+  <script src="js/model.js"></script>
+  <script type="module" src="js/todo3d.js"></script>
 </body>
 </html>

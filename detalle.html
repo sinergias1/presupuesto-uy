@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>¿De dónde sale la torta y cómo se reparte? Presupuesto del Estado uruguayo 2025</title>
+  <meta name="description" content="Mira de dónde sale la plata del Estado uruguayo y cómo se reparte entre ministerios, escuelas, hospitales y más. Datos abiertos del presupuesto 2025.">
+  <meta name="color-scheme" content="light dark">
+  <link rel="stylesheet" href="css/styles.css">
+  <!-- ECharts fijado a una versión. Para no depender del CDN, guardar el archivo en
+       vendor/echarts.min.js: la página lo usa automáticamente si el CDN falla. -->
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.6.0/dist/echarts.min.js" defer></script>
+  <script src="js/model.js" defer></script>
+  <script src="js/app.js" defer></script>
+</head>
+<body>
+  <a class="saltar" href="#contenido">Saltar al contenido</a>
+
+  <header class="cabecera">
+    <div class="wrap">
+      <p class="eyebrow">Presupuesto del Estado uruguayo · 2025 · <a class="vuelta3d" href="index.html">← Volver a la vista 3D completa</a></p>
+      <h1>¿De dónde sale la torta y cómo se reparte?</h1>
+      <p class="lead">Cada año el Estado junta plata con impuestos, tasas y otros cobros, y la reparte entre ministerios, escuelas, hospitales y más. Aquí puedes seguir ese recorrido. Empieza por lo general y haz clic para ver cada parte más de cerca.</p>
+      <p class="lead lead-datos">Los montos están en pesos uruguayos ($U). Los datos son abiertos y vienen del Ministerio de Economía y Finanzas (MEF) y la Contaduría General de la Nación.</p>
+    </div>
+  </header>
+
+  <main id="contenido" class="wrap">
+    <div id="migas-home"><nav id="migas" aria-label="Ruta de navegación"></nav></div>
+    <div id="estado" role="status"></div>
+
+    <section id="vista" hidden>
+      <div class="encabezado">
+        <p id="contexto" class="eyebrow"></p>
+        <h2 id="titulo" tabindex="-1"></h2>
+        <p id="subtitulo" class="sub"></p>
+      </div>
+
+      <div id="tiles" class="tiles"></div>
+      <section id="explica" class="explica" aria-labelledby="explica-t"></section>
+
+      <div class="card" id="grafico-card">
+        <div id="migas-slot" class="migas-slot"></div>
+        <p id="guia" class="guia"></p>
+        <div class="leyenda-fila">
+          <span class="ley-titulo">De qué fondo sale la plata:</span>
+          <ul id="leyenda" class="leyenda"></ul>
+        </div>
+        <div id="grafico" role="img" aria-label="Diagrama de flujo de la plata"></div>
+        <p id="pista" class="pista"></p>
+        <details id="omitidos" class="omitidos" hidden></details>
+      </div>
+
+      <div id="tablas"></div>
+    </section>
+
+    <section id="notas" class="notas"></section>
+  </main>
+
+  <footer class="pie">
+    <div class="wrap">
+      <p>Fuente de los datos: <a href="https://presupuestonacional.gub.uy/datos_abiertos_presupuesto_2025-2029" target="_blank" rel="noopener">Datos abiertos del Presupuesto Nacional 2025–2029</a>, del Ministerio de Economía y Finanzas (MEF) y la Contaduría General de la Nación. Los montos están en pesos uruguayos ($U) corrientes. Proyecto de código abierto.</p>
+    </div>
+  </footer>
+
+  <p id="anuncio" class="sr-only" aria-live="polite"></p>
+  <noscript><p class="wrap aviso">Esta visualización necesita JavaScript.</p></noscript>
+</body>
+</html>

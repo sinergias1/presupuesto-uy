@@ -213,7 +213,7 @@ function armar(ov) {
 async function iniciar() {
   if (!M) throw new Error('model.js no cargó');
   if (!webglDisponible()) {
-    aviso('Tu navegador no puede mostrar gráficos 3D (WebGL). <a href="index.html">Ver el gráfico clásico</a>.');
+    aviso('Tu navegador no puede mostrar gráficos 3D (WebGL). <a href="detalle.html">Ver el detalle en 2D</a>.');
     return;
   }
   aviso('Cargando datos…');
@@ -607,6 +607,7 @@ async function iniciar() {
         const nombreCol = NOMBRE_COL[n.col];
         const extra = document.createElement('div'); extra.className = 'tt-camino';
         extra.textContent = (nombreCol ? nombreCol + (n.padre ? ' · dentro de: ' + camino(n) : '') : '');
+        if (n.id.startsWith('gasto/') || n.id.startsWith('recursos/')) { const h = document.createElement('div'); h.className = 'tt-pista'; h.textContent = 'Doble clic: verlo por niveles'; extra.append(h); }
         tip.firstChild.append(extra);
         tip.hidden = false;
       } else tip.hidden = true;
@@ -658,7 +659,45 @@ async function iniciar() {
     ev.preventDefault();
     zoomHacia(Math.exp(Math.sign(ev.deltaY) * Math.min(Math.abs(ev.deltaY), 120) * 0.0018), ev.clientX, ev.clientY);
   }, { passive: false });
-  canvas.addEventListener('dblclick', volverATodo);
+  // --- doble clic (o doble toque): en un bloque o en una cinta abre la vista por niveles; en el vacío vuelve a ver todo
+  const esNavegable = (n) => n && (n.id.startsWith('gasto/') || n.id.startsWith('recursos/'));
+  function cintaEn(cx, cy) {
+    ndc.set((cx / innerWidth) * 2 - 1, -(cy / innerHeight) * 2 + 1);
+    ray.setFromCamera(ndc, camera);
+    if (!ray.ray.intersectPlane(plano, vHit)) return null;
+    const m = unidadesPorPixel(cam.dist) * 3;
+    let mejor = null, mejorD = Infinity;
+    for (let e = 0; e < enlaces.length; e++) {
+      const x0 = Lx0[e], x1 = Lx1[e];
+      if (vHit.x < x0 || vHit.x > x1) continue;
+      const a = (vHit.x - x0) / (x1 - x0);
+      const top = LyS[e] + (LyT[e] - LyS[e]) * suave(a);
+      const th = Lth[e];
+      if (vHit.y > top + m || vHit.y < top - th - m) continue;
+      const d = Math.abs(vHit.y - (top - th / 2));
+      if (d < mejorD) { mejorD = d; mejor = enlaces[e]; }
+    }
+    return mejor;
+  }
+  let ultimoDoble = 0;
+  function dobleAccion(cx, cy) {
+    if (performance.now() - ultimoDoble < 400) return;
+    ultimoDoble = performance.now();
+    let n = nodoEn(cx, cy);
+    if (!n) { const e = cintaEn(cx, cy); if (e) n = esNavegable(e.t) ? e.t : (esNavegable(e.s) ? e.s : e.t); }
+    if (!n) { volverATodo(); return; }
+    if (esNavegable(n)) { location.href = '3d.html#' + encodeURIComponent(n.id).replace(/%2F/g, '/'); return; }
+    // fondos y ajustes no tienen vista propia: se acerca la cámara a ese bloque
+    cam.pxT = n.x; cam.pyT = n.cy; cam.distT = Math.max(distTodo() * 0.3, 8); clampPan();
+  }
+  canvas.addEventListener('dblclick', (ev) => dobleAccion(ev.clientX, ev.clientY));
+  let ultimoToque = null;
+  canvas.addEventListener('pointerup', (ev) => {
+    if (ev.pointerType !== 'touch' || movioMucho) return;
+    const ahora = performance.now();
+    if (ultimoToque && ahora - ultimoToque.t < 350 && Math.hypot(ev.clientX - ultimoToque.x, ev.clientY - ultimoToque.y) < 30) { dobleAccion(ev.clientX, ev.clientY); ultimoToque = null; }
+    else ultimoToque = { t: ahora, x: ev.clientX, y: ev.clientY };
+  });
   $('zoom-mas').addEventListener('click', () => zoomHacia(0.6, innerWidth / 2, innerHeight / 2));
   $('zoom-menos').addEventListener('click', () => zoomHacia(1.67, innerWidth / 2, innerHeight / 2));
   $('zoom-centro').addEventListener('click', volverATodo);
@@ -778,5 +817,5 @@ async function iniciar() {
 
 iniciar().catch((e) => {
   console.error(e);
-  aviso('No se pudo armar la vista. <a href="3d.html">Ir a la vista por niveles</a>.');
+  aviso('No se pudo armar la vista. <a href="detalle.html">Ir al detalle en 2D</a>.');
 });

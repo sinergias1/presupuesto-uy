@@ -106,7 +106,7 @@ const cargarArchivo = async (archivo) => (await cargarJSON(BASE + archivo)).nodo
 async function iniciar() {
   if (!M) throw new Error('model.js no cargó');
   if (!webglDisponible()) {
-    aviso('Tu navegador no puede mostrar gráficos 3D (WebGL). <a href="index.html">Ver el gráfico clásico</a>.');
+    aviso('Tu navegador no puede mostrar gráficos 3D (WebGL). <a href="detalle.html">Ver el detalle en 2D</a>.');
     return;
   }
   const ov = await cargar();
@@ -318,8 +318,8 @@ async function iniciar() {
       return d;
     }));
     const clasico = $('clasico');
-    clasico.href = vista.tipo === 'general' ? 'index.html' : 'index.html#' + vista.nodo.id;
-    clasico.textContent = vista.tipo === 'general' ? '← Volver al gráfico clásico' : 'Ver tablas de este nivel (gráfico clásico) →';
+    clasico.href = vista.tipo === 'general' ? 'detalle.html' : 'detalle.html#' + vista.nodo.id;
+    clasico.textContent = 'Explorar más detalles de estos datos en 2D →';
   }
 
   // --- tamaño y cámara
@@ -636,5 +636,5 @@ async function iniciar() {
 
 iniciar().catch((e) => {
   console.error(e);
-  aviso('No se pudo armar la vista 3D. <a href="index.html">Ver el gráfico clásico</a>.');
+  aviso('No se pudo armar la vista 3D. <a href="detalle.html">Ver el detalle en 2D</a>.');
 });
