@@ -76,6 +76,7 @@ a { color: var(--link); }
 
 /* cabecera */
 .cabecera { padding: 28px 0 8px; }
+.cabecera .wrap { position: relative; }
 .eyebrow { margin: 0 0 4px; font-size: 13px; letter-spacing: .04em; text-transform: uppercase; color: var(--ink2); }
 h1 { margin: 0 0 8px; font-size: clamp(24px, 4vw, 34px); line-height: 1.15; font-weight: 650; }
 .lead { margin: 0; max-width: none; color: var(--ink2); font-size: 18px; line-height: 1.55; }
@@ -87,7 +88,10 @@ h1 { margin: 0 0 8px; font-size: clamp(24px, 4vw, 34px); line-height: 1.15; font
 @media (max-width: 640px) { .glosario { grid-template-columns: 1fr; gap: 0; } .glosario dd { margin-bottom: 8px; } }
 
 /* buscador */
-.buscador { position: relative; z-index: 5; margin-top: 14px; max-width: 420px; }
+.buscador { position: absolute; z-index: 5; top: 28px; right: 0; width: 280px; }
+@media (max-width: 640px) {
+  .buscador { position: relative; top: auto; right: auto; width: auto; max-width: 420px; margin-top: 14px; }
+}
 .buscador input { width: 100%; box-sizing: border-box; padding: 10px 12px; font: inherit; font-size: 15px;
   color: var(--ink); background: var(--surface); border: 1px solid var(--border); border-radius: 8px; }
 .buscador input::placeholder { color: var(--muted); }
