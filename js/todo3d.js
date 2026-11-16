@@ -517,8 +517,8 @@ async function iniciar() {
   }
   const texCartel = new THREE.CanvasTexture(dibujarCartel());
   texCartel.colorSpace = THREE.SRGBColorSpace; texCartel.anisotropy = 4;
-  const PHc = PH * 0.6, PWc = PHc * (760 / 520);
-  const cartelX = colX(0) - D.DX * 0.75; // centro del hueco: más a la derecha, más lejos de la familia
+  const PHc = PH * 0.72, PWc = PHc * (760 / 520);
+  const cartelX = colX(0) - D.DX * 0.4; // centro del hueco: más a la derecha, más lejos de la familia
   const planoCartel = new THREE.Mesh(new THREE.PlaneGeometry(PWc, PHc),
     new THREE.MeshBasicMaterial({ map: texCartel, transparent: true, depthWrite: false }));
   planoCartel.position.set(cartelX, yBase + PHc / 2 + PH * 0.02, -0.5);
