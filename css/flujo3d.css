@@ -31,7 +31,8 @@ h1 { margin: 0 0 14px; font-size: clamp(22px, 3.2vw, 34px); line-height: 1.1; fo
 .cifra small { display: block; font-size: 10.5px; letter-spacing: .08em; color: var(--ink-2); text-transform: uppercase; }
 .cifra strong { font-size: 18px; font-weight: 600; color: #fff; }
 
-.buscador { position: relative; margin-top: 160px; grid-column: 1 / -1; }
+/* sacado del flujo del panel de cifras: flota arriba, en el hueco a la izquierda de las tarjetas */
+.buscador { position: fixed; z-index: 10; top: 18px; right: 300px; width: 280px; }
 .buscador input { width: 100%; min-width: 220px; box-sizing: border-box; padding: 9px 12px; text-align: left;
   font-family: var(--mono); font-size: 13px; color: #fff; background: rgba(8, 14, 24, .72);
   border: 1px solid var(--linea); border-radius: 4px; backdrop-filter: blur(4px); }
@@ -65,7 +66,7 @@ h1 { margin: 0 0 14px; font-size: clamp(22px, 3.2vw, 34px); line-height: 1.1; fo
 
 @media (max-width: 760px) {
   .hud-der { top: auto; bottom: 46px; right: 12px; left: 12px; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-  .buscador { margin-top: 6px; }
+  .buscador { position: static; top: auto; right: auto; width: auto; margin-top: 6px; grid-column: 1 / -1; }
   .cifra { min-width: 0; padding: 6px 8px; }
   .cifra strong { font-size: 13px; }
   .cifra small { font-size: 9px; }
