@@ -490,20 +490,28 @@ async function iniciar() {
   $('zoom-mas').addEventListener('click', () => zoomHacia(0.8, innerWidth / 2, innerHeight / 2));
   $('zoom-menos').addEventListener('click', () => zoomHacia(1.25, innerWidth / 2, innerHeight / 2));
   $('zoom-centro').addEventListener('click', volverAlCentro);
+  // mover la vista un paso (mismo cálculo que las flechas del teclado), para los botones del D-pad
+  function moverPaso(dx, dy) {
+    const paso = mundoPorPixel() * 90;
+    cam.pxT += dx * paso; cam.pyT += dy * paso; clampPan();
+  }
+  $('mover-izq').addEventListener('click', () => moverPaso(-1, 0));
+  $('mover-der').addEventListener('click', () => moverPaso(1, 0));
+  $('mover-arriba').addEventListener('click', () => moverPaso(0, 1));
+  $('mover-abajo').addEventListener('click', () => moverPaso(0, -1));
   // teclado: flechas o WASD para moverse, + y - para el zoom, 0 para volver al centro
   addEventListener('keydown', (ev) => {
     if (ev.ctrlKey || ev.metaKey || ev.altKey) return;
-    const paso = mundoPorPixel() * 90;
     const k = ev.key.toLowerCase();
-    if (k === 'arrowleft' || k === 'a') cam.pxT -= paso;
-    else if (k === 'arrowright' || k === 'd') cam.pxT += paso;
-    else if (k === 'arrowup' || k === 'w') cam.pyT += paso;
-    else if (k === 'arrowdown' || k === 's') cam.pyT -= paso;
+    if (k === 'arrowleft' || k === 'a') moverPaso(-1, 0);
+    else if (k === 'arrowright' || k === 'd') moverPaso(1, 0);
+    else if (k === 'arrowup' || k === 'w') moverPaso(0, 1);
+    else if (k === 'arrowdown' || k === 's') moverPaso(0, -1);
     else if (k === '+' || k === '=') zoomHacia(0.85, innerWidth / 2, innerHeight / 2);
     else if (k === '-' || k === '_') zoomHacia(1.18, innerWidth / 2, innerHeight / 2);
     else if (k === '0') volverAlCentro();
     else return;
-    ev.preventDefault(); clampPan();
+    ev.preventDefault();
   });
   // Escape sube un nivel
   addEventListener('keydown', (ev) => {

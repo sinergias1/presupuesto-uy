@@ -108,19 +108,17 @@ body.cargando #lienzo { opacity: .55; transition: opacity .2s; }
 }
 .vertical .lbl { font-size: 12.5px; }
 
-.controles { position: fixed; z-index: 4; right: 22px; bottom: 150px; display: flex; flex-direction: column; gap: 6px; }
+.controles { position: fixed; z-index: 4; right: 22px; bottom: 150px; display: flex; flex-direction: row; align-items: flex-end; gap: 14px; }
 .controles-zoom { display: flex; flex-direction: column; gap: 6px; }
-/* el D-pad va aparte, pegado al margen izquierdo real de la pantalla (no "a la izquierda del grupo de
-   zoom", que seguía ligado al margen derecho) */
-.controles-mover { position: fixed; z-index: 4; left: 22px; bottom: 150px;
-  display: grid; grid-template-columns: repeat(3, 40px); grid-template-rows: repeat(3, 40px); gap: 6px; }
+.controles-mover { display: grid; grid-template-columns: repeat(3, 40px); grid-template-rows: repeat(3, 40px); gap: 6px; }
 .controles button { width: 40px; height: 40px; border-radius: 6px; border: 1px solid var(--linea); background: rgba(8, 14, 24, .7); color: #fff;
   font: 600 20px/1 var(--mono); cursor: pointer; backdrop-filter: blur(4px); }
 .controles button:hover, .controles button:focus-visible { border-color: #6fd0ff; outline: none; }
 #lienzo { cursor: grab; }
 @media (max-width: 760px) {
-  .controles { bottom: 230px; right: 12px; gap: 5px; }
-  .controles-mover { left: 12px; bottom: 230px; grid-template-columns: repeat(3, 34px); grid-template-rows: repeat(3, 34px); gap: 5px; }
+  .controles { bottom: 230px; right: 12px; gap: 10px; }
+  .controles-mover { grid-template-columns: repeat(3, 34px); grid-template-rows: repeat(3, 34px); gap: 5px; }
+  .controles-zoom { gap: 5px; }
   .controles button { width: 34px; height: 34px; font-size: 17px; }
 }
 .enlaces-pie { display: inline-flex; gap: 18px; flex-wrap: wrap; font-size: 14px; }
