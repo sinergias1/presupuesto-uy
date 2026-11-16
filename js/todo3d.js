@@ -491,32 +491,29 @@ async function iniciar() {
   const gyTopFinal = gyTop + (yBase - mundoY(PISO));
   const gente = BOLSILLOS.map((b) => ({ x: mundoX(b.x), y: gyTopFinal - ((b.y - MARCO.y) / MARCO.h) * PH, alto: b.alto }));
 
-  // --- cartel debajo de la familia: cuánto le cuesta el Estado a cada uruguayo, en promedio
+  // --- cartel en el hueco junto a la familia: cuánto le cuesta el Estado a cada uruguayo, en promedio.
+  // Canvas angosto y alto (en vez de ancho y bajo) para poder agrandarlo sin salirse del hueco
+  // por donde vuelan los billetes.
   const FUENTE = 'ui-monospace, "SF Mono", "Cascadia Mono", Consolas, Menlo, monospace';
   function dibujarCartel() {
-    const W = 1300, H = 300;
+    const W = 760, H = 360;
     const c = document.createElement('canvas'); c.width = W; c.height = H;
     const ctx = c.getContext('2d');
     ctx.textAlign = 'center';
     ctx.fillStyle = '#eaf3ff';
-    ctx.font = '700 36px ' + FUENTE;
-    ctx.fillText('En promedio, cada uruguayo aporta', W / 2, 55);
-    ctx.fillText('$U 20.500 por mes para sostener al Estado.*', W / 2, 105);
+    ctx.font = '700 42px ' + FUENTE;
+    ['En promedio, cada uruguayo', 'aporta $U 20.500 por mes', 'para sostener al Estado.*']
+      .forEach((linea, i) => ctx.fillText(linea, W / 2, 60 + i * 56));
     ctx.fillStyle = '#8fa6c4';
-    ctx.font = '400 22px ' + FUENTE;
-    [
-      '*Es un promedio: repartir el total entre la población.',
-      'La plata sale de impuestos y tasas que pagan tanto personas',
-      'como empresas, y no todos aportan lo mismo.',
-    ].forEach((linea, i) => ctx.fillText(linea, W / 2, 190 + i * 34));
+    ctx.font = '400 24px ' + FUENTE;
+    ['*Promedio entre toda la población.', 'Aportan personas y empresas;', 'no todos tributan igual.']
+      .forEach((linea, i) => ctx.fillText(linea, W / 2, 268 + i * 32));
     return c;
   }
   const texCartel = new THREE.CanvasTexture(dibujarCartel());
   texCartel.colorSpace = THREE.SRGBColorSpace; texCartel.anisotropy = 4;
-  // Va en el hueco entre la familia y las columnas de ingresos, por donde vuelan los billetes,
-  // apoyado cerca del piso (mismo lugar que antes, pero más grande y más legible).
-  const PWc = D.DX * 2.1, PHc = PWc * (300 / 1300);
-  const cartelX = colX(0) - D.DX * 1.2; // centro del hueco
+  const PWc = D.DX * 2.4 * 0.92, PHc = PWc * (360 / 760);
+  const cartelX = colX(0) - D.DX * 1.2; // centro del hueco entre la familia y los ingresos
   const planoCartel = new THREE.Mesh(new THREE.PlaneGeometry(PWc, PHc),
     new THREE.MeshBasicMaterial({ map: texCartel, transparent: true, depthWrite: false }));
   planoCartel.position.set(cartelX, yBase + PHc / 2 + PH * 0.02, -0.5);
