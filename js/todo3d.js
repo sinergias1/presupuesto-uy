@@ -476,6 +476,8 @@ async function iniciar() {
   porCol.forEach((l) => l.sort((a, b) => b.top - a.top));
   const colX = (c) => (c - (NCOLS - 1) / 2) * D.DX;
   const yBase = Math.min(...nodos.map((n) => n.top - n.H));
+  // techo de cada columna (el bloque más alto), para poner el título de la columna ahí arriba
+  const colTop = porCol.map((lista) => (lista.length ? lista[0].top : yBase));
 
   // --- ciudadanos: de la gente sale la plata. Una familia a la izquierda tira billetes (directo desde los bolsillos) hacia los ingresos
   const lienzoGente = await dibujarCiudadanos();
@@ -761,8 +763,12 @@ async function iniciar() {
   }
   const cabezas = $('cabezas');
   const cabs = NOMBRE_COL.map((txt) => {
-    const d = document.createElement('div'); d.className = 'cab'; d.textContent = txt; d.hidden = true; cabezas.append(d); return d;
+    const d = document.createElement('div'); d.className = 'cab'; d.textContent = txt; cabezas.append(d); return d;
   });
+  // ancho real de cada título (medido una sola vez, visibles, antes de ocultarlos): así se puede
+  // decidir si entra sin pisar al de al lado, en vez de adivinar con una fila fija.
+  const cabW = cabs.map((d) => d.offsetWidth);
+  cabs.forEach((d) => { d.hidden = true; });
 
   const v3 = new THREE.Vector3();
   const candidatos = [];
@@ -798,19 +804,22 @@ async function iniciar() {
       p.d.style.maxWidth = Math.max(110, Math.min(300, sepCols * 0.8)) + 'px';
       v3.set(nodo.x + anchoBloque / 2 + upp * 4, Math.min(yMax, Math.max(yMin, nodo.cy)), 0).project(camera);
       const py = (-v3.y * 0.5 + 0.5) * innerHeight;
-      // sin pisar el pie de la pantalla (títulos de columna y botones)
+      // sin pisar los botones del pie de la pantalla
       if (py > innerHeight - 96 || py < 8) { p.d.hidden = true; continue; }
       p.d.style.transform = `translate(${((v3.x * 0.5 + 0.5) * innerWidth).toFixed(1)}px,${py.toFixed(1)}px) translate(0,-50%)`;
     }
-    // títulos de columna, abajo de la pantalla, cuando hay lugar
+    // títulos de columna: flotando arriba del bloque más alto de cada una (ahí siempre hay aire),
+    // y solo si el título entra sin pisar al de la columna de al lado (se midió su ancho real antes).
     for (let c = 0; c < NCOLS; c++) {
       const d = cabs[c];
       const x = colX(c);
-      const visible = sepCols >= 60 && x > cam.px - hw && x < cam.px + hw;
+      const visible = sepCols >= 50 && cabW[c] <= sepCols - 10 && x > cam.px - hw && x < cam.px + hw;
       if (!visible) { if (!d.hidden) d.hidden = true; continue; }
+      v3.set(x, colTop[c] + D.altoTotal * 0.012, 0).project(camera);
+      const py = (-v3.y * 0.5 + 0.5) * innerHeight;
+      if (py < 8 || py > innerHeight - 20) { d.hidden = true; continue; }
       d.hidden = false;
-      v3.set(x, 0, 0).project(camera);
-      d.style.transform = `translate(${((v3.x * 0.5 + 0.5) * innerWidth).toFixed(1)}px,${innerHeight - 64 - (sepCols < 150 ? (c % 2) * 22 : 0)}px) translate(-50%,0)`;
+      d.style.transform = `translate(${((v3.x * 0.5 + 0.5) * innerWidth).toFixed(1)}px,${py.toFixed(1)}px) translate(-50%,-100%)`;
     }
   }
 
