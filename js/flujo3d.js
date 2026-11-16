@@ -130,6 +130,14 @@ async function iniciar() {
     ov.gasto.hijos.forEach((h) => agregar(h, 1, COLNOM_GASTO));
     ov.recursos.hijos.forEach((h) => agregar(h, 1, COLNOM_REC));
   })();
+  // proveedores del catálogo de compras estatales: no viven en el árbol del presupuesto, así que se
+  // cargan aparte (un índice chico, generado de antemano) y se suman al buscador cuando llegan
+  cargarJSON(BASE + 'indice_proveedores.json').then((ps) => {
+    ps.forEach((p) => {
+      const col = 'Proveedor' + (p.organismo ? ' · ' + p.organismo : '');
+      indiceBusqueda.push({ n: { id: p.id, label: p.nombre, col, valor: p.valor }, norm: normalizarBusq(p.nombre) });
+    });
+  }).catch(() => {});
   function buscarNodos(q) {
     const nq = normalizarBusq(q.trim());
     if (nq.length < 2) return [];
@@ -140,8 +148,8 @@ async function iniciar() {
   function irANodo(n) { location.hash = '#' + n.id; }
   const buscadorWrap = document.createElement('div'); buscadorWrap.className = 'buscador';
   const buscadorInput = document.createElement('input');
-  buscadorInput.type = 'search'; buscadorInput.placeholder = 'Buscar organismo, programa…';
-  buscadorInput.setAttribute('aria-label', 'Buscar un organismo o programa, para ir directo a su detalle');
+  buscadorInput.type = 'search'; buscadorInput.placeholder = 'Buscar organismo, programa, proveedor…';
+  buscadorInput.setAttribute('aria-label', 'Buscar un organismo, programa o proveedor, para ir directo a su detalle');
   const buscadorLista = document.createElement('ul'); buscadorLista.className = 'resultados'; buscadorLista.hidden = true;
   buscadorWrap.append(buscadorInput, buscadorLista);
   // las cifras (#cifras) se reemplazan enteras en cada navegación (hudDe), así que el buscador no va

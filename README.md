@@ -120,6 +120,18 @@ Si una compra no calza con un rubro específico de su unidad ejecutora, `etl_com
 con una nota en tooltip y tarjetas. Si la unidad tampoco tiene ese rubro, la compra va a la tabla "Compras que no pudimos ubicar
 en un rubro" de la unidad (`__ue__` en `data/2025/compras/<inciso>_<ue>.json`). Cobertura: ~96% de lo adjudicado queda en el gráfico.
 
+### Buscador de proveedores (v13)
+
+El buscador de las vistas 3D (`index.html`, `3d.html`) indexa también los nombres de los proveedores
+del catálogo de compras. Como descargar los ~100 MB de `data/2025/compras/*.json` en el navegador para
+armar ese índice no es viable, `etl_indice_proveedores.py` genera de antemano un índice chico (un
+registro por proveedor, con el organismo y la aparición de mayor monto como destino de navegación):
+
+    python etl_indice_proveedores.py
+
+Se corre después de `etl_compras.py`, y su salida (`data/2025/indice_proveedores.json`) es lo único
+que el buscador carga para resolver proveedores.
+
 ## Glosario y misión/visión de los organismos (v14)
 
 A partir de los tomos oficiales de la Ley N° 20.446 (ver `fuentes/`, con un índice en `fuentes/README.md`):

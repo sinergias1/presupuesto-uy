@@ -701,6 +701,15 @@ async function iniciar() {
   const normalizar = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
   const indiceBusqueda = nodos.filter((n) => esNavegable(n) && n.label)
     .map((n) => ({ n, norm: normalizar(n.label) }));
+  // proveedores del catálogo de compras estatales: no viven en el árbol del presupuesto, así que se
+  // cargan aparte (un índice chico, generado de antemano) y se suman al buscador cuando llegan, sin
+  // bloquear mientras tanto la búsqueda de organismos y programas
+  json('data/2025/indice_proveedores.json').then((ps) => {
+    ps.forEach((p) => {
+      const col = 'Proveedor' + (p.organismo ? ' · ' + p.organismo : '');
+      indiceBusqueda.push({ n: { id: p.id, label: p.nombre, col, valor: p.valor }, norm: normalizar(p.nombre) });
+    });
+  }).catch(() => {});
   function buscarNodos(q) {
     const nq = normalizar(q.trim());
     if (nq.length < 2) return [];
@@ -715,8 +724,8 @@ async function iniciar() {
   }
   const buscadorWrap = document.createElement('div'); buscadorWrap.className = 'buscador';
   const buscadorInput = document.createElement('input');
-  buscadorInput.type = 'search'; buscadorInput.placeholder = 'Buscar organismo, programa…';
-  buscadorInput.setAttribute('aria-label', 'Buscar un organismo o programa, para ir directo a su detalle');
+  buscadorInput.type = 'search'; buscadorInput.placeholder = 'Buscar organismo, programa, proveedor…';
+  buscadorInput.setAttribute('aria-label', 'Buscar un organismo, programa o proveedor, para ir directo a su detalle');
   const buscadorLista = document.createElement('ul'); buscadorLista.className = 'resultados'; buscadorLista.hidden = true;
   buscadorWrap.append(buscadorInput, buscadorLista);
   $('cifras').append(buscadorWrap);
@@ -726,7 +735,7 @@ async function iniciar() {
     buscadorLista.replaceChildren(...resultadosActuales.map((n) => {
       const li = document.createElement('li');
       const btn = document.createElement('button'); btn.type = 'button';
-      const nombreCol = NOMBRE_COL[n.col];
+      const nombreCol = typeof n.col === 'string' ? n.col : NOMBRE_COL[n.col];
       btn.append(document.createTextNode(n.label));
       if (nombreCol) { const sm = document.createElement('small'); sm.textContent = nombreCol; btn.append(sm); }
       // mousedown (no click): dispara ANTES de que el input pierda el foco, así no hace falta
