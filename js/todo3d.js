@@ -731,7 +731,7 @@ async function iniciar() {
       if (nombreCol) { const sm = document.createElement('small'); sm.textContent = nombreCol; btn.append(sm); }
       // mousedown (no click): dispara ANTES de que el input pierda el foco, así no hace falta
       // esperar a que el 'blur' del input se resuelva y un solo click ya alcanza para navegar.
-      const elegir = () => { buscadorLista.hidden = true; buscadorLista.replaceChildren(); buscadorInput.blur(); irANodo(n); };
+      const elegir = () => { buscadorInput.value = ''; buscadorLista.hidden = true; buscadorLista.replaceChildren(); buscadorInput.blur(); irANodo(n); };
       btn.addEventListener('mousedown', (ev) => { ev.preventDefault(); elegir(); });
       btn.addEventListener('click', elegir); // por si se activa con teclado (Enter/Espacio)
       li.append(btn);
@@ -741,7 +741,7 @@ async function iniciar() {
   });
   buscadorInput.addEventListener('keydown', (ev) => {
     if (ev.key === 'Escape') { buscadorInput.value = ''; buscadorLista.hidden = true; buscadorLista.replaceChildren(); buscadorInput.blur(); }
-    else if (ev.key === 'Enter' && resultadosActuales.length) { buscadorLista.hidden = true; buscadorLista.replaceChildren(); buscadorInput.blur(); irANodo(resultadosActuales[0]); }
+    else if (ev.key === 'Enter' && resultadosActuales.length) { const n = resultadosActuales[0]; buscadorInput.value = ''; buscadorLista.hidden = true; buscadorLista.replaceChildren(); buscadorInput.blur(); irANodo(n); }
     else return;
     ev.stopPropagation();
   });
