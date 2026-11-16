@@ -496,26 +496,26 @@ async function iniciar() {
   // mucho más chico): así queda claramente grande, como una tarjeta con un número destacado.
   const FUENTE = 'ui-monospace, "SF Mono", "Cascadia Mono", Consolas, Menlo, monospace';
   function dibujarCartel() {
-    const W = 640, H = 420;
+    const W = 760, H = 430;
     const c = document.createElement('canvas'); c.width = W; c.height = H;
     const ctx = c.getContext('2d');
     ctx.textAlign = 'center';
     ctx.fillStyle = '#eaf3ff';
-    ctx.font = '400 26px ' + FUENTE;
-    ctx.fillText('En promedio, cada uruguayo aporta', W / 2, 45);
+    ctx.font = '600 32px ' + FUENTE;
+    ctx.fillText('En promedio, cada uruguayo aporta', W / 2, 50);
     ctx.font = '700 80px ' + FUENTE;
-    ctx.fillText('$U 20.500', W / 2, 150);
-    ctx.font = '400 26px ' + FUENTE;
-    ctx.fillText('por mes para sostener al Estado.*', W / 2, 200);
+    ctx.fillText('$U 20.500', W / 2, 170);
+    ctx.font = '600 32px ' + FUENTE;
+    ctx.fillText('por mes para sostener al Estado.*', W / 2, 225);
     ctx.fillStyle = '#8fa6c4';
-    ctx.font = '400 22px ' + FUENTE;
+    ctx.font = '400 30px ' + FUENTE;
     ['*Promedio entre toda la población.', 'Aportan personas y empresas;', 'no todos tributan igual.']
-      .forEach((linea, i) => ctx.fillText(linea, W / 2, 280 + i * 32));
+      .forEach((linea, i) => ctx.fillText(linea, W / 2, 300 + i * 38));
     return c;
   }
   const texCartel = new THREE.CanvasTexture(dibujarCartel());
   texCartel.colorSpace = THREE.SRGBColorSpace; texCartel.anisotropy = 4;
-  const PHc = PH * 0.6, PWc = PHc * (640 / 420);
+  const PHc = PH * 0.6, PWc = PHc * (760 / 430);
   const cartelX = colX(0) - D.DX * 1.2; // centro del hueco entre la familia y los ingresos
   const planoCartel = new THREE.Mesh(new THREE.PlaneGeometry(PWc, PHc),
     new THREE.MeshBasicMaterial({ map: texCartel, transparent: true, depthWrite: false }));
