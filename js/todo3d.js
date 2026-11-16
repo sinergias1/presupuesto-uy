@@ -513,10 +513,13 @@ async function iniciar() {
   }
   const texCartel = new THREE.CanvasTexture(dibujarCartel());
   texCartel.colorSpace = THREE.SRGBColorSpace; texCartel.anisotropy = 4;
-  const PWc = PW, PHc = PWc * (300 / 1300);
+  // Va en el hueco entre la familia y las columnas de ingresos, por donde vuelan los billetes,
+  // apoyado cerca del piso (mismo lugar que antes, pero más grande y más legible).
+  const PWc = D.DX * 2.1, PHc = PWc * (300 / 1300);
+  const cartelX = colX(0) - D.DX * 1.2; // centro del hueco
   const planoCartel = new THREE.Mesh(new THREE.PlaneGeometry(PWc, PHc),
     new THREE.MeshBasicMaterial({ map: texCartel, transparent: true, depthWrite: false }));
-  planoCartel.position.set(gx, yBase - PH * 0.05 - PHc / 2, -0.5);
+  planoCartel.position.set(cartelX, yBase + PHc / 2 + PH * 0.02, -0.5);
   scene.add(planoCartel);
   const NT = MOVIL ? 16 : 30;
   const tiradas = [];
