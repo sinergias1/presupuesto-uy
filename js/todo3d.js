@@ -490,6 +490,34 @@ async function iniciar() {
   planoGente.position.y += yBase - mundoY(PISO);
   const gyTopFinal = gyTop + (yBase - mundoY(PISO));
   const gente = BOLSILLOS.map((b) => ({ x: mundoX(b.x), y: gyTopFinal - ((b.y - MARCO.y) / MARCO.h) * PH, alto: b.alto }));
+
+  // --- cartel debajo de la familia: cuánto le cuesta el Estado a cada uruguayo, en promedio
+  const FUENTE = 'ui-monospace, "SF Mono", "Cascadia Mono", Consolas, Menlo, monospace';
+  function dibujarCartel() {
+    const W = 1300, H = 300;
+    const c = document.createElement('canvas'); c.width = W; c.height = H;
+    const ctx = c.getContext('2d');
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#eaf3ff';
+    ctx.font = '700 36px ' + FUENTE;
+    ctx.fillText('En promedio, cada uruguayo aporta', W / 2, 55);
+    ctx.fillText('$U 20.500 por mes para sostener al Estado.*', W / 2, 105);
+    ctx.fillStyle = '#8fa6c4';
+    ctx.font = '400 22px ' + FUENTE;
+    [
+      '*Es un promedio: repartir el total entre la población.',
+      'La plata sale de impuestos y tasas que pagan tanto personas',
+      'como empresas, y no todos aportan lo mismo.',
+    ].forEach((linea, i) => ctx.fillText(linea, W / 2, 190 + i * 34));
+    return c;
+  }
+  const texCartel = new THREE.CanvasTexture(dibujarCartel());
+  texCartel.colorSpace = THREE.SRGBColorSpace; texCartel.anisotropy = 4;
+  const PWc = PW, PHc = PWc * (300 / 1300);
+  const planoCartel = new THREE.Mesh(new THREE.PlaneGeometry(PWc, PHc),
+    new THREE.MeshBasicMaterial({ map: texCartel, transparent: true, depthWrite: false }));
+  planoCartel.position.set(gx, yBase - PH * 0.05 - PHc / 2, -0.5);
+  scene.add(planoCartel);
   const NT = MOVIL ? 16 : 30;
   const tiradas = [];
   gente.forEach((p) => { for (let j = 0; j < NT; j++) tiradas.push({ p, t: 0, dur: 3, hoja: null, giro: 0 }); });
