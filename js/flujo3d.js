@@ -113,6 +113,66 @@ async function iniciar() {
   }
   const ov = await cargar();
 
+  // --- buscador: índice de todo organismo/programa/ingreso del presupuesto (no solo lo que se ve en
+  // esta vista), para poder saltar directo a cualquier nodo desde cualquier parte de este 3D
+  const normalizarBusq = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  const COLNOM_GASTO = ['Grupo de organismos', 'Organismo (inciso)', 'Oficina (unidad ejecutora)', 'Programa'];
+  const COLNOM_REC = ['Ingreso', 'Subtipo de ingreso', 'Tipo de ingreso'];
+  const indiceBusqueda = [];
+  (function armarIndiceBusqueda() {
+    const agregar = (n, prof, lista) => {
+      if (n.id && n.nombre) {
+        const label = M.nombreDe(n.id, n.nombre);
+        indiceBusqueda.push({ n: { id: n.id, label, col: lista[Math.min(prof - 1, lista.length - 1)], valor: n.valor || 0 }, norm: normalizarBusq(label) });
+      }
+      (n.hijos || []).forEach((h) => agregar(h, prof + 1, lista));
+    };
+    ov.gasto.hijos.forEach((h) => agregar(h, 1, COLNOM_GASTO));
+    ov.recursos.hijos.forEach((h) => agregar(h, 1, COLNOM_REC));
+  })();
+  function buscarNodos(q) {
+    const nq = normalizarBusq(q.trim());
+    if (nq.length < 2) return [];
+    const palabras = nq.split(/\s+/).filter(Boolean);
+    return indiceBusqueda.filter((e) => palabras.every((p) => e.norm.includes(p)))
+      .sort((a, b) => b.n.valor - a.n.valor).slice(0, 8).map((e) => e.n);
+  }
+  function irANodo(n) { location.hash = '#' + n.id; }
+  const buscadorWrap = document.createElement('div'); buscadorWrap.className = 'buscador';
+  const buscadorInput = document.createElement('input');
+  buscadorInput.type = 'search'; buscadorInput.placeholder = 'Buscar organismo, programa…';
+  buscadorInput.setAttribute('aria-label', 'Buscar un organismo o programa, para ir directo a su detalle');
+  const buscadorLista = document.createElement('ul'); buscadorLista.className = 'resultados'; buscadorLista.hidden = true;
+  buscadorWrap.append(buscadorInput, buscadorLista);
+  // las cifras (#cifras) se reemplazan enteras en cada navegación (hudDe), así que el buscador no va
+  // anidado ahí adentro (se perdería); en mobile entra en el encabezado, que nunca se borra
+  buscadorWrap.classList.add('buscador-aparte');
+  if (MOVIL) document.querySelector('.hud-izq').append(buscadorWrap);
+  else $('cifras').before(buscadorWrap);
+  let resultadosBusq = [];
+  buscadorInput.addEventListener('input', () => {
+    resultadosBusq = buscarNodos(buscadorInput.value);
+    buscadorLista.replaceChildren(...resultadosBusq.map((n) => {
+      const li = document.createElement('li');
+      const btn = document.createElement('button'); btn.type = 'button';
+      btn.append(document.createTextNode(n.label));
+      if (n.col) { const sm = document.createElement('small'); sm.textContent = n.col; btn.append(sm); }
+      btn.addEventListener('mousedown', (ev) => { ev.preventDefault(); irANodo(n); });
+      btn.addEventListener('click', () => irANodo(n));
+      li.append(btn);
+      return li;
+    }));
+    buscadorLista.hidden = !resultadosBusq.length;
+  });
+  buscadorInput.addEventListener('keydown', (ev) => {
+    if (ev.key === 'Escape') { buscadorInput.value = ''; buscadorLista.hidden = true; buscadorLista.replaceChildren(); buscadorInput.blur(); }
+    else if (ev.key === 'Enter' && resultadosBusq.length) irANodo(resultadosBusq[0]);
+    else return;
+    ev.stopPropagation();
+  });
+  buscadorInput.addEventListener('blur', () => { setTimeout(() => { buscadorLista.hidden = true; }, 150); });
+  buscadorInput.addEventListener('focus', () => { if (resultadosBusq.length) buscadorLista.hidden = false; });
+
   // --- renderer, escena, cámara (se crean una sola vez)
   const canvas = $('lienzo');
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: 'high-performance' });
@@ -511,6 +571,7 @@ async function iniciar() {
   // teclado: flechas o WASD para moverse, + y - para el zoom, 0 para volver al centro
   addEventListener('keydown', (ev) => {
     if (ev.ctrlKey || ev.metaKey || ev.altKey) return;
+    if (ev.target && (ev.target.tagName === 'INPUT' || ev.target.tagName === 'TEXTAREA')) return; // no robar teclas al buscador
     const k = ev.key.toLowerCase();
     if (k === 'arrowleft' || k === 'a') moverPaso(-1, 0);
     else if (k === 'arrowright' || k === 'd') moverPaso(1, 0);

@@ -67,6 +67,9 @@ h1 { margin: 0 0 14px; font-size: clamp(22px, 3.2vw, 34px); line-height: 1.1; fo
 @media (max-width: 760px) {
   .hud-der { top: auto; bottom: 46px; right: 12px; left: 12px; grid-template-columns: repeat(3, 1fr); gap: 6px; }
   .buscador { position: static; top: auto; right: auto; width: auto; margin-top: 6px; grid-column: 1 / -1; }
+  /* en 3d.html las cifras se reemplazan en cada navegación, así que ahí el buscador no está anidado
+     adentro (para no perderse); en mobile, en vez de ir pegado a las cifras, va en el encabezado */
+  .buscador.buscador-aparte { margin-top: 14px; grid-column: auto; }
   .cifra { min-width: 0; padding: 6px 8px; }
   .cifra strong { font-size: 13px; }
   .cifra small { font-size: 9px; }
