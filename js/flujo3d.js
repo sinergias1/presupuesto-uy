@@ -157,8 +157,9 @@ async function iniciar() {
       const btn = document.createElement('button'); btn.type = 'button';
       btn.append(document.createTextNode(n.label));
       if (n.col) { const sm = document.createElement('small'); sm.textContent = n.col; btn.append(sm); }
-      btn.addEventListener('mousedown', (ev) => { ev.preventDefault(); irANodo(n); });
-      btn.addEventListener('click', () => irANodo(n));
+      const elegir = () => { buscadorLista.hidden = true; buscadorLista.replaceChildren(); buscadorInput.blur(); irANodo(n); };
+      btn.addEventListener('mousedown', (ev) => { ev.preventDefault(); elegir(); });
+      btn.addEventListener('click', elegir);
       li.append(btn);
       return li;
     }));
@@ -166,7 +167,7 @@ async function iniciar() {
   });
   buscadorInput.addEventListener('keydown', (ev) => {
     if (ev.key === 'Escape') { buscadorInput.value = ''; buscadorLista.hidden = true; buscadorLista.replaceChildren(); buscadorInput.blur(); }
-    else if (ev.key === 'Enter' && resultadosBusq.length) irANodo(resultadosBusq[0]);
+    else if (ev.key === 'Enter' && resultadosBusq.length) { buscadorLista.hidden = true; buscadorLista.replaceChildren(); buscadorInput.blur(); irANodo(resultadosBusq[0]); }
     else return;
     ev.stopPropagation();
   });
