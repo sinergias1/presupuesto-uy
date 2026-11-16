@@ -4,8 +4,9 @@ por proveedor, no uno por cada vez que aparece) para que el buscador de las vist
 proveedores del catálogo de compras estatales sin tener que descargar los ~100 MB de
 data/2025/compras/*.json en el navegador.
 
-Por cada nombre de proveedor (normalizado) se queda con la aparición de mayor monto, y le agrega el
-nombre del organismo (vía data/2025/organismos.json) para mostrarlo como subtítulo en el buscador.
+Por cada proveedor y organismo al que le vendió (si el mismo proveedor aparece en más de un organismo,
+un resultado por cada uno) se queda con la aparición de mayor monto dentro de ese organismo, y agrega
+el nombre del organismo (vía data/2025/organismos.json) para mostrarlo como subtítulo en el buscador.
 
 Se corre después de etl_compras.py:
 
@@ -34,20 +35,18 @@ def normalizar(s):
 
 def main():
     organismos = json.load(open(RUTA_ORGANISMOS, encoding='utf-8'))
-    mejor = {}  # nombre normalizado -> {id, nombre, valor, organismo}
+    mejor = {}  # (nombre normalizado, organismo) -> {id, nombre, valor, organismo}
 
     def walk(n):
         if not isinstance(n, dict):
             return
         if n.get('nivel') == 'Proveedor':
-            clave = normalizar(n['nombre'])
+            organismo = organismo_de(n['id'], organismos)
+            clave = (normalizar(n['nombre']), organismo)
             valor = n.get('valor', 0) or 0
             actual = mejor.get(clave)
             if not actual or valor > actual['valor']:
-                mejor[clave] = {
-                    'id': n['id'], 'nombre': n['nombre'], 'valor': valor,
-                    'organismo': organismo_de(n['id'], organismos),
-                }
+                mejor[clave] = {'id': n['id'], 'nombre': n['nombre'], 'valor': valor, 'organismo': organismo}
         for h in n.get('hijos') or []:
             walk(h)
 
