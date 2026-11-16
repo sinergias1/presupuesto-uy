@@ -749,6 +749,16 @@ async function iniciar() {
     setTimeout(() => { buscadorLista.hidden = true; }, 150);
   });
   buscadorInput.addEventListener('focus', () => { if (resultadosActuales.length) buscadorLista.hidden = false; });
+  // en escritorio, que los botones de abajo midan lo mismo que las tarjetas de arriba (mismo borde
+  // izquierdo), en vez de quedar más angostos y desalineados
+  function alinearControles() {
+    if (MOVIL) return;
+    const controles = document.querySelector('.controles');
+    const ancho = $('cifras').getBoundingClientRect().width;
+    if (controles && ancho) { controles.style.width = ancho + 'px'; controles.style.justifyContent = 'space-between'; }
+  }
+  alinearControles();
+  addEventListener('resize', alinearControles);
 
   function cintaEn(cx, cy) {
     ndc.set((cx / innerWidth) * 2 - 1, -(cy / innerHeight) * 2 + 1);

@@ -322,6 +322,9 @@ async function iniciar() {
     const clasico = $('clasico');
     clasico.href = vista.tipo === 'general' ? 'detalle.html' : 'detalle.html#' + vista.nodo.id;
     clasico.textContent = 'Explorar más detalles de estos datos en 2D →';
+    // que los botones de abajo midan lo mismo que las tarjetas (mismo borde izquierdo); se recalcula acá
+    // porque el ancho de las tarjetas cambia según la vista (cuántas cifras muestra cada una)
+    alinearControles();
   }
 
   // --- tamaño y cámara
@@ -331,7 +334,13 @@ async function iniciar() {
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
   }
-  addEventListener('resize', ajustar);
+  function alinearControles() {
+    if (MOVIL) return;
+    const controles = document.querySelector('.controles');
+    const ancho = $('cifras').getBoundingClientRect().width;
+    if (controles && ancho) { controles.style.width = ancho + 'px'; controles.style.justifyContent = 'space-between'; }
+  }
+  addEventListener('resize', () => { ajustar(); alinearControles(); });
   ajustar();
 
   const cam = { yaw: 0, pitch: 0, yawT: 0, pitchT: 0, dist: 60, distT: 27, arrastrando: false, px: 0, py: 0, pxT: 0, pyT: 0 };
