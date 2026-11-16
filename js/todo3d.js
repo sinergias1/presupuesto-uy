@@ -790,20 +790,28 @@ async function iniciar() {
   $('zoom-mas').addEventListener('click', () => zoomHacia(0.6, innerWidth / 2, innerHeight / 2));
   $('zoom-menos').addEventListener('click', () => zoomHacia(1.67, innerWidth / 2, innerHeight / 2));
   $('zoom-centro').addEventListener('click', volverATodo);
+  // mover la vista un paso (mismo cálculo que las flechas del teclado), para los botones del D-pad
+  function moverPaso(dx, dy) {
+    const paso = unidadesPorPixel(cam.dist) * 90;
+    cam.pxT += dx * paso; cam.pyT += dy * paso; clampPan();
+  }
+  $('mover-izq').addEventListener('click', () => moverPaso(-1, 0));
+  $('mover-der').addEventListener('click', () => moverPaso(1, 0));
+  $('mover-arriba').addEventListener('click', () => moverPaso(0, 1));
+  $('mover-abajo').addEventListener('click', () => moverPaso(0, -1));
   addEventListener('keydown', (ev) => {
     if (ev.ctrlKey || ev.metaKey || ev.altKey) return;
     if (ev.target && (ev.target.tagName === 'INPUT' || ev.target.tagName === 'TEXTAREA')) return; // no robar teclas al buscador
-    const paso = unidadesPorPixel(cam.dist) * 90;
     const k = ev.key.toLowerCase();
-    if (k === 'arrowleft' || k === 'a') cam.pxT -= paso;
-    else if (k === 'arrowright' || k === 'd') cam.pxT += paso;
-    else if (k === 'arrowup' || k === 'w') cam.pyT += paso;
-    else if (k === 'arrowdown' || k === 's') cam.pyT -= paso;
+    if (k === 'arrowleft' || k === 'a') moverPaso(-1, 0);
+    else if (k === 'arrowright' || k === 'd') moverPaso(1, 0);
+    else if (k === 'arrowup' || k === 'w') moverPaso(0, 1);
+    else if (k === 'arrowdown' || k === 's') moverPaso(0, -1);
     else if (k === '+' || k === '=') zoomHacia(0.8, innerWidth / 2, innerHeight / 2);
     else if (k === '-' || k === '_') zoomHacia(1.25, innerWidth / 2, innerHeight / 2);
     else if (k === '0') volverATodo();
     else return;
-    ev.preventDefault(); clampPan();
+    ev.preventDefault();
   });
 
   // --- carteles: solo los de bloques que se ven lo bastante grandes, con tope

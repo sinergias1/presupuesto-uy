@@ -29,9 +29,16 @@
   <aside class="hud hud-der" id="cifras" aria-label="Totales"></aside>
 
   <div class="controles" role="group" aria-label="Vista">
-    <button id="zoom-mas" type="button" aria-label="Acercar" title="Acercar (+)">+</button>
-    <button id="zoom-menos" type="button" aria-label="Alejar" title="Alejar (−)">−</button>
-    <button id="zoom-centro" type="button" aria-label="Ver todo" title="Ver todo (0 o doble clic)">⌖</button>
+    <div class="controles-mover" role="group" aria-label="Mover la vista">
+      <span></span><button id="mover-arriba" type="button" aria-label="Mover hacia arriba" title="Mover hacia arriba (flecha arriba)">↑</button><span></span>
+      <button id="mover-izq" type="button" aria-label="Mover hacia la izquierda" title="Mover hacia la izquierda (flecha izquierda)">←</button><span></span><button id="mover-der" type="button" aria-label="Mover hacia la derecha" title="Mover hacia la derecha (flecha derecha)">→</button>
+      <span></span><button id="mover-abajo" type="button" aria-label="Mover hacia abajo" title="Mover hacia abajo (flecha abajo)">↓</button><span></span>
+    </div>
+    <div class="controles-zoom">
+      <button id="zoom-mas" type="button" aria-label="Acercar" title="Acercar (+)">+</button>
+      <button id="zoom-menos" type="button" aria-label="Alejar" title="Alejar (−)">−</button>
+      <button id="zoom-centro" type="button" aria-label="Ver todo" title="Ver todo (0 o doble clic)">⌖</button>
+    </div>
   </div>
 
   <footer class="hud hud-abajo">
