@@ -492,27 +492,30 @@ async function iniciar() {
   const gente = BOLSILLOS.map((b) => ({ x: mundoX(b.x), y: gyTopFinal - ((b.y - MARCO.y) / MARCO.h) * PH, alto: b.alto }));
 
   // --- cartel en el hueco junto a la familia: cuánto le cuesta el Estado a cada uruguayo, en promedio.
-  // Canvas angosto y alto (en vez de ancho y bajo) para poder agrandarlo sin salirse del hueco
-  // por donde vuelan los billetes.
+  // Tamaño en función de la altura de la familia (PH), no del espaciado entre columnas (D.DX, que es
+  // mucho más chico): así queda claramente grande, como una tarjeta con un número destacado.
   const FUENTE = 'ui-monospace, "SF Mono", "Cascadia Mono", Consolas, Menlo, monospace';
   function dibujarCartel() {
-    const W = 760, H = 360;
+    const W = 640, H = 420;
     const c = document.createElement('canvas'); c.width = W; c.height = H;
     const ctx = c.getContext('2d');
     ctx.textAlign = 'center';
     ctx.fillStyle = '#eaf3ff';
-    ctx.font = '700 42px ' + FUENTE;
-    ['En promedio, cada uruguayo', 'aporta $U 20.500 por mes', 'para sostener al Estado.*']
-      .forEach((linea, i) => ctx.fillText(linea, W / 2, 60 + i * 56));
+    ctx.font = '400 26px ' + FUENTE;
+    ctx.fillText('En promedio, cada uruguayo aporta', W / 2, 45);
+    ctx.font = '700 80px ' + FUENTE;
+    ctx.fillText('$U 20.500', W / 2, 150);
+    ctx.font = '400 26px ' + FUENTE;
+    ctx.fillText('por mes para sostener al Estado.*', W / 2, 200);
     ctx.fillStyle = '#8fa6c4';
-    ctx.font = '400 24px ' + FUENTE;
+    ctx.font = '400 22px ' + FUENTE;
     ['*Promedio entre toda la población.', 'Aportan personas y empresas;', 'no todos tributan igual.']
-      .forEach((linea, i) => ctx.fillText(linea, W / 2, 268 + i * 32));
+      .forEach((linea, i) => ctx.fillText(linea, W / 2, 280 + i * 32));
     return c;
   }
   const texCartel = new THREE.CanvasTexture(dibujarCartel());
   texCartel.colorSpace = THREE.SRGBColorSpace; texCartel.anisotropy = 4;
-  const PWc = D.DX * 2.4 * 0.92, PHc = PWc * (360 / 760);
+  const PHc = PH * 0.6, PWc = PHc * (640 / 420);
   const cartelX = colX(0) - D.DX * 1.2; // centro del hueco entre la familia y los ingresos
   const planoCartel = new THREE.Mesh(new THREE.PlaneGeometry(PWc, PHc),
     new THREE.MeshBasicMaterial({ map: texCartel, transparent: true, depthWrite: false }));
