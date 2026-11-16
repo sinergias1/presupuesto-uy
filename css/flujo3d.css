@@ -22,7 +22,7 @@ h1 { margin: 0 0 14px; font-size: clamp(22px, 3.2vw, 34px); line-height: 1.1; fo
 .leyenda li { display: inline-flex; align-items: center; gap: 6px; }
 .leyenda i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; box-shadow: 0 0 8px currentColor; background: currentColor; }
 
-.hud-der { top: 18px; right: 22px; display: grid; gap: 10px; text-align: right; font-family: var(--mono); }
+.hud-der { top: 18px; right: 22px; z-index: 10; display: grid; gap: 10px; text-align: right; font-family: var(--mono); }
 .cifra { padding: 8px 12px; border: 1px solid var(--linea); border-radius: 4px; background: rgba(8, 14, 24, .55); backdrop-filter: blur(4px); min-width: 170px;
   position: relative; }
 .cifra::before, .cifra::after { content: ""; position: absolute; width: 8px; height: 8px; border: 1px solid #6fd0ff; }
