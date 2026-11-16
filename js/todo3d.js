@@ -729,7 +729,10 @@ async function iniciar() {
       const nombreCol = NOMBRE_COL[n.col];
       btn.append(document.createTextNode(n.label));
       if (nombreCol) { const sm = document.createElement('small'); sm.textContent = nombreCol; btn.append(sm); }
-      btn.addEventListener('click', () => irANodo(n));
+      // mousedown (no click): dispara ANTES de que el input pierda el foco, así no hace falta
+      // esperar a que el 'blur' del input se resuelva y un solo click ya alcanza para navegar.
+      btn.addEventListener('mousedown', (ev) => { ev.preventDefault(); irANodo(n); });
+      btn.addEventListener('click', () => irANodo(n)); // por si se activa con teclado (Enter/Espacio)
       li.append(btn);
       return li;
     }));
