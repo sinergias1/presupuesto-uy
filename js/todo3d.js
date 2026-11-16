@@ -696,6 +696,57 @@ async function iniciar() {
   }, { passive: false });
   // --- doble clic (o doble toque): en un bloque o en una cinta abre la vista por niveles; en el vacío vuelve a ver todo
   const esNavegable = (n) => n && !n.id.includes('#') && (n.id.startsWith('gasto/') || n.id.startsWith('recursos/'));
+
+  // --- buscador: escribir "ministerio", "secretaría de presidencia", etc. y saltar directo a ese nodo
+  const normalizar = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  const indiceBusqueda = nodos.filter((n) => esNavegable(n) && n.label)
+    .map((n) => ({ n, norm: normalizar(n.label) }));
+  function buscarNodos(q) {
+    const nq = normalizar(q.trim());
+    if (nq.length < 2) return [];
+    // cada palabra escrita tiene que aparecer en el nombre, en cualquier orden y aunque haya
+    // otras palabras en el medio (p.ej. "secretaria de presidencia" -> "Secretaría de la Presidencia...")
+    const palabras = nq.split(/\s+/).filter(Boolean);
+    return indiceBusqueda.filter((e) => palabras.every((p) => e.norm.includes(p)))
+      .sort((a, b) => b.n.valor - a.n.valor).slice(0, 8).map((e) => e.n);
+  }
+  function irANodo(n) {
+    location.href = '3d.html#' + encodeURIComponent(n.id).replace(/%2F/g, '/');
+  }
+  const buscadorWrap = document.createElement('div'); buscadorWrap.className = 'buscador';
+  const buscadorInput = document.createElement('input');
+  buscadorInput.type = 'search'; buscadorInput.placeholder = 'Buscar organismo, programa…';
+  buscadorInput.setAttribute('aria-label', 'Buscar un organismo o programa, para ir directo a su detalle');
+  const buscadorLista = document.createElement('ul'); buscadorLista.className = 'resultados'; buscadorLista.hidden = true;
+  buscadorWrap.append(buscadorInput, buscadorLista);
+  $('cifras').append(buscadorWrap);
+  let resultadosActuales = [];
+  buscadorInput.addEventListener('input', () => {
+    resultadosActuales = buscarNodos(buscadorInput.value);
+    buscadorLista.replaceChildren(...resultadosActuales.map((n) => {
+      const li = document.createElement('li');
+      const btn = document.createElement('button'); btn.type = 'button';
+      const nombreCol = NOMBRE_COL[n.col];
+      btn.append(document.createTextNode(n.label));
+      if (nombreCol) { const sm = document.createElement('small'); sm.textContent = nombreCol; btn.append(sm); }
+      btn.addEventListener('click', () => irANodo(n));
+      li.append(btn);
+      return li;
+    }));
+    buscadorLista.hidden = !resultadosActuales.length;
+  });
+  buscadorInput.addEventListener('keydown', (ev) => {
+    if (ev.key === 'Escape') { buscadorInput.value = ''; buscadorLista.hidden = true; buscadorLista.replaceChildren(); buscadorInput.blur(); }
+    else if (ev.key === 'Enter' && resultadosActuales.length) irANodo(resultadosActuales[0]);
+    else return;
+    ev.stopPropagation();
+  });
+  buscadorInput.addEventListener('blur', () => {
+    // da tiempo a que el click en un resultado se procese antes de ocultar la lista
+    setTimeout(() => { buscadorLista.hidden = true; }, 150);
+  });
+  buscadorInput.addEventListener('focus', () => { if (resultadosActuales.length) buscadorLista.hidden = false; });
+
   function cintaEn(cx, cy) {
     ndc.set((cx / innerWidth) * 2 - 1, -(cy / innerHeight) * 2 + 1);
     ray.setFromCamera(ndc, camera);
@@ -738,6 +789,7 @@ async function iniciar() {
   $('zoom-centro').addEventListener('click', volverATodo);
   addEventListener('keydown', (ev) => {
     if (ev.ctrlKey || ev.metaKey || ev.altKey) return;
+    if (ev.target && (ev.target.tagName === 'INPUT' || ev.target.tagName === 'TEXTAREA')) return; // no robar teclas al buscador
     const paso = unidadesPorPixel(cam.dist) * 90;
     const k = ev.key.toLowerCase();
     if (k === 'arrowleft' || k === 'a') cam.pxT -= paso;
