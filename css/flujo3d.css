@@ -31,7 +31,7 @@ h1 { margin: 0 0 14px; font-size: clamp(22px, 3.2vw, 34px); line-height: 1.1; fo
 .cifra small { display: block; font-size: 10.5px; letter-spacing: .08em; color: var(--ink-2); text-transform: uppercase; }
 .cifra strong { font-size: 18px; font-weight: 600; color: #fff; }
 
-.buscador { position: relative; margin-top: 4px; grid-column: 1 / -1; }
+.buscador { position: relative; margin-top: 20px; grid-column: 1 / -1; }
 .buscador input { width: 100%; min-width: 220px; box-sizing: border-box; padding: 9px 12px; text-align: left;
   font-family: var(--mono); font-size: 13px; color: #fff; background: rgba(8, 14, 24, .72);
   border: 1px solid var(--linea); border-radius: 4px; backdrop-filter: blur(4px); }

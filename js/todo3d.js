@@ -233,7 +233,7 @@ async function iniciar() {
     li.append(i, document.createTextNode(n.label)); leyenda.append(li);
   });
   const t = ov.totales;
-  [['Se espera cobrar', M.fmtMonto(t.recursos)], ['Se puede gastar', M.fmtMonto(t.gasto)], [t.diferencia < 0 ? 'Falta para cubrir' : 'Sobra', M.fmtMonto(Math.abs(t.diferencia))]]
+  [['Se estimó recaudar', M.fmtMonto(t.recursos)], ['Se estimó gastar', M.fmtMonto(t.gasto)], [t.diferencia < 0 ? 'Faltante estimado' : 'Superávit estimado', M.fmtMonto(Math.abs(t.diferencia))]]
     .forEach(([k, v]) => {
       const d = document.createElement('div'); d.className = 'cifra';
       const sm = document.createElement('small'); sm.textContent = k;
