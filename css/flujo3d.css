@@ -117,7 +117,7 @@ body.cargando #lienzo { opacity: .55; transition: opacity .2s; }
 #lienzo { cursor: grab; }
 @media (max-width: 760px) {
   .controles { bottom: 230px; right: 12px; gap: 6px; }
-  .controles-mover { grid-template-columns: repeat(3, 34px); grid-template-rows: repeat(3, 34px); gap: 5px; }
+  .controles-mover { position: fixed; left: 12px; bottom: 230px; grid-template-columns: repeat(3, 34px); grid-template-rows: repeat(3, 34px); gap: 5px; }
   .controles-zoom { gap: 5px; }
   .controles button { width: 34px; height: 34px; font-size: 17px; }
 }
