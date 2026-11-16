@@ -39,6 +39,22 @@
     'Compra': 'compras',
   };
 
+  // Definiciones cortas para mostrar al pasar el mouse sobre una palabra técnica,
+  // en los lugares donde esa palabra ya aparece en la interfaz (encabezados de
+  // nivel, columnas de tablas). Fuente: "Notas generales" del Tomo I - Resúmenes,
+  // Ley N° 20.446 (Presupuesto Nacional 2025-2029).
+  var GLOSARIO = {
+    'Grupo de organismos': 'Una de las tres grandes familias del Estado: Administración Central (ministerios y Presidencia), Organismos del artículo 220 de la Constitución (Poder Judicial, entes autónomos, universidades...) u Otros organismos (deuda, subsidios y partidas que no son de un organismo en particular).',
+    'Organismo (inciso)': 'Cada organismo grande del presupuesto: un ministerio, la Presidencia, la Universidad, el Poder Judicial, etc. En los documentos oficiales se llama "inciso".',
+    'Oficina o dirección (unidad ejecutora)': 'Una oficina o dirección dentro de un organismo (inciso), con su propio presupuesto. En los documentos oficiales se llama "unidad ejecutora".',
+    'Programa': 'Un conjunto de actividades con un objetivo concreto, por ejemplo "Seguridad pública". En los documentos oficiales, "programa presupuestal".',
+    'En qué se gasta': 'Si la plata se va en sueldos (remuneraciones), en el día a día (funcionamiento) o en obras y equipos (inversiones).',
+    'Rubro del gasto': 'La compra o el pago puntual: un sueldo, un alquiler, un equipo. En los documentos oficiales, "objeto del gasto".',
+    'Tipo de ingreso': 'La clase de cobro: impuestos, tasas, multas u otros ingresos del Estado.',
+    'Subtipo de ingreso': 'Una categoría más específica dentro de cada tipo de ingreso.',
+    'Ingreso': 'Un cobro puntual dentro de un subtipo de ingreso, por ejemplo el IVA dentro de los impuestos.',
+  };
+
   // Nombres simples para lo que se repite en todas las vistas: [nombre, explicación].
   // Clave: id del nodo, o "fuente/<código>" para los fondos de financiamiento.
   var AMIGABLE = {
@@ -624,6 +640,7 @@
   return {
     NIVELES_GASTO: NIVELES_GASTO,
     NIVELES_RECURSOS: NIVELES_RECURSOS,
+    GLOSARIO: GLOSARIO,
     UMBRAL_FLUJO: UMBRAL_FLUJO,
     numEs: numEs,
     fmtCorto: fmtCorto,

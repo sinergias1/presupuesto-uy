@@ -131,6 +131,16 @@ h1 { margin: 0 0 8px; font-size: clamp(24px, 4vw, 34px); line-height: 1.15; font
 .ex-card p { margin: 0; font-size: 16px; line-height: 1.5; }
 .ex-card strong { font-weight: 650; }
 
+/* organismo: misión y visión, en un "+" expandible */
+.organismo-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 16px; margin: 0 0 16px; }
+.organismo-card summary { cursor: pointer; font-weight: 600; }
+.organismo-card h4 { margin: 10px 0 2px; font-size: 14px; font-weight: 650; color: var(--ink2); }
+.organismo-card p { margin: 0; font-size: 15px; line-height: 1.5; }
+.organismo-card .tabla-nota { margin-top: 10px; }
+
+/* palabra con definición al pasar el mouse (o enfocarla con el teclado) */
+.glosa { text-decoration: underline dotted; text-decoration-color: var(--ink2); text-underline-offset: 3px; cursor: help; }
+
 /* gráfico */
 .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 10px 16px 14px; }
 .leyenda-fila { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; margin-bottom: 6px; font-size: 13px; }

@@ -119,3 +119,13 @@ Si una compra no calza con un rubro específico de su unidad ejecutora, `etl_com
 (199-0 consumo, 299-0 servicios, 399-0 bienes de uso). Esas compras llevan `aprox: true`, se marcan con "≈" en el gráfico y
 con una nota en tooltip y tarjetas. Si la unidad tampoco tiene ese rubro, la compra va a la tabla "Compras que no pudimos ubicar
 en un rubro" de la unidad (`__ue__` en `data/2025/compras/<inciso>_<ue>.json`). Cobertura: ~96% de lo adjudicado queda en el gráfico.
+
+## Glosario y misión/visión de los organismos (v14)
+
+A partir de los tomos oficiales de la Ley N° 20.446 (ver `fuentes/`, con un índice en `fuentes/README.md`):
+
+- **Glosario al pasar el mouse**: las palabras técnicas que ya aparecen como encabezado en la interfaz (p. ej. "Organismo (inciso)", "Oficina o dirección (unidad ejecutora)", "Programa", "Rubro del gasto", "Tipo de ingreso") ahora tienen una definición en `M.GLOSARIO` (`js/model.js`) y se muestran con un subrayado punteado; al pasar el mouse (o enfocarlas con el teclado) aparece la definición, usando el atributo `title` nativo, igual que el resto del sitio. El helper `glosa()` en `js/app.js` envuelve el texto solo si hay una entrada en el glosario.
+- Términos sin una palabra única en la interfaz (línea de base, articulado, gran recaudador, área programática, proyecto, agrupador, tipo de crédito), sacados de las "Notas generales" del Tomo I, se agregaron al glosario expandible existente ("Palabras que conviene conocer").
+- **Misión y visión de cada organismo**: al entrar al nivel de un organismo (inciso) aparece una tarjeta "+ Misión y visión" (`<details>`), con el texto oficial de cada ministerio u organismo según el Tomo II (Planificación y Evaluación). Los datos están en `data/2025/organismos.json`, indexados por el mismo `id` que usa el sitio (`gasto/a|c/<código>`); se cargan bajo demanda (`renderOrganismo()` en `js/app.js`) y se enlazan al documento oficial correspondiente.
+  - Cobertura: 28 organismos (Administración Central e Incisos del art. 220 de la Constitución). No incluye el Parlamento (no está en el Tomo II) ni los incisos 20-24 (deuda, subsidios y partidas que no son de un organismo en particular).
+- Los Tomos III, IV y V y el anexo de I+D se subieron a `fuentes/` para que se pueda citar y verificar cualquier dato contra el documento legal, pero no agregan datos nuevos: ya están, a mayor detalle, en los CSV oficiales que procesa `etl.py`.

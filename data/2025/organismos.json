@@ -1,0 +1,170 @@
+{
+  "gasto/a/2": {
+    "inciso": 2,
+    "nombre": "Presidencia de la República",
+    "mision": "Orientar, formular y asegurar el cumplimiento de las políticas de Estado, brindando el asesoramiento y apoyo necesarios para una eficaz toma de decisiones.",
+    "vision": null
+  },
+  "gasto/a/3": {
+    "inciso": 3,
+    "nombre": "Ministerio de Defensa Nacional",
+    "mision": "Preparar, dirigir, ordenar y ejecutar la Política de Defensa Nacional aprobada por el Poder Ejecutivo, preservando, en el marco de la Constitución y las Leyes, la soberanía y la independencia del Estado uruguayo, conservando la integridad del territorio y sus recursos estratégicos y la paz de la República, contribuyendo a generar las condiciones para el bienestar social.",
+    "vision": "Ser una institución profesionalizada en materia de defensa, mediante una gestión eficaz y eficiente de los recursos, que permita dotarla del equipamiento y los recursos humanos entrenados y orientada a mantener la paz, resguardar la soberanía del Estado y preservar el territorio."
+  },
+  "gasto/a/4": {
+    "inciso": 4,
+    "nombre": "Ministerio del Interior",
+    "mision": "El Ministerio del Interior tiene como misión mantener el orden y la seguridad pública, protegiendo el libre ejercicio de los derechos y libertades de los habitantes del país, siendo auxiliar de la Justicia y garante de los derechos humanos de todos los ciudadanos.",
+    "vision": "El Ministerio del Interior será un organismo altamente técnico y profesionalizado que abordará la seguridad desde una óptica integral en la cual la prevención, disuasión y represión del delito sean fundamentales, colaborando con la Justicia y estando al servicio de la sociedad para mantener una adecuada convivencia entre los habitantes del país."
+  },
+  "gasto/a/5": {
+    "inciso": 5,
+    "nombre": "Ministerio de Economía y Finanzas",
+    "mision": "El Ministerio de Economía y Finanzas tiene como misión la conducción de la política económica a ser desarrollada por el Poder Ejecutivo. En particular, debe velar por la mejora de las condiciones de vida de los habitantes de la República. Para eso implementará políticas públicas coordinadas y consistentes, con el seguimiento de su ejecución y la difusión de información relevante para la población sobre sus resultados. Su cometido fundamental es lograr la estabilidad de las condiciones macroeconómicas para el progreso del trabajo y las inversiones en el país, velando por el mantenimiento y mejora de las condiciones ambientales. En este sentido, debe trabajar por la sostenibilidad, responsabilidad y transparencia de las finanzas públicas.",
+    "vision": "Ser un agente positivo y determinante para la mejora de las condiciones de vida de los habitantes del país, promoviendo una economía vibrante que brinde a todos los individuos oportunidades a nivel personal y social que les permita desarrollar plenamente su mayor potencial."
+  },
+  "gasto/a/6": {
+    "inciso": 6,
+    "nombre": "Ministerio de Relaciones Exteriores",
+    "mision": "Representar al Estado uruguayo ante la comunidad internacional, promoviendo y defendiendo su soberanía y sus intereses políticos, económicos, comerciales, culturales, ambientales y de derechos humanos; protegiendo a los nacionales en el exterior; y contribuyendo a la paz, la integración regional, la cooperación internacional y el desarrollo sostenible.",
+    "vision": "Un Ministerio que articula la proyección internacional de Uruguay mediante una diplomacia profesional, innovadora y orientada a resultados, con capacidad de adaptación a un entorno dinámico, fortaleciendo la presencia del país en el mundo y contribuyendo al bienestar de su población, incorporando la igualdad de género como principio transversal de su acción."
+  },
+  "gasto/a/7": {
+    "inciso": 7,
+    "nombre": "Ministerio de Ganadería, Agricultura y Pesca",
+    "mision": "Definir, ejecutar políticas y normativas que fomenten la producción y el comercio sostenible del sector agropecuario, agroindustrial y pesquero, haciendo un uso y manejo responsable de los recursos naturales. Salvaguardar y mejorar el estatus sanitario, animal, vegetal y la inocuidad de los alimentos con foco en el concepto de una sola salud. Impulsar el desarrollo inclusivo y sostenible en las cadenas agropecuarias, agroindustriales y pesqueras, propiciando mejores condiciones de vida para la población rural, generando conciencia agropecuaria.",
+    "vision": "Ser un organismo reconocido por la generación y aplicación de políticas agropecuarias eficientes, que articulando entre; los distintos actores de las cadenas productivas y en el marco de un modelo de desarrollo sostenible, protejan y mejoren el status sanitario y fitosanitario dé la producción nacional, el bienestar animal, la calidad e inocuidad de nuestros productos, el cuidado del medio ambiente, y el desarrollo de la población rural, en beneficio del bienestar general dé la ciudadanía."
+  },
+  "gasto/a/8": {
+    "inciso": 8,
+    "nombre": "Ministerio de Industria, Energía y Minería",
+    "mision": "El Ministerio de Industria, Energía y Minería tiene como misión la conducción integral y coordinada de las políticas públicas orientadas al desarrollo de los sectores industrial, energético, minero, de telecomunicaciones, servicios de comunicación audiovisual y postal, de la propiedad intelectual y de las micro, pequeñas y medianas empresas, así como realizar la promoción de la tecnología y seguridad nuclear y protección radiológica. Es responsable de establecer los lineamientos de política que permitan fortalecer la matriz productiva del país, impulsar la innovación y la transferencia tecnológica, fomentar la competitividad, promover la descarbonización de la matriz energética y el desarrollo del sistema de telecomunicaciones. El Ministerio busca promover un desarrollo productivo sustentable en lo económico, ambiental y social, que favorezca una economía más diversificada, con generación de empleo de calidad y mayor valor agregado nacional para un desarrollo inclusivo e integrado con la región y el mundo.",
+    "vision": "El MIEM es una institución estratégica para catalizar la transformación tecnológica y productiva de Uruguay, capaz de liderar la diversificación de la estructura productiva y el desarrollo de las infraestructuras nacionales, promoviendo la incorporación de capacidades nacionales en cadenas de valor, la descarbonización de la matriz energética e industrial y el impulso a los sectores industriales, de las telecomunicaciones y energéticos con alto potencial regional y global. Reconocido como el ámbito de planificación, elaboración e implementación de políticas de desarrollo productivo, capaz de diseñar políticas basadas en el conocimiento y de anticiparse a las oportunidades y desafíos mediante la coordinación permanente del sector público y el privado. Asimismo, el MIEM se orienta a consolidar un desarrollo equilibrado territorialmente y con criterios de justicia social, acompañando la inserción internacional del país, fortaleciendo la industria nacional, apoyando el desarrollo tecnológico y la competitividad de las micro, pequeñas y medianas empresas. Potenciando la innovación y desarrollo tecnológico, articulando con actores públicos y privados para incorporar capacidades y favorecer la transferencia tecnológica."
+  },
+  "gasto/a/9": {
+    "inciso": 9,
+    "nombre": "Ministerio de Turismo",
+    "mision": "Impulsar el turismo nacional mediante políticas sostenibles e inclusivas que fomenten la inversión, fortalezcan la competitividad y generen empleo, en coordinación con los sectores público y privado.",
+    "vision": "Consolidar al turismo como una política de Estado estratégica para el desarrollo sostenible del país, reconociéndolo como un derecho humano fundamental y una herramienta para el bienestar social. Posicionar a Uruguay como un destino turístico sostenible, inclusivo y de calidad, tanto a nivel nacional como internacional."
+  },
+  "gasto/a/10": {
+    "inciso": 10,
+    "nombre": "Ministerio de Transporte y Obras Públicas",
+    "mision": "Impulsar el desarrollo nacional planificando, regulando, ejecutando y manteniendo proyectos de infraestructura estratégica para el transporte de personas y cargas, y otras intervenciones territoriales relevantes. Lo hacemos con criterios de seguridad, eficiencia, inclusión y sostenibilidad, promoviendo la integración multimodal, la innovación tecnológica, la transparencia y la participación ciudadana, al servicio de una gestión pública comprometida con el bienestar colectivo.",
+    "vision": "Ser un Ministerio que está al servicio del país, liderando el desarrollo de infraestructuras necesarias, con impactos positivos en la calidad de vida, la movilidad y la equidad territorial."
+  },
+  "gasto/a/11": {
+    "inciso": 11,
+    "nombre": "Ministerio de Educación y Cultura",
+    "mision": "El Ministerio de Educación y Cultura es responsable de diseñar, ejecutar, coordinar, regular y dar seguimiento a políticas públicas en las áreas de la educación, la cultura, la ciencia y la tecnología. También es responsable de representar los intereses de la sociedad en materia constitucional, legal y registral.",
+    "vision": "El Ministerio de Educación y Cultura contribuye al desarrollo personal y colectivo en las áreas de la educación, la cultura, la ciencia y la tecnología, así como al fortalecimiento de los valores propios de la democracia representativa y el Estado de Derecho. Para ello desarrolla, coordina y evalúa políticas públicas orientadas a facilitar la generación de conocimiento, la educación de calidad, la igualdad de oportunidades, el acceso a los bienes culturales, la integración territorial y la calidad de la convivencia."
+  },
+  "gasto/a/12": {
+    "inciso": 12,
+    "nombre": "Ministerio de Salud Pública",
+    "mision": "Contribuir al mejoramiento de la salud de los habitantes de la República, elaborando las políticas de promoción de salud y prevención, normalizando y regulando el tratamiento y la rehabilitación de la enfermedad, bajo los principios rectores de universalidad, equidad, calidad, solidaridad, sustentabilidad y eficiencia.",
+    "vision": "Ser reconocida como la entidad rectora en el establecimiento y aseguramiento del cumplimiento de las políticas que respondan adecuadamente a las necesidades y expectativas de los ciudadanos en materia de salud, con una estructura institucional con vocación de servicio, eficaz y transparente para el correcto ejercicio de la Rectoría en salud."
+  },
+  "gasto/a/13": {
+    "inciso": 13,
+    "nombre": "Ministerio de Trabajo y Seguridad Social",
+    "mision": "El Ministerio de Trabajo y Seguridad Social es la institución rectora en el diseño, implementación y evaluación de las políticas públicas de las relaciones laborales, del empleo y de la formación profesional, de la seguridad y salud en el trabajo y de la seguridad social a nivel nacional. Promueve el diálogo social, la negociación colectiva, el trabajo decente y la cultura del trabajo digno, el cumplimiento de la normativa laboral, las condiciones generales y ambientales de trabajo, la prevención y solución de los conflictos individuales y colectivos, la mejora de las condiciones de trabajo y de la seguridad social, de la economía social y solidaria y el respeto de los derechos fundamentales de los/las trabajadores/as, buscando el desarrollo integral de las personas, con perspectiva de género y generaciones, para contribuir al logro de un país productivo, sustentable innovador e inclusivo con menos desigualdad.",
+    "vision": "Ser la institución pública reconocida por impulsar el trabajo decente y digno, la cultura del trabajo, garante de los derechos fundamentales en el ámbito laboral y corresponsable del desarrollo social, en un clima de dialogo y paz social mediante una gestión transparente, eficaz y eficiente con un equipo de personas capacitados, motivado y comprometido."
+  },
+  "gasto/a/14": {
+    "inciso": 14,
+    "nombre": "Ministerio de Vivienda y Ordenamiento Territorial",
+    "mision": "Contribuir a garantizar el derecho a una vivienda y a un hábitat adecuado, mediante el diseño, ejecución y coordinación de políticas públicas integrales de vivienda y ordenamiento territorial. El Ministerio se posiciona como institución referente del sistema público en la materia, priorizando a los sectores con mayores dificultades para el acceso a la vivienda, con especial énfasis en aquellos en situación de mayor vulnerabilidad . Promoviendo la integración socio-territorial, la sostenibilidad ambiental, la participación activa de la ciudadanía y con un enfoque de derechos.",
+    "vision": "Ser el ministerio referente en el desarrollo de políticas habitacionales inclusivas, sostenibles y territorialmente integradas, que promuevan el acceso equitativo a una vivienda adecuada y contribuyan a la construcción de comunidades más cohesionadas, resilientes y con mejor calidad de vida en todo el territorio nacional."
+  },
+  "gasto/a/15": {
+    "inciso": 15,
+    "nombre": "Ministerio de Desarrollo Social",
+    "mision": "El Ministerio de Desarrollo Social es responsable de coordinar - tanto a nivel territorial como sectorial - planes, programas y proyectos relacionados con políticas sociales a efectos de optimizar procesos y garantizar su convergencia hacia metas de desarrollo social integral, favoreciendo la participación y organización social, el fortalecimiento de las capacidades comunitarias y el pleno ejercicio de los derechos humanos por parte de todas las personas que habitan el país. A su vez le corresponde un rol rector en las áreas donde lo establece la normativa vigente, así como un rol ejecutor de políticas y servicios sociales, con énfasis en la protección, la promoción y el desarrollo de personas y grupos en situación de vulneración.",
+    "vision": "Avanzar hacia mayores niveles de igualdad, integración y participación social, mediante la ejecución, coordinación y regulación de políticas públicas tendientes a la protección y promoción de la dignidad humana, con enfoque de justicia social, interseccional y de desarrollo comunitario."
+  },
+  "gasto/a/36": {
+    "inciso": 36,
+    "nombre": "Ministerio de Ambiente",
+    "mision": "Diseñar, liderar y ejecutar la política ambiental nacional, promoviendo el desarrollo sostenible, la protección del ambiente y de la biodiversidad mediante la planificación, gestión, evaluación y control de los recursos naturales, la gestión integrada de recursos hídricos, agua potable y saneamiento. Impulsar una transición ecológica justa, basada en derechos, igualdad de género y participación social. Formular e implementar políticas públicas integradas que anticipen riesgos y enfrenten los desafíos ambientales y climáticos, promoviendo el ordenamiento ambiental en articulación con instituciones, y actores sociales, e incorporando la dimensión ambiental en todos los niveles de decisión.",
+    "vision": "Ser referente nacional en la política ambiental, impulsando un desarrollo sostenible justo, inclusivo y resiliente. Consolidar una gestión innovadora, participativa y fortalecida institucionalmente que garantice el derecho a un ambiente sano."
+  },
+  "gasto/c/16": {
+    "inciso": 16,
+    "nombre": "Poder Judicial",
+    "mision": "Juzgar y hacer ejecutar lo juzgado, para garantizar el ejercicio y la tutela de los derechos de los individuos conforme al ordenamiento jurídico, preservando el Estado de Derecho.",
+    "vision": "Afianzarse como un Poder Judicial que brinda acceso a la Justicia en forma oportuna e igualitaria para todas las personas, con sistemas de organización y gestión modernos, eficaces y eficientes, con vocación de servicio y transparencia en su gestión."
+  },
+  "gasto/c/17": {
+    "inciso": 17,
+    "nombre": "Tribunal de Cuentas",
+    "mision": "El Tribunal de Cuentas es la Entidad Fiscalizadora Superior que, con autonomía técnica, orgánica y funcional y en cumplimiento de la Constitución y las leyes de la República, ejerce el contralor de la Hacienda Pública en beneficio directo de la Sociedad.",
+    "vision": "Que el Tribunal de Cuentas sea reconocido como un Organismo eficaz en el contralor y mejoramiento de la gestión de la Hacienda Pública."
+  },
+  "gasto/c/18": {
+    "inciso": 18,
+    "nombre": "Corte Electoral",
+    "mision": "Garantizar a la población la legitimidad y la pureza de los actos y procedimientos electorales, de plebiscito y referendum, conforme a las disposiciones constitucionales y legales. En particular preservar el Registro Civico Nacional, organizar y juzgar las elecciones nacionales, departamentales, municipales e internas de los Partidos Politicos y aquellas elecciones que organice la Corte Electoral por mandato legal.",
+    "vision": "Organismo plenamente informatizado, con funcionarios adecuadamente capacitados y comprometidos con los objetivos de la Corporacion, brindando un servicio eficiente y preservando la credibilidad de la población."
+  },
+  "gasto/c/19": {
+    "inciso": 19,
+    "nombre": "Tribunal de lo Contencioso Administrativo",
+    "mision": "Dictar justicia administrativa. Es el organismo jurisdiccional que tiene potestad constitucional de confirmar o anular los actos administrativos emitidos por el Estado.",
+    "vision": "Mejorar los resultados de la gestion publica y su evaluacion por los usuarios del sistema. Priorizar la calidad del servicio y la satisfaccion del ciudadano en el area jurisdiccional."
+  },
+  "gasto/c/25": {
+    "inciso": 25,
+    "nombre": "Administración Nacional de Educación Pública",
+    "mision": "Brindar una educación de calidad para todos los habitantes, trabajando a partir de la igualdad de oportunidades y la efectiva inclusión a fin de que los estudiantes desarrollen sus potencialidades cognitivas, emocionales, sociales, físicas y ciudadanas en un marco de respeto de derechos y desarrollo integral para toda la vida.",
+    "vision": "Ser el organismo público de la educación inicial, primaria, media, superior terciaria y formación universitaria en educación que desde el trabajo coordinado y articulado con todos los actores del quehacer educativo logra generar espacios de aprendizaje a través de propuestas que consideran las características propias de los estudiantes, respetando sus derechos y contribuyendo a formar personas reflexivas, creativas, con capacidad crítica e innovadoras, altamente preparadas para enfrentar los desafíos de la sociedad del conocimiento y que, mediante sus virtudes y talentos, son sujetos activos que contribuyen al desarrollo social, productivo, científico, económico y cultural de Uruguay."
+  },
+  "gasto/c/26": {
+    "inciso": 26,
+    "nombre": "Universidad de la República",
+    "mision": "La misión de la institución está definida por el Art 2° de su Ley Orgánica (ley 12.549 del 29 de octubre de 1958): \"La Universidad de la República tendrá a su cargo la enseñanza pública superior en todos los planos de la cultura, la enseñanza artística, la habilitación para el ejercicio de las profesiones científicas y el ejercicio de las demás funciones que la ley le encomiende. Le incumbe asimismo, a través de todos sus órganos, en sus respectivas competencias, acrecentar, difundir y defender la cultura; impulsar y proteger la investigación científica y las actividades artísticas, y contribuir al estudio de los problemas de interés general y propender a su comprensión pública; defender los valores morales y los principios de justicia, libertad, bienestar social, los derechos de la persona humana y la forma democrático-republicana de gobierno\". El desarrollo institucional de la Udelar desde la aprobación de su Ley Orgánica, la demanda social de un acceso generalizado a la educación superior de calidad y la relevancia del conocimiento como soporte para el bienestar colectivo en el siglo XXI han enriquecido su misión. Así, la institución debe ser un actor clave en la democratización del conocimiento avanzado; en la constitución de redes que conecten las necesidades de nuestra sociedad con la investigación científica y la creación cultural global; en la construcción de bases sólidas para la creación endógena de conocimiento como sustento de la soberanía nacional, y en la aplicación de ese conocimiento para afrontar desafíos característicos de un desarrollo sostenible, equitativo y multifacético.",
+    "vision": "Ser la principal universidad del país, pública, abierta, de acceso libre, de referencia y de alcance nacional en la formación e investigación de alto nivel en todas las áreas del conocimiento y de la creación cultural. Reconocida dentro y fuera de fronteras por su actuación basada en la autonomía y la democracia, por la transparencia en sus procesos internos, por sus principios éticos, por la promoción de la diversidad y por el respeto de los derechos en su más amplia expresión que guían su vida institucional. Estar conectada con diversos actores nacionales, integrada en redes internacionales en permanente búsqueda de la calidad académica y comprometida con la construcción de una sociedad próspera, abierta, democrática, igualitaria, culturalmente rica, sostenible y capaz de asegurar el bienestar de sus ciudadanos en todas sus dimensiones. Potenciadora de la constitución de un verdadero sistema educativo público, promoviendo programas conjuntos y estrategias colaborativas sostenidas en recursos compartidos entre las instituciones que lo integren y coordinando su accionar con los actores involucrados en el diseño e instrumentación de las políticas de incentivo a la investigación, a la innovación, al cambio tecnológico y productivo, a la atención a la salud, a la difusión científica y cultural y a la democratización del conocimiento."
+  },
+  "gasto/c/27": {
+    "inciso": 27,
+    "nombre": "Instituto del Niño y Adolescente del Uruguay",
+    "mision": "Garantizar el ejercicio efectivo de la ciudadanía de todos los niños, niñas y adolescentes del Uruguay, como corresponde a su calidad de sujeto pleno de derecho.",
+    "vision": "El INAU posicionado como rector de políticas destinadas a promover, proteger y/o restituir los derechos de niños, niñas y adolescentes, articulado en un Sistema Nacional de Infancia, en el marco de la Doctrina de Protección Integral."
+  },
+  "gasto/c/29": {
+    "inciso": 29,
+    "nombre": "Administración de los Servicios de Salud del Estado",
+    "mision": "Somos el principal prestador estatal de servicios de salud, gratuito y elegible, con una red de servicios distribuidos en todo el territorio nacional, que brinda a sus usuarios una atención segura e integral, mediante el desarrollo de acciones de promoción, prevención, diagnóstico, tratamiento y rehabilitación y que contribuye a la salud de todos los habitantes de la República en el marco del Sistema Nacional Integrado de Salud.",
+    "vision": "Ser una organización reconocida a nivel nacional por brindar servicios de excelencia, cumpliendo los más estrictos estándares de calidad y seguridad, a través de una atención centrada en el usuario, eficaz y eficiente, mediante la descentralización de la atención, promoviendo el compromiso y la formación continua de sus funcionarios, procurando estar a la vanguardia del desarrollo tecnológico e integrando la docencia e investigación en el beneficio de la salud pública."
+  },
+  "gasto/c/31": {
+    "inciso": 31,
+    "nombre": "Universidad Tecnológica del Uruguay",
+    "mision": "Somos una universidad pública dedicada a la educación tecnológica y la innovación, con especial foco en las regiones históricamente postergadas. Garantizamos una educación superior de calidad, promoviendo la investigación colaborativa y el vínculo con los sectores productivos y de servicios. A través de un modelo educativo flexible y orientado al futuro, impulsamos el desarrollo sostenible y equitativo del país.",
+    "vision": "Aspiramos a ser una universidad pública reconocida por su impacto transformador en el desarrollo territorial, social y productivo del Uruguay. Impulsamos la educación tecnológica con un enfoque innovador, inclusivo y sostenible. Formamos profesionales capaces de enfrentar desafíos locales y globales, consolidándose como una institución de referencia nacional e internacional, comprometida con un futuro más justo y equitativo."
+  },
+  "gasto/c/32": {
+    "inciso": 32,
+    "nombre": "Instituto Uruguayo de Meteorología",
+    "mision": "Prestar los servicios públicos meteorológicos y climatológicos, con el objeto de contribuir a la seguridad de las personas y sus bienes, al desarrollo sostenible de la sociedad y actuar como autoridad meteorológica en el territorio nacional. Coordinar las actividades meteorológicas de cualquier naturaleza en el país y representar a la República Oriental del Uruguay ante los organismos internacionales en la materia.",
+    "vision": "Ser el instituto técnico-científico de referencia en el país en materia de servicios meteorológicos y climáticos. Ser reconocidos por la sociedad uruguaya y la comunidad meteorológica regional e internacional por la calidad, confiabilidad, oportunidad y precisión de los servicios meteorológicos ofrecidos y el desarrollo de productos innovadores. Contribuir a la seguridad y protección de los ciudadanos, sus bienes y del medio ambiente; así como aportar a la resiliencia de las cadenas de valor sensibles a las condiciones climáticas. Realizar una gestión pública eficiente y transparente, basada en las mejores prácticas de gobierno electrónico. Posicionar a nuestros funcionarios como servidores públicos de excelencia profesional, integridad y compromiso."
+  },
+  "gasto/c/33": {
+    "inciso": 33,
+    "nombre": "Fiscalía General de la Nación",
+    "mision": "Diseñar y ejecutar la política pública de investigación y persecución criminal; delitos e infracciones cometidas por adolescentes ejerciendo la acción penal que legalmente corresponda; cooperar formal e informalmente con las fiscalías de otros países en la investigación y persecución criminal; atender y proteger a las víctimas y testigos de los delitos; ejercer la acción pública en materia aduanera; promover la acción civil en los casos previstos por la ley; actuar en representación de la sociedad en los asuntos de intereses difusos y en materia de faltas.",
+    "vision": "Ser una institución confiable, altamente profesionalizada y comprometida con los cometidos asignados."
+  },
+  "gasto/c/34": {
+    "inciso": 34,
+    "nombre": "Junta de Transparencia y Ética Pública",
+    "mision": "Promover políticas, normativas y acciones que fortalezcan la transparencia en la gestión del Estado y asesorar al Poder Judicial y a la Administración en la lucha contra la corrupción. Promover medidas preventivas contra la corrupción. Gestionar el registro de declaraciones juradas de funcionarios públicos, asimilados, autoridades y candidatos a cargos electivos ejecutivos; el contenido de las declaraciones juradas deberá tener un análisis en función de análisis de riesgo para la disuasión, prevención y combate a las prácticas de corrupción pública y ser un insumo importante para el apoyo a la justicia en términos de delitos contra de la administración pública y las faltas a la ética del funcionario público previsto en la Ley N° 19.823 Código de Ética. Tramitar las denuncias que reciba por actos de corrupción o transgresiones a la ética publica Ofrecer a los funcionarios públicos capacitación actualizada en ética y normativa anticorrupción y atender los requerimientos de las Convenciones Interamericana y de las Naciones Unidas de lucha contra la corrupción.",
+    "vision": "La JUTEP es el órgano de control superior para prevenir, detectar, sancionar y erradicar las prácticas corruptas en la Administración Publica En tal sentido, es una institución referente a nivel nacional e internacional en la promoción de la ética y la transparencia de la gestión pública aportando a un gobierno abierto, honesto y confiable al servicio de la ciudadanía. Proponemos fortalecer la confianza pública mediante el ejercicio independiente, técnico y transparente de nuestras competencias contribuyendo de forma efectiva a la prevención de la corrupción y colaborar con el sistema integral de lucha contra el crimen organizado y el lavado de activos."
+  },
+  "gasto/c/35": {
+    "inciso": 35,
+    "nombre": "Instituto Nacional de Inclusión Social Adolescente",
+    "mision": "Garantizar el cumplimiento de las medidas socioeducativas dispuestas por la justicia penal a los y las adolescentes, reconociéndoles como sujetos de derecho en estricta observancia de la normativa nacional e internacional en la materia.",
+    "vision": "Posicionarse como el Instituto rector en políticas que promuevan procesos socioeducativos tendientes a la inserción social efectiva de los y las adolescentes en conflicto con la ley penal."
+  }
+}

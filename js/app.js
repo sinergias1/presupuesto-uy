@@ -78,6 +78,13 @@
     return el;
   }
 
+  // Envuelve una palabra/etiqueta con una definición de ayuda (al pasar el mouse),
+  // si M.GLOSARIO tiene una entrada para ese texto exacto; si no, lo deja igual.
+  function glosa(texto) {
+    const def = M.GLOSARIO && M.GLOSARIO[texto];
+    return def ? h('span', { class: 'glosa', tabindex: '0', title: def }, texto) : texto;
+  }
+
   // ---------------------------------------------------------------- datos
   const cache = new Map();
   async function getJSON(url) {
@@ -498,7 +505,7 @@
     const tbody = h('tbody');
     const conEjec = filas.some((f) => f.ejecutado != null);
     const cabeza = h('tr', {},
-      h('th', { scope: 'col' }, columnaNombre),
+      h('th', { scope: 'col' }, glosa(columnaNombre)),
       conClasif ? h('th', { scope: 'col', class: 'col-clas' }, 'Grupo') : null,
       h('th', { scope: 'col', class: 'num' }, 'Monto'),
       h('th', { scope: 'col', class: 'num' }, pctEtiqueta),
@@ -778,6 +785,13 @@
       ['Escalafón', 'El grupo de cargos al que pertenece una función, por tipo de trabajo. En los datos aparece como una letra; mira “¿Qué es cada escalafón?” arriba.'],
       ['Sueldo nominal', 'El sueldo antes de descuentos e impuestos.'],
       ['Mil millones', 'Mil veces un millón. Por ejemplo, 1,0 mil millones son 1.000.000.000 de pesos.'],
+      ['Línea de base', 'El punto de partida del presupuesto de cada organismo: lo que ya tenía autorizado para sueldos, funcionamiento e inversiones, antes de los cambios que trae esta ley.'],
+      ['Articulado', 'Los cambios que esta ley agrega o quita a la línea de base: más o menos plata para algo puntual.'],
+      ['Gran recaudador', 'Quien cobra la mayor parte de los impuestos y otros ingresos del Estado: el Ministerio de Economía y Finanzas, el Banco Central y el Banco República.'],
+      ['Área programática', 'Una función permanente del Estado (salud, educación, seguridad, etc.) a la que se asocian uno o más programas presupuestales, de uno o varios organismos.'],
+      ['Proyecto', 'Dentro de una unidad ejecutora, un conjunto de acciones con un plazo definido: de funcionamiento (gasto corriente) o de inversión (compra de bienes de capital).'],
+      ['Agrupador', 'Una forma de juntar varios rubros del gasto bajo un concepto más amplio, para que sea más fácil de leer.'],
+      ['Tipo de crédito', 'Explica para qué sirve una partida: 0 permanente, 1 por única vez, 2 asociada a una recaudación específica, 3 solo para este año, 4 estimada y no limitativa (depende de que ocurra algo).'],
     ];
     const esc = M.ESCALAFONES;
     const bloqueEscalafones = state.ov.puestos ? h('details', {},
@@ -918,6 +932,36 @@
       h('div', { class: 'ex-grid' }, ...tarjetas));
   }
 
+  // Misión, visión del organismo (inciso), en un "+" expandible, solo cuando se está
+  // viendo ese organismo. Datos: Tomo II - Planificación y Evaluación, Ley N° 20.446.
+  let organismoToken = 0;
+  async function renderOrganismo(r) {
+    const token = ++organismoToken;
+    const cont = $('organismo');
+    if (!cont) return;
+    if (!r || r.nivel !== 'Organismo (inciso)') { cont.hidden = true; cont.replaceChildren(); return; }
+    let datos;
+    try {
+      datos = (await getJSON(BASE + 'organismos.json'))[r.id];
+    } catch (e) {
+      cont.hidden = true; cont.replaceChildren();
+      return;
+    }
+    if (token !== organismoToken) return; // superada por una navegación posterior
+    if (!datos || (!datos.mision && !datos.vision)) { cont.hidden = true; cont.replaceChildren(); return; }
+    const pdf = r.id.startsWith('gasto/a/')
+      ? 'fuentes/tomo-ii-administracion-central.pdf'
+      : 'fuentes/tomo-ii-organismos-articulo-220.pdf';
+    cont.hidden = false;
+    cont.replaceChildren(h('details', { class: 'organismo-card' },
+      h('summary', {}, `+ Misión y visión de ${datos.nombre}`),
+      datos.mision ? h('div', {}, h('h4', {}, 'Misión'), h('p', {}, datos.mision)) : null,
+      datos.vision ? h('div', {}, h('h4', {}, 'Visión'), h('p', {}, datos.vision)) : null,
+      h('p', { class: 'tabla-nota' },
+        'Fuente: Tomo II - Planificación y Evaluación, Ley N° 20.446 (Presupuesto Nacional 2025-2029). ',
+        h('a', { href: pdf, target: '_blank', rel: 'noopener' }, 'Ver el documento oficial ↗'))));
+  }
+
   function renderVista() {
     const v = state.vista;
     const ov = state.ov;
@@ -925,7 +969,7 @@
 
     if (v.tipo === 'general') {
       titulo = 'El panorama completo';
-      contexto = 'Inicio';
+      contexto = ['Inicio'];
       sub = 'Primero se junta la plata (izquierda), después va a un fondo (centro) y al final se reparte (derecha). ' + (esToque() ? 'Toca' : 'Haz clic en') + ' un bloque con › para ver qué hay adentro.';
       const dif = ov.totales.diferencia;
       tiles = [
@@ -939,10 +983,11 @@
       ];
       renderMigas([{ texto: 'Inicio', hash: null }], true);
       titDoc = '¿De dónde sale la torta y cómo se reparte? Presupuesto del Estado uruguayo 2025';
+      renderOrganismo(null);
     } else {
       const r = M.resumenNodo(ov, v);
       titulo = r.titulo;
-      contexto = r.padre ? `${r.nivel} · ${r.padre}` : r.nivel;
+      contexto = r.padre ? [glosa(r.nivel), ` · ${r.padre}`] : [glosa(r.nivel)];
       sub = (r.ayuda ? r.ayuda + ' ' : '') + textoDescripcion(r);
       tiles = [
         tile(r.enCompras ? 'Compras adjudicadas' : r.id.includes('/cargos') ? 'Estimado al año' : r.esGasto ? 'Plata autorizada para gastar' : 'Lo que se espera cobrar', M.fmtMonto(r.valor),
@@ -971,9 +1016,10 @@
       if (r.tieneSueldos) tiles.push(tileSueldo(r.cargos));
       renderMigas(M.migas(v), true);
       titDoc = `${r.titulo} · ¿De dónde sale la torta y cómo se reparte?`;
+      renderOrganismo(r);
     }
 
-    $('contexto').textContent = contexto;
+    $('contexto').replaceChildren(...contexto);
     $('titulo').textContent = titulo;
     $('subtitulo').textContent = sub;
     $('tiles').replaceChildren(...tiles);
