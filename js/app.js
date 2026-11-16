@@ -56,9 +56,10 @@
     clearTimeout(cartel.t);
     cartel.t = setTimeout(() => cartel.el.classList.remove('visible'), 2800);
   }
-  // Esc: subir un nivel
+  // Esc: subir un nivel (no si el foco está en el buscador: ahí Esc solo cierra el desplegable)
   addEventListener('keydown', (ev) => {
     if (ev.key !== 'Escape' || !state.vista || state.vista.tipo === 'general') return;
+    if (ev.target && (ev.target.tagName === 'INPUT' || ev.target.tagName === 'TEXTAREA')) return;
     const migas = M.migas(state.vista);
     if (migas.length > 1) location.hash = migas[migas.length - 2].hash;
   });
@@ -1088,12 +1089,94 @@
     }
   }
 
+  // ------------------------------------------------------------ buscador
+  const normalizarBusq = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  const COLNOM_GASTO = ['Grupo de organismos', 'Organismo (inciso)', 'Oficina (unidad ejecutora)', 'Programa'];
+  const COLNOM_REC = ['Ingreso', 'Subtipo de ingreso', 'Tipo de ingreso'];
+  const indiceBusqueda = [];
+
+  function armarIndiceBusqueda(ov) {
+    const agregar = (n, prof, lista) => {
+      if (n.id && n.nombre) {
+        const label = M.nombreDe(n.id, n.nombre);
+        indiceBusqueda.push({ n: { id: n.id, label, col: lista[Math.min(prof - 1, lista.length - 1)], valor: n.valor || 0 }, norm: normalizarBusq(label) });
+      }
+      (n.hijos || []).forEach((h) => agregar(h, prof + 1, lista));
+    };
+    (ov.gasto.hijos || []).forEach((h) => agregar(h, 1, COLNOM_GASTO));
+    (ov.recursos.hijos || []).forEach((h) => agregar(h, 1, COLNOM_REC));
+    getJSON(BASE + 'indice_proveedores.json').then((ps) => {
+      ps.forEach((p) => {
+        const col = 'Proveedor' + (p.organismo ? ' · ' + p.organismo : '');
+        indiceBusqueda.push({ n: { id: p.id, label: p.nombre, col, valor: p.valor }, norm: normalizarBusq(p.nombre) });
+      });
+    }).catch(() => {});
+  }
+
+  function buscarNodos(q) {
+    const nq = normalizarBusq(q.trim());
+    if (!nq) return [];
+    const palabras = nq.split(/\s+/).filter(Boolean);
+    return indiceBusqueda
+      .filter((e) => palabras.every((p) => e.norm.includes(p)))
+      .sort((a, b) => (b.n.valor || 0) - (a.n.valor || 0))
+      .slice(0, 12)
+      .map((e) => e.n);
+  }
+
+  function irANodo(n) { location.hash = '#' + n.id; }
+
+  function iniciarBuscador() {
+    const input = $('buscador-input');
+    const lista = $('buscador-lista');
+    if (!input || !lista) return;
+    let resultadosActuales = [];
+
+    function cerrar() { lista.hidden = true; lista.replaceChildren(); resultadosActuales = []; }
+
+    function render(resultados) {
+      resultadosActuales = resultados;
+      lista.replaceChildren();
+      if (!resultados.length) { lista.hidden = true; return; }
+      resultados.forEach((n) => {
+        const li = document.createElement('li');
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.append(document.createTextNode(n.label));
+        const small = document.createElement('small');
+        small.textContent = typeof n.col === 'string' ? n.col : '';
+        btn.append(small);
+        const elegir = () => { input.value = ''; cerrar(); input.blur(); irANodo(n); };
+        btn.addEventListener('mousedown', (ev) => { ev.preventDefault(); elegir(); });
+        btn.addEventListener('click', elegir); // por si se activa con teclado (Enter/Espacio)
+        li.append(btn);
+        lista.append(li);
+      });
+      lista.hidden = false;
+    }
+
+    input.addEventListener('input', () => render(buscarNodos(input.value)));
+    input.addEventListener('focus', () => { if (input.value.trim()) render(buscarNodos(input.value)); });
+    input.addEventListener('blur', () => setTimeout(cerrar, 150));
+    input.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Escape') {
+        ev.stopPropagation();
+        if (!lista.hidden) cerrar(); else input.blur();
+      } else if (ev.key === 'Enter' && resultadosActuales.length) {
+        const n = resultadosActuales[0];
+        input.value = ''; cerrar(); input.blur(); irANodo(n);
+      }
+    });
+  }
+
   async function boot() {
     if (location.protocol === 'file:') { mostrarError(new Error('file')); return; }
     mostrarEstado('Cargando datos…');
     try {
       state.ov = await getJSON(BASE + 'overview.json');
     } catch (e) { mostrarError(e); return; }
+    armarIndiceBusqueda(state.ov);
+    iniciarBuscador();
     await asegurarEcharts();
     renderNotas();
     window.addEventListener('hashchange', route);
