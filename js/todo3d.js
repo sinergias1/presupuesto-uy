@@ -508,7 +508,7 @@ async function iniciar() {
     ctx.fillText('$U 20.500', W / 2, 225);
     ctx.font = '600 44px ' + FUENTE;
     ctx.fillText('por mes para', W / 2, 288);
-    ctx.fillText('sostener al Estado.*', W / 2, 340);
+    ctx.fillText('mantener al Estado.*', W / 2, 340);
     ctx.fillStyle = '#8fa6c4';
     ctx.font = '400 30px ' + FUENTE;
     ['*Promedio entre toda la población.', 'Aportan personas y empresas;', 'no todos tributan igual.']
